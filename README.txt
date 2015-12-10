@@ -1,4 +1,3 @@
-TEST
 Created by Michel Thiebaut de Schotten and Chris Foulon.
 Tractotron is not approved for clinical use.
 Tractotron is the property of Chris Foulon and Michel Thiebaut de Schotten.

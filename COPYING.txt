@@ -1,0 +1,420 @@
+### Licence FSL ###
+FMRIB Software Library, Release 5.0 (c) 2012, The University of Oxford
+(the "Software")
+
+The Software remains the property of the University of Oxford ("the
+University").
+
+The Software is distributed "AS IS" under this Licence solely for
+non-commercial use in the hope that it will be useful, but in order
+that the University as a charitable foundation protects its assets for
+the benefit of its educational and research purposes, the University
+makes clear that no condition is made or to be implied, nor is any
+warranty given or to be implied, as to the accuracy of the Software,
+or that it will be suitable for any particular purpose or for use
+under any specific conditions. Furthermore, the University disclaims
+all responsibility for the use which is made of the Software. It
+further disclaims any liability for the outcomes arising from using
+the Software.
+
+The Licensee agrees to indemnify the University and hold the
+University harmless from and against any and all claims, damages and
+liabilities asserted by third parties (including claims for
+negligence) which arise directly or indirectly from the use of the
+Software or the sale of any products based on the Software.
+
+No part of the Software may be reproduced, modified, transmitted or
+transferred in any form or by any means, electronic or mechanical,
+without the express permission of the University. The permission of
+the University is not required if the said reproduction, modification,
+transmission or transference is done without financial return, the
+conditions of this Licence are imposed upon the receiver of the
+product, and all original and amended source code is included in any
+transmitted product. You may be held legally responsible for any
+copyright infringement that is caused or encouraged by your failure to
+abide by these terms and conditions.
+
+You are not permitted under this Licence to use this Software
+commercially. Use for which any financial return is received shall be
+defined as commercial use, and includes (1) integration of all or part
+of the source code or the Software into a product for sale or license
+by or on behalf of Licensee to third parties or (2) use of the
+Software or any derivative of it for research with the final aim of
+developing software products for sale or license to a third party or
+(3) use of the Software or any derivative of it for research with the
+final aim of developing non-software products for sale or license to a
+third party, or (4) use of the Software to provide any service to an
+external organisation for which payment is received. If you are
+interested in using the Software commercially, please contact Isis
+Innovation Limited ("Isis"), the technology transfer company of the
+University, to negotiate a licence. Contact details are:
+innovation@isis.ox.ac.uk quoting reference BS/9564.
+
+
+-------------------------------------------------------------------
+
+The Standard Space Atlases
+
+The Cerebellum, Harvard-Oxford, JHU, Juelich, Striatum and Thalamus atlases, 
+whilst not being the property of Oxford, are released under the terms of the
+main FSL licence above, at the request of their owners. These atlases
+should therefore not be used for commercial purposes; for such
+purposes please contact the primary co-ordinator for the relevant
+atlas:
+
+Harvard-Oxford: steve@fmrib.ox.ac.uk
+JHU: susumu@mri.jhu.edu
+Juelich: S.Eickhoff@fz-juelich.de
+Thalamus: behrens@fmrib.ox.ac.uk
+Cerebellum: j.diedrichsen@bangor.ac.uk
+Striatum: andri.tziortzi@gmail.com
+
+-------------------------------------------------------------------
+
+FSLView
+
+FSLView sources are released under the terms of the GPLv2
+(http://www.gnu.org/licenses/old-licenses/gpl-2.0.html). FSLView 
+binaries use Qt (http://qt.nokia.com) which is released under LGPLv2.1.
+The FSLView binaries are released under the GPL, with the added 
+exception that we also give permission to link this program with the Qt
+non-commercial edition, and distribute the resulting executable,
+without including the source code for the Qt non-commercial edition in
+the source distribution.
+
+FSLView is distributed "AS IS" under this Licence in the hope that it
+will be useful, but in order that the University as a charitable
+foundation protects its assets for the benefit of its educational and
+research purposes, the University makes clear that no condition is
+made or to be implied, nor is any warranty given or to be implied, as
+to the accuracy of the Software, or that it will be suitable for any
+particular purpose or for use under any specific conditions.
+Furthermore, the University disclaims all responsibility for the use
+which is made of the Software. It further disclaims any liability for
+the outcomes arising from using the Software.
+
+
+### Licence ANTs ###
+Copyright (c) 2009-2013 ConsortiumOfANTS
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+3. Neither the name of the consortium nor the names of its contributors
+  may be used to endorse or promote products derived from this software
+  without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE CONSORTIUM AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE. 
+
+### TrackVis License Agreement ###
+
+The General Hospital Corporation
+
+ACADEMIC RESEARCH END-USER
+SOFTWARE LICENSE AGREEMENT
+
+By downloading, using, reproducing, displaying or otherwise accessing the 
+Software which is the subject of this Agreement, Licensee (defined below) 
+hereby agrees to all of the terms and conditions in this Agreement.  If 
+Licensee does not so agree, Licensee shall have no license or right to 
+use, reproduce or display the Software.
+
+This Academic Research End-User Software License Agreement (the 
+"Agreement") is by and between The General Hospital Corporation, d/b/a 
+Massachusetts General Hospital, a Massachusetts not-for-profit 
+corporation, with a principal place of business at 55 Fruit Street, 
+Boston, Massachusetts 02114 (the "Licensor") and the individual who is 
+or has engaged in downloading, using, reproducing, displaying or otherwise 
+accessing the Software described herein (the "Individual") and the 
+institution or entity which employs or is otherwise affiliated with such 
+Individual in connection with the Individual's use of the Software (the 
+"Institution" and together with the Individual, collectively 
+"Licensee"), and is effective as of the date the Software is first 
+downloaded or otherwise accessed by the Individual or the Institution (the 
+"Effective Date").  Each party to this Agreement is referred to herein 
+as a "Party" and collectively as the "Parties."
+
+RECITALS
+
+Licensor, through its investigators Ruopeng Wang, MS and Van Wedeen, MD of 
+the Department of Radiology, has developed the Software (defined below), 
+for use in the field of Diffusion Imaging research, and desires to permit 
+Licensee to use the software for Research Purposes only (defined below).
+
+Licensee desires to license the Software solely for Research Purposes in 
+accordance with the terms and conditions hereof.
+
+         Now therefore, in consideration of the premises and covenants 
+hereinafter set forth and other good and valuable consideration, the 
+receipt and sufficiency of which is hereby acknowledged, the Parties 
+hereby agree as follows:
+
+I.       Certain Definitions.  As used in this Agreement, the following 
+terms shall have the following meanings:
+
+         (a)    "Affiliate" with respect to either entity Party means 
+any corporation or other legal entity other than that Party in whatever 
+country organized, controlling, controlled by or under common control with 
+that Party.  The term "control" shall mean the power, direct or 
+indirect, to elect or appoint fifty percent (50%) or more of the directors 
+or trustees, or to cause direction of management and policies, whether 
+through the ownership of voting securities, by contract or otherwise.
+
+        (b)    "Binary Code" means the embodiment of a computer program 
+which is not in human-readable form, and which is derived from source code 
+of such program by means of assembly or compilation into either a 
+computer-specific non-executable code, or an executable code capable of 
+being run on a computer system.
+
+        (c)     "Commercial Purposes" shall mean the sale, lease, license or 
+other transfer of the Software, use of the Software for the performance of 
+contract research, or to produce or manufacture products for sale, or to 
+develop, use, and/or distribute educational materials based on the 
+Software, including but not limited to courseware or text books.
+
+        (d)     "Patent Rights" means Licensor's rights in the Software 
+under U.S. and foreign patent law, if applicable, as may be further 
+described in Appendix A.
+
+        (e)     "Research Purposes" means the academic or government 
+funded research under the direction of the Individual at the Institution.
+
+        (f)     "Software" means the computer programs known as TrackVis 
+and Diffusion Toolkit and any related documentation as further defined and 
+described in Appendix A.
+
+2.        Software License Grant.  Subject to the terms and conditions 
+contained in this Agreement, Licensor hereby grants to Licensee a 
+nonexclusive, nontransferable, nonsublicensable, royalty-free license:
+
+        (i)     under Licensor's copyright rights, to reproduce and display the 
+Software; and
+        (ii)    under Licensor's Patent Rights, to use the Software (but 
+not to sell or otherwise transfer the Software);
+
+provided, however, that the foregoing license grant is limited to Research 
+Purposes only and only at the Institution.  The Software shall not be 
+reproduced, displayed or used for any Commercial Purposes unless Licensor 
+has consented in writing in advance and the Parties have entered into a 
+commercial license agreement containing appropriate terms for royalties, 
+and such other terms and conditions as are required by Licensor.
+
+3.        Title and Ownership.  The Software is protected by copyright and 
+foreign treaties, and may be subject to Patent Rights and other 
+proprietary rights of Licensor and, if applicable, its licensor(s). 
+Except to the extent of the limited license provided for in this 
+Agreement, Licensor shall retain all of its rights, title and interest in 
+and to the Software.  This Agreement does not grant any rights in or to 
+any intellectual property owned or licensed by Licensor except those 
+rights expressly granted hereunder, and except as specifically set forth 
+in this Agreement, Licensee shall have no other rights in or to the 
+Software nor any underlying intellectual property.
+
+4.        Conditions.  As a condition to the license granted hereunder, 
+Licensee, and each of Individual or the Institution, as applicable, shall 
+comply at all times with each of the following:
+
+        (a)     Licensee shall preserve and maintain all applicable 
+attributions, copyright notices and licenses included in or applicable to 
+the Software.
+
+        (b)     Licensee may make copies of the Software but only to the extent 
+required to support Licensee's authorized use of the Software for 
+Licensee's Research Purposes.  Licensee agrees to reproduce on any such 
+copies all of Licensor's proprietary notices contained in and on the 
+Software and its associated media.
+
+        (c)     Licensee shall use the Software only for Research Purposes and 
+only at the Institution.
+
+        (d)     Licensee shall not sell, license, distribute, rent, lease, 
+offer on an ASP or service bureau basis, grant a security interest in, 
+sublicense or otherwise transfer or permit any third party (other than 
+Licensee's own employees, students and fellows or other collaborators 
+solely in connection with permitted activities at the Institution) to 
+access or use all or any portion of the Software in any form or any of the 
+rights therein or thereto.
+
+        (e)     This Agreement does not grant any rights with respect to 
+third party software, except those rights that Licensor has been 
+authorized by a third party to grant to Licensee, and accordingly Licensee 
+is solely responsible for obtaining any permissions from third parties 
+which are necessary to use, reproduce, or display, the Software.
+
+        (f)     Licensee shall exercise its rights pursuant to this Agreement in 
+compliance with all applicable governmental laws, regulations and orders, 
+including without limitation those relating to export and import control.
+
+        (g)     To the extent such restriction is not prohibited by 
+applicable law, Licensee shall not decompile, disassemble or reverse 
+engineer the Software or its structure, sequence, organization, algorithms 
+or data.
+
+        (h)     Licensee shall notify Licensor promptly if it becomes 
+aware of any unauthorized access to or use or transfer of the Software.
+
+        (i)     Institution shall be jointly responsible for the actions of 
+Individuals hereunder with respect to the Software and compliance with the 
+terms of this Agreement.   Licensee hereby represents and warrants that 
+all information provided to Licensor in connection with accessing, 
+downloading and/or using the Software is accurate, true and complete.
+
+5.        Limitations.
+
+(a)        LICENSEE ACKNOWLEDGES THAT THE SOFTWARE HAS BEEN DESIGNED FOR 
+RESEARCH PURPOSES ONLY AND HAS NOT BEEN REVIEWED OR APPROVED BY THE FOOD 
+AND DRUG ADMINISTRATION OR BY ANY OTHER AGENCY, AND FURTHER ACKNOWLEDGES 
+THAT CLINICAL APPLICATIONS ARE NEITHER RECOMMENDED NOR ADVISED.
+
+(b)        Licensee shall be solely responsible for installing and 
+maintaining the Software and for testing the Software for proper 
+operation.  Unless otherwise agreed in writing, Licensor shall have no 
+obligation to provide to Licensee any support, maintenance, corrections, 
+debugging, improvements, modifications, upgrades or updates of the 
+Software, or otherwise assist Licensee in installing, configuring, 
+integrating, understanding or using the Software.
+
+6.        Publication.  Licensee may publish and present the results of 
+Licensee's use of the Software in peer-reviewed journals.  Licensee 
+agrees to provide acknowledgement to Licensor and its designated 
+professional staff, Ruopeng Wang, MS and Van Wedeen, MD, who participated 
+in the creation of the Software, in such publications or presentations in 
+accordance with standard academic practice.
+
+7.        Term and Termination.  This Agreement and the license granted by 
+Licensor hereunder shall commence on the Effective Date and continue in 
+effect until terminated by any Party as provided herein.  Licensee may 
+terminate this Agreement at any time by destroying all copies of the 
+Software and notifying Licensor in writing of such destruction, or 
+returning all copies of the Software to Licensor.  Licensor may terminate 
+this Agreement upon sixty (60) days prior notice to Licensee if Licensee 
+does not comply with any of the material provisions of this Agreement and 
+such breach remains uncured at the end of such sixty (60) day period, 
+provided however that in the case of any breach of this Agreement that 
+Licensor in its reasonable judgment deems uncurable, Licensor may 
+terminate this Agreement immediately upon notification to Licensee.  Upon 
+any such termination, Licensee shall immediately cease all uses of the 
+Software and any portion thereof, and shall return or destroy all copies 
+of the Software and any portion thereof and, if so requested, provide 
+written certification of such destruction to Licensor.
+
+8.        Disclaimer.  Licensee accepts the Software free of charge and on 
+an "AS IS" basis.  Licensee understands and acknowledges that the Software 
+is experimental, may contain errors and is subject to further development 
+and revision and assumes the entire risk as to its use of the Software. 
+Licensor does not guarantee the accuracy of the Software, or of any 
+results or data, and assumes no obligation to notify Licensee of any bug 
+fixes, enhancements or other modifications that may be made to the 
+Software.  LICENSOR SPECIFICALLY DISCLAIMS ALL EXPRESS AND IMPLIED 
+WARRANTIES OF ANY KIND INCLUDING, BUT NOT LIMITED TO, ANY WARRANTIES OF 
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+
+9.        Limitation of Liability; Indemnification.  IN NO EVENT SHALL 
+LICENSOR OR ANY OF ITS TRUSTEES, DIRECTORS, OFFICERS, MEDICAL OR 
+PROFESSIONAL STAFF, EMPLOYEES, STUDENTS OR  AGENTS ("LICENSOR'S 
+PERSONNEL") BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, 
+INCIDENTAL, EXEMPLARY OR CONSEQUENTIAL DAMAGES HOWEVER CAUSED AND ON ANY 
+THEORY OF LIABILITY ARISING IN ANY WAY RELATED TO THE SOFTWARE OR THIS 
+AGREEMENT, EVEN IF LICENSOR OR ANY OF LICENSOR'S PERSONNEL HAS BEEN 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  EXCEPT TO THE EXTENT 
+PROHIBITED BY LAW OR REGULATION, LICENSEE ASSUMES ALL LIABILITY FOR 
+LICENSEE'S USE, REPRODUCTION,  AND DISPLAY OF THE SOFTWARE, AND AGREES TO 
+INDEMNIFY AND HOLD HARMLESS LICENSOR AND EACH OF LICENSOR'S PERSONNEL 
+FROM AND AGAINST ANY AND ALL DAMAGES, COSTS, LIABILITY, LOSS OR EXPENSES 
+(INCLUDING ATTORNEYS' FEES AND COSTS) ARISING IN CONNECTION WITH ANY 
+CLAIMS, SUITS, ACTIONS, DEMANDS AND JUDGMENTS RELATED TO LICENSEE'S USE, 
+REPRODUCTION,  AND DISPLAY OF THE SOFTWARE.
+
+10.        Independent Status.  Neither the making of this Agreement nor the 
+performance of its provisions shall be construed to constitute any Party 
+an agent, employee or legal representative of the other Party for any 
+purpose whatsoever.
+
+11.        Use of Name.  Except as expressly provided in this Agreement or 
+pursuant to specific prior written permission of the applicable party, 
+Licensee shall not use any of the names, logos or trademarks, or any 
+adaptation thereof, of Licensor or any of its Affiliates, or of any 
+trustee, director, officer, staff member, employee, student or agent 
+thereof, or of any funding agency, in any advertising, promotional or 
+sales material or publicity or in any document employed to obtain funds or 
+financing, or to endorse or promote research results or products produced 
+in whole or in part by operation of the Software or derived from or based 
+on the Software.  Such permission shall be obtained from Licensor's Chief 
+Public Affairs Officer.  Licensee hereby grants permission to Licensor to 
+use Licensee's name for purposes of obtaining funds from any funding 
+agency.
+
+12.        U.S. Government Rights.  For Software supported by federal 
+funding, the license granted under this Agreement is subject to the 
+rights, conditions and limitations imposed by U.S. law including without 
+limitation 35 U.S.C. § 202 et seq. and regulations pertaining thereto. 
+Notwithstanding the foregoing, the license granted under this Agreement 
+does not constitute a response by Licensee to any request for proposals, 
+bid solicitation or other invitation or offer to contract by any 
+governmental authority but instead constitutes an offer to enter into a 
+license agreement only upon the terms set forth herein.  If the U.S. 
+Government or any other governmental authority shall seek to acquire the 
+Software and its acquisition of such Software would result in the U.S. 
+Government or such other governmental authority having rights in the 
+Software that are at variance with the terms and conditions of this 
+Agreement and license, Licensee shall not be bound by any such rights 
+unless it shall have expressly entered into an amendment of this Agreement 
+that shall set forth such rights in accordance with any applicable 
+governmental rules or regulations, including the Federal Acquisition 
+Regulation and the Defense Federal Acquisition Regulation Supplement.
+
+13.        General.  This Agreement constitutes the entire understanding of 
+the Parties with respect to the subject matter hereof, superseding and 
+merging any prior oral or written understandings between the Parties with 
+respect thereto.  Sections 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 and 13 shall 
+survive any termination of this Agreement.  This Agreement may be modified 
+or amended only in a writing signed by duly authorized representatives of 
+the Parties hereto.  If any part of this Agreement is adjudged to be 
+invalid or unenforceable, the Parties intend that such invalidity shall 
+not affect any other provision hereof.  Any waiver or failure of any Party 
+to assert a right hereunder shall not constitute a waiver or excuse a 
+similar failure in any other circumstance.  Licensee shall not assign any 
+of its rights or obligations under this Agreement without the prior 
+written consent of Licensor.  Except to the extent prohibited by law or 
+regulation, this Agreement shall be governed by and construed in 
+accordance with the laws of The Commonwealth of Massachusetts, excluding 
+its provisions with respect to conflict of laws, and each Party consents 
+to the exclusive jurisdiction and venue of courts in Boston, Massachusetts 
+in all disputes relating to this Agreement.  Headings in this Agreement 
+are for convenience only and are not intended to be used to interpret or 
+construe this Agreement.  This Agreement may be executed in counterparts 
+and delivered by facsimile with the same effect as an original.  Each of 
+the undersigned represents that such individual is duly authorized to 
+execute this Agreement.
+
+
+
+Appendix A
+
+Description of the Software
+
+1.        Diffusion Toolkit in binary code form:  Diffusion Toolkit is a 
+software tool for the performance of data reconstruction and fiber 
+tracking for diffusion MR imaging, utilizing but not limited to tensor 
+data, diffusion spectrum imaging (DSI), high angular resolution diffusion 
+imaging (HARDI) data and Q-ball imaging data.
+
+2.        TrackVis in binary code form: TrackVis is a 3-dimensional 
+visualization program that allows real-time visualization and analysis of 
+the fiber track data that was created by Diffusion Toolkit.

@@ -1,0 +1,15 @@
+** Current version **
+v1.1.1
+** Files **
+-New template added : BCBToolKit/Tools/extraFiles/MNI152_wskull.nii.gz
+** Bug Corrections **
+-Normalisation didn't work if bet value wasn"t manually defined
+-In Normalisation, temporary files wasn't all saved if you checked the option
+
+** Previous update **
+v1.1.0:
+** IHM **
+-Option to save temporary files in Normalisation
+-In Settings menu of Normalisation, you can now define the brain extraction threshold
+** Functions **
+-You can now apply transformation computed by normalisation to 4D nifti inside the "Other directory"

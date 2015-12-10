@@ -1,0 +1,745 @@
+package IHM;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import Applications.Cortical;
+import Applications.Disco;
+import Applications.Normalisation;
+import Applications.Statistical;
+import Applications.Tractotron;
+import Config.BCBEnum;
+import Config.Config;
+import Settings.SettingsFrame;
+
+public class BCBToolKitIHM  implements BCBToolKit {	
+	public static final int FRAME_HEIGHT = 520;
+	private String wd;
+	private JFrame frame;
+	// MenuBar
+	private JMenuBar menu;
+	private JMenuItem settings;
+	private JMenuItem ackno;
+	private JMenuItem disclaimer;
+	private JMenuItem about;
+	// Appli buttons
+	private JButton tracto;
+	private JButton disco;
+	private JButton corti;
+	private JButton norma;
+	private JButton stat;
+	//Set of buttons
+	private HashSet<JButton> butSet;
+	// Conf
+	private SettingsFrame setFrame;
+	private Config conf;
+	// Determine if files will be saved after shutdown
+	private boolean savePaths;
+	// Applications
+	private Tractotron appTracto;
+	private Disco appDisco;
+	private Cortical appCorti;
+	private Normalisation appNorma;
+	private Statistical appStat;
+	
+	// Map of positions of each frame, including BCBToolBox as GENERAL
+	private Map<BCBEnum.Index, Point> posMap;
+	/*
+	 *  Maps of different paths/files that have to be saved and shared
+	 *  There are loaded by the loadMaps function
+	 */
+	private Map<BCBEnum.Param, String> pathsMap;
+	private Map<BCBEnum.Param, File> filesMap;
+	/*
+	 * A set to save all browser which will need to save their paths
+	 * Updated by the function addBro each time an appli is opened 
+	 */
+	private HashMap<BCBEnum.Param, Browser> broMap;
+	
+	public BCBToolKitIHM(String wd) {
+		this.wd = wd;
+		this.conf = new Config(this.wd + "/Tools/extraFiles/BCBToolKit.conf");
+		this.savePaths = conf.getVal(BCBEnum.Param.SAVE_PATHS).equals("true");
+		// Creation of the button set
+		this.butSet = new HashSet<JButton>();
+		//Creation and initializing pathsMap and filesMap 
+		this.pathsMap = new HashMap<BCBEnum.Param, String>();
+		this.filesMap = new HashMap<BCBEnum.Param, File>();
+		loadMaps();
+		this.broMap = new HashMap<BCBEnum.Param, Browser>();
+		this.posMap = new HashMap<BCBEnum.Index, Point>();
+		
+		createView();
+		placeComponents();
+		createControllers();
+	}
+	
+	/**
+	 * Loading file and path maps with checking of file 
+	 * integrity
+	 */
+	private void loadMaps() {
+		for (BCBEnum.Param p : BCBEnum.Param.values()) {
+			if (p.key().startsWith("default")) {
+				String tmp = conf.getVal(p);
+				if (!tmp.equals("")) {
+					File f = new File(tmp);
+					if (!f.exists()) {
+						Tools.showMessage(frame, "File issue warning", 
+								"Be careful, the " + p.key() + "doesn't exist");
+						pathsMap.put(p, "");
+						filesMap.put(p, null);
+						conf.setVal(p, "");
+					} else if (!f.canRead()) {
+						Tools.showMessage(frame, "File issue warning", 
+								"Be careful, the " + p.key() + "is unreadable");
+						pathsMap.put(p, "");
+						filesMap.put(p, null);
+						conf.setVal(p, "");
+					} else if (!f.canWrite()) {
+						Tools.showMessage(frame, "File issue warning", 
+								"Be careful, the " + p.key() + "cannot be wrote");
+						pathsMap.put(p, "");
+						filesMap.put(p, null);
+						conf.setVal(p, "");
+					} else {
+						filesMap.put(p, f);
+						pathsMap.put(p, conf.getVal(p));
+					}
+				} else {
+					pathsMap.put(p, "");
+					filesMap.put(p, null);
+				}
+			}
+		}
+	}
+	
+
+	// IHM
+	public void display() {
+		frame.pack();
+		if (conf.getVal(BCBEnum.Index.GENERAL.name()).equals("")) {
+			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+			GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
+			Rectangle rect = defaultScreen.getDefaultConfiguration().getBounds();
+			int x = (int)rect.getMaxX() / 8;
+			int y = ((int)rect.getMaxY()-frame.getHeight()) / 2; //Milieu vertical
+			frame.setLocation(x, y);
+		} else {
+			setCustomLocation(frame, BCBEnum.Index.GENERAL);
+		}
+		//frame.setLocationRelativeTo(null); //Met la frame au centre
+		frame.setVisible(true);
+	}
+	
+	public void createView() {
+		frame = new JFrame("BCBToolKit"); {
+			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
+			frame.setResizable(false);
+		}
+		// Menu
+		menu = new JMenuBar();
+		settings = new JMenuItem("Settings");
+		ackno = new JMenuItem("Acknowledgement");
+		disclaimer = new JMenuItem("Dislaimer");
+		about = new JMenuItem("About BCBToolKit");
+		// Buttons
+		//tracto = new JButton(twoLinesString("Tractotron", ""), buttonIcon("iconT.png"));
+		tracto = new JButton(buttonIcon("tracto.png", 150, 81));
+		//formatButton(tracto);
+		disco = new JButton(buttonIcon("disco.png", 140, 120));
+		formatButton(disco);
+		corti = new JButton(buttonIcon("corti.png", 141, 93));
+		formatButton(corti);
+		norma = new JButton(buttonIcon("norma.png", 150, 120));
+		formatButton(norma);
+		URL url = getClass().getClassLoader().getResource("undercons.png");
+		ImageIcon logo = new ImageIcon(url);
+		stat = new JButton(Tools.twoLinesString("Statistical",  "Analysis"), logo);
+		formatButton(stat);
+		setFrame = new SettingsFrame(conf, this);
+		// Once buttons created, we add them in the set
+		butSet.add(tracto);
+		butSet.add(disco);
+		butSet.add(corti);
+		butSet.add(norma);
+		butSet.add(stat);
+		stat.setEnabled(false);
+	}
+	
+	public void placeComponents() {
+		//Menus
+		JMenu confMenu = new JMenu("Preferences"); {
+			confMenu.add(settings);
+		}
+		JMenu help = new JMenu("Help"); {
+			help.add(ackno);
+			help.add(disclaimer);
+			help.add(about);
+		}
+		menu.add(confMenu);
+		menu.add(help);
+		//Buttons
+		JPanel p = new JPanel(); {
+			GridLayout boxLay = new GridLayout(0, 2);
+			p.setLayout(boxLay);
+			p.add(tracto);
+			p.add(disco);
+			p.add(corti);
+			p.add(norma);
+			p.add(stat);
+		}
+		frame.setJMenuBar(menu);
+		// On ajoute un logo en dessous de la barre de menu
+		ImagePanel logo = new ImagePanel("BCBLogo.png", 152, 97);
+		logo.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 6));
+		frame.add(logo , BorderLayout.NORTH);
+		frame.add(p, BorderLayout.CENTER);
+	}
+	
+	public void createControllers() {
+		frame.addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent e) {
+				closing();
+			}
+		});
+		
+		settings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openSettings();
+            }
+		});
+		
+		tracto.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				callTractotron();
+            }
+		});
+		
+		disco.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				callDisco();
+            }
+		});
+		
+		corti.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				callCortical();
+            }
+		});
+		
+		norma.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				callNormalization();
+            }
+		});
+		
+		stat.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				callStatistical();
+            }
+		});
+		
+		disclaimer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				File dis = new File(getWD() + "/DISCLAIMER");
+				FileInputStream fis = null;
+				try {
+					fis = new FileInputStream(dis);
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+				byte[] data = new byte[(int) dis.length()];
+				try {
+					fis.read(data);
+					fis.close();
+				} catch (IOException e2) {
+					e2.printStackTrace();
+				}
+
+				String str = "";
+				try {
+					str = new String(data, "UTF-8");
+				} catch (UnsupportedEncodingException e1) {
+					e1.printStackTrace();
+				}
+				Tools.showLongMessage(frame, "DISCLAIMER", str);
+            }
+		});
+		
+		ackno.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				File dis = new File(getWD() + "/ACKNOWLEDGEMENT");
+				FileInputStream fis = null;
+				try {
+					fis = new FileInputStream(dis);
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+				byte[] data = new byte[(int) dis.length()];
+				try {
+					fis.read(data);
+					fis.close();
+				} catch (IOException e2) {
+					e2.printStackTrace();
+				}
+
+				String str = "";
+				try {
+					str = new String(data, "UTF-8");
+				} catch (UnsupportedEncodingException e1) {
+					e1.printStackTrace();
+				}
+				Tools.showLongMessage(frame, "Acknowledgement", str);
+            }
+		});
+		
+		about.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				File dis = new File(getWD() + "/VERSION");
+				FileInputStream fis = null;
+				try {
+					fis = new FileInputStream(dis);
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+				byte[] data = new byte[(int) dis.length()];
+				try {
+					fis.read(data);
+					fis.close();
+				} catch (IOException e2) {
+					e2.printStackTrace();
+				}
+
+				String str = "";
+				try {
+					str = new String(data, "UTF-8");
+				} catch (UnsupportedEncodingException e1) {
+					e1.printStackTrace();
+				}
+				Tools.showLongMessage(frame, "About BCBToolKit", str);
+            }
+		});
+	}
+	
+	public BCBToolKitIHM getBCB() {
+		return this;
+	}
+	
+	public JFrame getFrame() {
+		return this.frame;
+	}
+	
+	public String getWD() {
+		return this.wd;
+	}
+	
+	public HashMap<BCBEnum.Param, String> getPathsMap() {
+		HashMap<BCBEnum.Param, String> tmp = new HashMap<BCBEnum.Param, String>(this.pathsMap);
+		return tmp;
+	}
+	
+	public HashMap<BCBEnum.Param, File> getFilesMap() {
+		HashMap<BCBEnum.Param, File> tmp = new HashMap<BCBEnum.Param, File>(this.filesMap);
+		return tmp;
+	}
+	
+	public String getPath(BCBEnum.Param p) {
+		return pathsMap.get(p);
+	}
+	
+	public File getFile(BCBEnum.Param p) {
+		return filesMap.get(p);
+	}
+	
+	public HashMap<BCBEnum.Param, Browser> getBroMap() {
+		return new HashMap<BCBEnum.Param, Browser>(this.broMap);
+	}
+	
+	/**
+	 * Set s as the path of the file corresponding to p. 
+	 * @param p != null
+	 * @param s != null
+	 */
+	public void setFileMapPath(BCBEnum.Param p, String s) {
+		if (p == null || s == null) {
+			throw new IllegalArgumentException("Param or String is null");
+		}
+		if (this.pathsMap.containsKey(p)) {
+			this.pathsMap.put(p, s);
+		}
+	}
+	
+	/**
+	 * Add a browser in broMap to save its value after shutdown if the option 
+	 * 	is checked.
+	 * @param bro != null
+	 */
+	public void addBro(BCBEnum.Param p, Browser bro) {
+		if (bro == null) {
+			throw new IllegalArgumentException("The browser is null");
+		}
+		this.broMap.put(p, bro);
+	}
+	
+	/**
+	 * Add the location of a frame to the posMap
+	 */
+	public void addLoc(BCBEnum.Index i, Point p) {
+		posMap.put(i, p);
+	}
+	
+	public void updateReset() {
+		getSettings().updateResetControllers();
+	}
+	
+	/**
+     * Return the Tractotron 
+     * @post   null if callTractotron() wasn't used
+     * 		   instance of Tractotron 
+     */
+	public Tractotron getTractotron() {
+		return appTracto;
+	}
+
+	/**
+     * Return the Disco
+     * @post   null if callDisco wasn't used
+     * 		   instance of Disco
+     */
+	public Disco getDisco() {
+		return appDisco;
+	}
+	
+	/**
+     * Return the Cortical
+     * @post   null if callCortical wasn't used
+     * 		   instance of Cortical
+     */
+	public Cortical getCortical() {
+		return appCorti;
+	}
+	
+	/**
+	 * Return the Normalization
+	 * @post null if callNormalization wasn't used
+	 * 		 instance of Normalization 
+	 */
+	public Normalisation getNormalization() {
+		return appNorma;
+	}
+	
+	/**
+     * Return the Statistical
+     * @post   null if callStatistical wasn't used
+     * 		   instance of Statistical
+     */
+	public Statistical getStatistical() {
+		return appStat;
+	}
+	
+	private void formatButton(JButton but) {
+		but.setIconTextGap(10);
+		but.setVerticalTextPosition(SwingConstants.BOTTOM);
+		but.setHorizontalTextPosition(SwingConstants.CENTER);
+	}
+	
+	private Icon buttonIcon(String path, int w, int h) {
+		URL url = getClass().getClassLoader().getResource(path);
+		ImageIcon icon = new ImageIcon(url);
+		Image img = Tools.getScaledImage(icon.getImage(), w, h);
+		icon.setImage(img);
+		return icon;
+	}
+	
+	// CALL FUNCTIONS which will call different functions in different frame
+	/**
+	 * Instanciate the Tractotron with getWD() as parameter
+	 * @post
+	 *    	getTractotron() != null
+	 */    
+	public void callTractotron() {
+		if (appTracto == null) {
+			appTracto = new Tractotron(getWD(), getBCB());
+			updateReset();
+		} else {
+			appTracto.getFrame().setVisible(true);
+		}		
+		//deactivateButtons(tracto);
+	}
+
+    /**
+     * Instanciate the disconnectome maps with getWD() as parameter
+     * @post
+     * 		getDisco() != null
+     */
+	public void callDisco() {
+		if (appDisco == null) {
+			appDisco = new Disco(getWD(), getBCB());
+			updateReset();
+		} else {
+			appDisco.getFrame().setVisible(true);
+		}
+		//deactivateButtons(disco);
+	}
+	
+	/**
+     * Instanciate the cortical thickness with getWD() as parameter
+     * @post
+     * 		getCortical() != null
+     */
+	public void callCortical() {
+		if (appCorti == null) {
+			appCorti = new Cortical(getWD(), getBCB());
+			updateReset();
+		} else {
+			appCorti.getFrame().setVisible(true);
+		}
+		//deactivateButtons(corti);
+	}
+	
+	/**
+	 * Instanciate the Normalization with getWD() as parameter
+	 * @post
+	 * 		getNormalization != null
+	 */
+	public void callNormalization() {
+		if (appNorma == null) {
+			appNorma = new Normalisation(getWD(), getBCB());
+			updateReset();
+		} else {
+			appNorma.getFrame().setVisible(true);
+		}
+	}
+	
+	/**
+     * Instanciate the Statistical analysis with getWD() as parameter
+     * @post
+     * 		getStatistical() != null
+     */
+	public void callStatistical() {
+		if (appStat == null) {
+			appStat = new Statistical(getWD(), getBCB());
+			updateReset();
+		} else {
+			appStat.getFrame().setVisible(true);
+		}
+	}
+	
+	/**
+	 * Call this to do general actions when sub-app is closed
+	 */
+	public void closingApp() {
+		//activateButtons();
+		saveDefPaths();
+	}
+	
+	private void saveDefPaths() {
+		if (savePaths) {
+			for (Browser b : broMap.values()) {
+				b.setConf();
+			}
+		} else {
+			for (BCBEnum.Param p : pathsMap.keySet()) {
+				getConfig().setVal(p, "");
+			}
+		}
+	}
+
+	public void closing() {
+		saveDefPaths();
+
+		if (appTracto != null && appTracto.getFrame().isVisible()) {
+			appTracto.closing();
+		}
+		if (appDisco != null && appDisco.getFrame().isVisible()) {
+			appDisco.closing();
+		}
+		if (appCorti != null && appCorti.getFrame().isVisible()) {
+			appCorti.closing();
+		}
+		if (appNorma != null && appNorma.getFrame().isVisible()) {
+			appNorma.closing();
+		}
+		if (appStat != null && appStat.getFrame().isVisible()) {
+			appStat.closing();
+		}
+		//Must be before shutdown because we need frames ...
+		if (setFrame.saveLocations()) {
+			this.saveLocations();
+		} else {
+			for (BCBEnum.Index p : BCBEnum.Index.values()) {
+				conf.deleteProp(p.name());
+			}
+		}
+		
+		if (appTracto != null) {
+			appTracto.shutDown();
+		}
+		if (appDisco != null) {
+			appDisco.shutDown();
+		}
+		if (appCorti != null) {
+			appCorti.shutDown();
+		}
+		if (appNorma != null) {
+			appNorma.shutDown();
+		}
+		if (appStat != null) {
+			appStat.shutDown();
+		}
+		conf.saveConfig();
+		frame.dispose();
+	}
+	
+	public void deactivateButtons(JButton but) {
+		for (JButton j : butSet) {
+			if (j != but) {
+				j.setEnabled(false);
+			}
+		}
+		// Update reset buttons of the SettingsFrame
+		updateReset();
+	}
+	
+	public void activateButtons() {
+		for (JButton j : butSet) {
+				j.setEnabled(true);
+		}
+	}
+
+	public void savePaths(boolean b) {
+		this.savePaths = b;
+	}
+	
+	private void saveLocations() {
+		this.addLoc(BCBEnum.Index.GENERAL, this.getLocation());
+		for (BCBEnum.Index i : posMap.keySet()) {
+			Point p = posMap.get(i);
+			conf.setVal(i, (int)p.getX() + " " + (int)p.getY());
+		}
+	}
+	
+	public Point getLocation() {
+		return frame.getLocationOnScreen();
+	}
+	
+	public void setCustomLocation(JFrame f, BCBEnum.Index index) {
+		String x = conf.getVal(index.name()).split(" ")[0];
+		String y = conf.getVal(index.name()).split(" ")[1];
+		f.setLocation(new Point(Integer.parseInt(x), Integer.parseInt(y)));
+	}
+	
+	/**
+	 * Removing temprary folder if there is a cancellation
+	 * @param tmpPath the path of the temporary folder 
+	 */
+	public void cancelActions(String tmpPath, SwingWorker<Void, Void> w) {
+		w.cancel(true);
+		String[] array2 = {"rm", "-rf", tmpPath};
+		try {
+			Runtime.getRuntime().exec(array2);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Remove the border of the component c
+	 * @param c
+	 */
+	public void removeBorder(JComponent c) {
+		c.setBorder(BorderFactory.createEmptyBorder());
+	}
+
+	//Model
+	@Override
+	public void openSettings() {
+		setFrame.openSettings(BCBEnum.Index.GENERAL);
+	}
+	
+	public void openSettings(BCBEnum.Index index) {
+		setFrame.openSettings(index);
+	}
+
+	@Override
+	public SettingsFrame getSettings() {
+		return this.setFrame;
+	}
+
+	@Override
+	public Config getConfig() {
+		return this.conf;
+	}
+	
+	//POINT D'ENTREE
+	public static void main(final String[] args) {
+		try {
+			// Set cross-platform Java L&F (also called "Metal")
+			UIManager.setLookAndFeel(
+					UIManager.getCrossPlatformLookAndFeelClassName());
+		} 
+		catch (UnsupportedLookAndFeelException e) {
+			// handle exception
+		}
+		catch (ClassNotFoundException e) {
+			// handle exception
+		}
+		catch (InstantiationException e) {
+			// handle exception
+		}
+		catch (IllegalAccessException e) {
+			// handle exception
+		}
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				if (args.length != 1) {
+					String script = "";
+					if (Tools.isOSX()) {
+						script = "BCBToolKit.command";
+					} else {
+						script = "BCBToolKit.sh";
+					}
+		            System.out.println("You have to launch this application with " + script);
+		        } else {
+		        	new BCBToolKitIHM(args[0]).display();
+		        }
+			}
+		});
+	}
+}

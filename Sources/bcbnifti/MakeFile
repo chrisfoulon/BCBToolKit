@@ -1,0 +1,24 @@
+CC=gcc 
+CFLAGS=-Wall -std=c99 -pedantic -g
+
+EXEC=bcbnifti
+
+all:bcbnifti main
+
+main : main.o
+	$(CC) $(CFLAGS) -o $@ $^
+
+main.o : main.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+bcbnifti : bcbnifti.o
+	$(CC) $(CFLAGS) -o $@ $^
+
+bcbnifti.o : bcbnifti.c bcbnifti.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+clean :
+	$(RM) -rf *.o
+
+mrproper : clean
+	$(RM) -rf $(EXEC)

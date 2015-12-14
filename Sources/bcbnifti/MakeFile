@@ -1,9 +1,17 @@
-CC=gcc 
-CFLAGS=-Wall -std=c99 -pedantic -g
+export CC=gcc
+export CFLAGS=-Wall -std=c99 -pedantic -g
+export LDFLAGS=
+
+export OBJ= $
+
+FSLIO_DIR=fslio
+NIFTIIO_DIR=niftiio
+ZNZLIB_DIR=znzlib
 
 EXEC=bcbnifti
 
-all:bcbnifti main
+all:$(EXEC)
+	(cd $FSLIO_DIR
 
 main : main.o
 	$(CC) $(CFLAGS) -o $@ $^

@@ -10,9 +10,11 @@ export INC=-I$(ROOT_DIR)
 #mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 #current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
-FSLIO_DIR=fslio
-NIFTIIO_DIR=niftiio
-ZNZLIB_DIR=znzlib
+FSLIO=fslio/libfslio.a
+NIFTIIO=niftiio/libniftiio.a
+ZNZLIB=znzlib/znzlib.a
+
+LIBFILES=$(ZNZLIB) $(FSLIO) $(NIFTIIO)
 
 LIBS=-lm -lz
 
@@ -36,7 +38,7 @@ lib:
 		cd ..; \
 	done
 
-main : main.o znzlib/libznz.a
+main : main.o $(LIBFILES)
 	$(CC) $(CFLAGS) ${LDFLAGS} -o $@ $^ ${LIBS}
 
 main.o : main.c

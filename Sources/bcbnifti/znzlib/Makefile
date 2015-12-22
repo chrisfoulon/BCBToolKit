@@ -1,18 +1,18 @@
 PROJNAME = znzlib
 
-LIBS = -lznz -lm -lz 
+#LIBS = -lznz -lm -lz 
 
 OBJS=znzlib.o
 
 all: libznz.a
 
-libznz.a: znzlib.o
-	${AR} -r libznz.a znzlib.o
+libznz.a: $(OBJS)
+	${AR} -r libznz.a $(OBJS)
 
 # -I/usr/include
 
-znzlib.o: znzlib.c znzlib.h
-	gcc -Wall -std=c99 -pedantic -g -Wno-unused-variable -o $@ -c $<
+$(OBJS): znzlib.c znzlib.h
+	$(CC) $(CFLAGS) -o $@ -c $< $(INC)
 	
 clean:
 	rm -rf *.o

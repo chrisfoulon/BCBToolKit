@@ -1,6 +1,6 @@
 export CC=gcc
 #-Wno-unused-but-set-variable there is a variable in nifti_io.c which isn't used ... 
-export CFLAGS=-Wall -std=c99 -pedantic -g -Wno-unused-variable
+export CFLAGS=-Wall -std=c99 -pedantic -g -Wno-unused-variable -DHAVE_ZLIB
 export LDFLAGS=
 export AR=ar
 
@@ -12,7 +12,7 @@ export INC=-I$(ROOT_DIR)
 
 FSLIO=fslio/libfslio.a
 NIFTIIO=niftiio/libniftiio.a
-ZNZLIB=znzlib/znzlib.a
+ZNZLIB=znzlib/libznz.a
 
 LIBFILES=$(ZNZLIB) $(FSLIO) $(NIFTIIO)
 
@@ -22,14 +22,7 @@ LIBDIR=znzlib niftiio fslio
 
 EXEC=bcbnifti main
 
-all: lib main
-
-libznz.a: 
-	cd znzlib && ${MAKE}
-
-libniftiio.a: libznz.a
-
-libfslio.a:  
+all: lib main 
 
 #Rule to compile and create all libs
 lib:
@@ -42,7 +35,7 @@ main : main.o $(LIBFILES)
 	$(CC) $(CFLAGS) ${LDFLAGS} -o $@ $^ ${LIBS}
 
 main.o : main.c
-	$(CC) $(CFLAGS) ${LDFLAGS} -o $@ -c $^
+	$(CC) $(CFLAGS) ${LDFLAGS} -o $@ -c $^ $(INC)
 
 bcbnifti : bcbnifti.o
 	$(CC) $(CFLAGS) -o $@ $^

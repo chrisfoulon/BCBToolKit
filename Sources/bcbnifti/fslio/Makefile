@@ -6,11 +6,11 @@ SCRIPTS = remove_ext fsloutputtype imtest imglob imcp imln imrm immv
 
 all: libfslio.a
 
+$(OBJS): fslio.c fslio.h
+	$(CC) $(CFLAGS) -o $@ -c $< $(INC)
+
 libfslio.a: $(OBJS)
 	$(AR) -r libfslio.a $(OBJS)
-
-fslio.o: fslio.c fslio.h
-	$(CC) $(CFLAGS) -o $@ -c $< $(INC)
 	
 clean:
 	rm -rf *.o

@@ -56,3 +56,5 @@ mrproper : clean
 		cd $$dir && $(MAKE) $@; \
 		cd ..; \
 	done
+	
+reset : mrproper all

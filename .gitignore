@@ -10,3 +10,4 @@ Tools/installR/**
 Tools/binaries/ANTs/**
 Sources/bcbnifti/initFSLEnv
 Sources/bcbnifti/clu_*
+Sources/bcbnifti/untest.sh

@@ -1,6 +1,7 @@
 package Models;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -19,6 +20,7 @@ import IHM.LoadingBar;
 import IHM.Tools;
 
 public class CorticalModel {
+	public static final String logFile = "logCorticalThickness.txt"; 
 	private String t1Dir;
 	private String resultDir;
 	//The execution path of the software
@@ -110,9 +112,23 @@ public class CorticalModel {
 			}
 			out.close();
 			Scanner err = new Scanner(proc.getErrorStream());
+			String log = new String("");
 			while (err.hasNextLine()) {
-				erreur += err.nextLine() + "\n";
+				String tmperr = err.nextLine();
+				if (tmperr.startsWith("+")) {
+					log += tmperr + "\n";
+				} else {
+					erreur += tmperr + "\n";
+				}
 			}
+			
+			try {
+				FileWriter writer = new FileWriter(resultDir + "/" + logFile, false); 
+				writer.write(log);
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
 			err.close();
 		} catch (IOException e) {
 			Writer writer = new StringWriter();

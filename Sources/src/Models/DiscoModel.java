@@ -19,6 +19,7 @@ import IHM.LoadingBar;
 import IHM.Tools;
 
 public class DiscoModel {
+	public static final String logFile = "logDisconnectome.txt"; 
 	private String lesionDir;
 	private String resultDir;
 	//The execution path of the software
@@ -103,7 +104,7 @@ public class DiscoModel {
 		perms.add(PosixFilePermission.OTHERS_READ);
 		perms.add(PosixFilePermission.OTHERS_EXECUTE);
 		
-		String erreur = "";
+		Boolean error = false;
 		
 		try {
 			
@@ -131,11 +132,7 @@ public class DiscoModel {
 				}
 			}
 			out.close();
-			Scanner err = new Scanner(proc.getErrorStream());
-			while (err.hasNextLine()) {
-				erreur += err.nextLine() + "\n";
-			}
-			err.close();
+			error = Tools.scriptError(proc, resultDir, logFile, frame);
 		
 		} catch (IOException e) {
 			Writer writer = new StringWriter();
@@ -145,15 +142,9 @@ public class DiscoModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		if (erreur != "") {
-			String message = "**** SCRIPT ERROR ****\n"
-							 + erreur
-							 + "**** SCRIPT ERROR END ****\n";
-			Tools.showErrorMessage(frame, message);
-			return;
-		} else {
+		if (!error) {
 			Tools.showMessage(frame, "End !", "Finished!!! Disconnectome maps saved in " + resultDir);
-			return;
 		}
+		return;
 	}
 }

@@ -322,7 +322,7 @@ public class Tractotron {
 	}
 
 	public void closing() {
-		getBCB().addLoc(BCBEnum.Index.NORMALISATION, this.getLocation());
+		getBCB().addLoc(BCBEnum.Index.TRACTOTRON, this.getLocation());
 		getBCB().closingApp();
 		frame.setVisible(false);
 	}

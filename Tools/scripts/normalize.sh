@@ -2,7 +2,7 @@
 #Normalize Patients - Michel Thiebaut de Schotten & Chris Foulon
 #$1 = T1Folder $2 LesionFolder $3 ResultFolder $4 templateFile $5 betValue $6 keepTmp $7 otherFilesFolder $8 otherResultFolder
 [ $# -lt 6 ] && { echo "Usage : $0 T1Folder LesionFolder ResultFolder templateFile betValue keepTmp [-OPTIONAL otherFilesFolder] [-OPTIONAL otherResultFolder]"; exit 1; }
-
+set -x
 path=${PWD}/Tools
     
 lib=$path/libraries/lib

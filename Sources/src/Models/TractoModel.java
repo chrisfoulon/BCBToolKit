@@ -21,6 +21,7 @@ import IHM.LoadingBar;
 import IHM.Tools;
 
 public class TractoModel {
+	public static final String logFile = "logTractotron.txt"; 
 	private String lesionDir;
 	private String tractsDir;
 	private File result;
@@ -88,10 +89,8 @@ public class TractoModel {
 			throw new IllegalStateException(
 					"You have to select the result file");
 		}
-		
-		String retour = "";
-		
-		String erreur = "";
+				
+		Boolean error = false;
 		// On vide le fichier result. 
 		try {
 			FileWriter writer = new FileWriter(result, false); 
@@ -125,15 +124,12 @@ public class TractoModel {
 			
 			Scanner out = new Scanner(proc.getInputStream());
 			String tmp = "";
-			//int nbPat = 0;
 			int progress = 0;
 			while (out.hasNextLine()) {
 				tmp = out.nextLine();
 				if (tmp.startsWith("#")) {
 					StringTokenizer token = new StringTokenizer(tmp, "#\n");
 					if (token.hasMoreTokens()) {
-						//nbPat = Integer.parseInt(token.nextToken());
-						//setNbTicks(nbPat);
 						setNbTicks(new File(lesionDir).listFiles(fileNameFilter).length
 									* new File(tractsDir).listFiles(fileNameFilter).length);
 					} else {
@@ -141,22 +137,11 @@ public class TractoModel {
 						loading.setWidth(progress);
 					}
 				} else {
-					retour += out.nextLine();
+					System.out.println(tmp);
 				}
 			}
 			out.close();
-			Scanner err = new Scanner(proc.getErrorStream());
-			while (err.hasNextLine()) {
-				erreur += err.nextLine() + "\n";
-			}
-			err.close();
-			if (erreur != "") {
-				String message = "**** SCRIPT ERROR(1) ****\n"
-								 + erreur
-								 + "**** SCRIPT ERROR END ****\n";
-				Tools.showErrorMessage(frame, message);
-				return;
-			}
+			error = Tools.scriptError(proc, result.getParent(), logFile, frame);
 			
         } catch (IOException e) {
 			Writer writer = new StringWriter();
@@ -166,63 +151,9 @@ public class TractoModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		if (retour == "") {
+		if (!error) {
 			Tools.showMessage(frame, "End !", "Data properly written in the result file");
-			return;
-		} else {
-			String message = "**** SCRIPT ERROR(2) ****\n"
-					 + erreur
-					 + "**** SCRIPT ERROR END ****\n";
-			Tools.showErrorMessage(frame, message);
-			return;
 		}
-	}
-	
-	public void testR() {
-		//On donne les droits d'exécution sur le script
-		Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
-		// add owners permissions
-		perms.add(PosixFilePermission.OWNER_READ);
-		perms.add(PosixFilePermission.OWNER_WRITE);
-		perms.add(PosixFilePermission.OWNER_EXECUTE);
-		// add group permissions
-		perms.add(PosixFilePermission.GROUP_READ);
-		perms.add(PosixFilePermission.GROUP_EXECUTE);
-		// add others permissions
-		perms.add(PosixFilePermission.OTHERS_READ);
-		perms.add(PosixFilePermission.OTHERS_EXECUTE);
-
-	    try {
-			Files.setPosixFilePermissions(Paths.get(exeDir + "/test.r"), perms);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		String[] array2 = {exeDir + "/test.r"};
-
-		try {
-			Process proc = Runtime.getRuntime().exec(array2);
-			
-			Scanner out = new Scanner(proc.getInputStream());
-			//String tmp = "";
-			//int progress = 0;
-			// Le script renvoi 5 # par patient
-			//setNbTicks(new File(lesionDir).listFiles(fileNameFilter).length * 5);
-			while (out.hasNextLine()) {
-				System.out.println(out.next());
-			}
-			out.close();
-			String erreur = new String("");
-			Scanner err = new Scanner(proc.getErrorStream());
-			while (err.hasNextLine()) {
-				erreur += err.nextLine() + "\n";
-			}
-			err.close();
-			System.out.println(erreur);
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-	}
+		return;
+	}	
 }

@@ -1,6 +1,6 @@
 #! /bin/bash
 #hypertron v1.0 - Michel Thiebaut de Schotten & Chris Foulon
-
+set -x
 path=${PWD}/Tools
 
 lib=$path/libraries/lib

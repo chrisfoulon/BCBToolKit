@@ -1,6 +1,7 @@
 package Models;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -19,6 +20,7 @@ import IHM.LoadingBar;
 import IHM.Tools;
 
 public class NormalisationModel {
+	public static final String logFile = "logNormalisation.txt"; 
 	private String tempFile;
 	private String t1Dir;
 	private String lesDir;
@@ -157,6 +159,8 @@ public class NormalisationModel {
 				System.out.println(inLoop);
 			}
 			out.close();
+			
+			String log = new String("");
 			Scanner err = new Scanner(proc.getErrorStream());
 			while (err.hasNextLine()) {
 				String tmp = err.nextLine();
@@ -166,11 +170,20 @@ public class NormalisationModel {
 						tmp.toLowerCase().contains(sigmas.toLowerCase()) ||
 						tmp.equals("")) {
 					//nothing !
-				} else {
+				} else if (tmp.startsWith("+")) {
+					log += tmp + "\n";
+				}else {
 					erreur += tmp + "\n";
 				}
 			}
 			err.close();
+			try {
+				FileWriter writer = new FileWriter(resDir + "/" + logFile, false); 
+				writer.write(log);
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		
 		} catch (IOException e) {
 			Writer writer = new StringWriter();

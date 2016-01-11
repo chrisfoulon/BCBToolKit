@@ -11,7 +11,8 @@ public final class BCBEnum {
 		DISCONNECTOME(2),
 		CORTICAL(3),
 		NORMALISATION(4),
-		STATISTICAL(5);
+		ANACOM(5),
+		STATISTICAL(6);
 		
 		private int index;
 		
@@ -60,6 +61,7 @@ public final class BCBEnum {
 		SMAP1DIR("default STATISTICAL map1"),
 		SMAP2DIR("default STATISTICAL map2"),
 		SRESDIR("default STATISTICAL result"),
+		//ANACOM
 		//General
 		STARTDIR("start directory"),
 		// WARNING : for SAVE_PATHS the value "" means false "true" means what it means
@@ -81,11 +83,12 @@ public final class BCBEnum {
 	}
 
 	public static enum fType {
-		DIR("dir"), 
-		XLS("xls"),
+		CSV("csv"),
+		DIR("dir"),
 		NII("nii"),
 		NIIGZ("nii.gz"),
-		OTH("oth");
+		OTH("oth"), 
+		XLS("xls");
 		
 		private String key = "";
 		

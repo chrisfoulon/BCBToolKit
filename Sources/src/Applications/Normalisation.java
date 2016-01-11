@@ -38,7 +38,6 @@ public class Normalisation {
 	public static final int FRAME_HEIGHT = 500;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
-	public static final int INFRAME_PADDING = 20;
 	public static final int LINE_HEIGHT = 20;
 	public static final String NORMA_TITLE = "Normalisation";
 	public final String DEF_TEMP;

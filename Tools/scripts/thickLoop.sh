@@ -1,6 +1,6 @@
 #! /bin/bash
 #Cortical Thickness - Michel Thiebaut de Schotten & Chris Foulon
-
+set -x
 path=${PWD}/Tools
 lib=$path/libraries/lib
 bin=$path/binaries/bin

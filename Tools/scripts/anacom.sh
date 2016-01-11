@@ -1,9 +1,14 @@
 #! /bin/bash
 #Anacom - Serge Kinkingnéhun & Michel Thiebaut de Schotten & Chris Foulon 
 
-#Counter for adding value in cases 
+set -x
+
+#We can juste have patient files and one mean value as parameter
+
+
+#Counter for adding value in cells 
 i=0
-#Here we fill arrays with the two columns of the csv file 
+#Here we fill arrays with the two columns of the csv file, IFS define separators 
 while IFS=, read pat[$i] sco[$i]
 do
     i=$((i+1))

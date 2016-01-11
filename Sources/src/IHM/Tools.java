@@ -6,6 +6,9 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Scanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -138,4 +141,48 @@ public final class Tools {
 		}
 	}
 	
+	/**
+	 * Catch the error stream, filter the log trace and write it in 
+	 * path/logName file, check if there is an real error and if yes, 
+	 * write it in a popup and return true. 
+	 * @param proc : the Process where the script was executed
+	 * @param path : the path to the result directory, where le logFile
+	 * will be written.
+	 * @param logName : the logfile name
+	 * @param frame : the JFrame where the error popup will appear
+	 * @return true if there is an error (excluding log trace)
+	 * 		   false if not
+	 */
+	public static Boolean scriptError(Process proc, String path, String logName, JFrame frame) {
+		String erreur = new String("");
+		Scanner err = new Scanner(proc.getErrorStream());
+		String log = new String("");
+		while (err.hasNextLine()) {
+			String tmperr = err.nextLine();
+			if (tmperr.startsWith("+")) {
+				log += tmperr + "\n";
+			} else {
+				erreur += tmperr + "\n";
+			}
+		}
+		
+		try {
+			FileWriter writer = new FileWriter(path + "/" + logName, false); 
+			writer.write(log);
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
+		
+		err.close();
+		if (!erreur.equals("")) {
+			String message = "**** SCRIPT ERROR ****\n"
+							 + erreur
+							 + "**** SCRIPT ERROR END ****\n";
+			Tools.showErrorMessage(frame, message);
+			return true;
+		}
+		
+		return false;
+	}
 }

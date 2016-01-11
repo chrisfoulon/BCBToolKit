@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include "znzlib/znzlib.h"
 #include "fslio/fslio.h"
 #include "niftiio/nifti1_io.h"
+#include "znzlib/znzlib.h"
 
 
 int addValTo(double val, double** vec, int index, int len) {
@@ -35,10 +35,6 @@ int addValTo(double val, double** vec, int index, int len) {
   return len + 1;
 }
 
-void copy (void *const dest, void *const src, size_t size) {
-   memcpy(dest, src, size);
-}
-
 /**
  * We assume that fslio is complete, i.e it contains a header and data.
  */
@@ -62,13 +58,17 @@ void createROI(FSLIO* fslio, int x, int y, int z, int radius) {
   void* p = NULL;
   
   switch(fslio->niftiptr->datatype) {
-    case NIFTI_TYPE_UINT8:
+    case NIFTI_TYPE_UINT8: {
       //fslio->niftiptr->data[pos] = UINT8;
       p = &UINT8;
+      //unsigned char *p = (unsigned char *) fslio->niftiptr->data;
       break;
-    case NIFTI_TYPE_INT8:
-      p = &INT8;
-      break;
+    }
+    case NIFTI_TYPE_INT8: {
+	//p = &INT8;
+	void* p;
+	break;
+      }
     case NIFTI_TYPE_UINT16:
       p = &UINT16;
       break;
@@ -98,9 +98,11 @@ void createROI(FSLIO* fslio, int x, int y, int z, int radius) {
     case NIFTI_TYPE_COMPLEX128:
     case NIFTI_TYPE_COMPLEX256:
     case NIFTI_TYPE_COMPLEX64:
-  default:
-  fprintf(stderr, "\nWarning, cannot support %s yet.\n",nifti_datatype_string(fslio->niftiptr->datatype));
-      return;
+  default: {
+    void* p;
+    fprintf(stderr, "\nWarning, cannot support %s yet.\n",nifti_datatype_string(fslio->niftiptr->datatype));
+	return;
+    }
   }
   for (int tx = x - radius; tx < x + radius; tx++) {
     for (int ty = y - radius; ty < y + radius; ty++) {
@@ -108,7 +110,10 @@ void createROI(FSLIO* fslio, int x, int y, int z, int radius) {
 	if (tx < xx && ty < yy && tz < zz) {
 	  int pos = tx * ty * tz;
 	  
-	  copy(fslio->niftiptr->data + pos * (size_t)fslio->niftiptr->datatype, p, (size_t)fslio->niftiptr->datatype);
+	  memcpy(fslio->niftiptr->data + pos * (size_t)fslio->niftiptr->datatype, p, (size_t)fslio->niftiptr->datatype);
+	  void* fef = fslio->niftiptr->data + pos * (size_t)fslio->niftiptr->datatype;
+	  int* yey = (int*) fef;
+	  printf("[%d]", *yey);
 	}
       }
     }
@@ -116,94 +121,113 @@ void createROI(FSLIO* fslio, int x, int y, int z, int radius) {
 }
 
 int main(int argc, char **argv) {
-    int fd = open( "testni", O_RDWR );
-    znzFile z = znzdopen(fd, "rw", 0);
-    znzFile* p = &z;
-    Xznzclose(p);
-    
-    FSLIO *fslio = FslInit();
-    /*const char* fname = "/home/tolhs/Tractotron/BCBToolKit/Lesions/lesionpatient1.nii.gz";
-    char* varname = "/home/tolhs/MesDocuments/normalize/RES.nii";
-    varname = fname;*/
-    char* varname = "/home/tolhs/MesDocuments/ANACOM/lesions/lesionpatient1.nii.gz";
-    
-    char** tabl = (char**)malloc(sizeof(*tabl) * 10);
-    
-    for (int i = 0; i < 10; i++) {
-      tabl[i] = (char*)malloc(sizeof(char) * 62);
-      sprintf(tabl[i], "/home/tolhs/MesDocuments/ANACOM/lesions/lesionpatient%d.nii.gz", i);
-    }
-    
-    char* output = "/home/tolhs/MesDocuments/ANACOM/lesions/testIMG.nii.gz";
-    
-    
-    FSLIO *out;
-    
-    FILE* f = fopen(output, "w");
-    if (f != NULL)
-    {
-        fclose(f);
-	printf("Ok fopen and fclose\n"); 
-    }
-    
-    if (nifti_validfilename(output)) {
-	printf("nifti_validfilename(output) OK.\n");
-    }
-    FslReadAllVolumes(fslio, varname);
-    printf("OK \n");
-    
-    out = FslOpen(output, "rw");
-    
-    FslCloneHeader(out, fslio);
-    printf("OKCLONE \n");
-    FslWriteAllVolumes(out, fslio->niftiptr->data);
-    printf("OKWRITE \n");
-    //FslClose(fslio);
-    //printf("OK2 \n");
-    
-    printf("DataType : %d\n", fslio->niftiptr->datatype);
-    printf("Sizeof int : %lu\n", sizeof(double));
-    printf("Datatype to string : %s\n", nifti_datatype_to_string(fslio->niftiptr->datatype));
-    
-    double*** mat = FslGetVolumeAsScaledDouble(fslio, 0);
-    
-    
-    //createROI(out, 50, 50, 50, 10);
-    
-    double*** mat2 = FslGetVolumeAsScaledDouble(out, 0);
-    
-    for (int i = 0; i < 50; i++) {
-      printf("[%f]", mat[i][i][i]);
-    }
-    
-    for (int i = 50 * 50 * 50; i < 50 * 50 * 50 + 20; i++) {
-      printf("[%f]", mat2[i][i][i]);
-    }
-    
-    printf("\nHello world\n");
-    
-    double* vec = (double*)malloc(sizeof(*vec) * 10); 
-    double* tab = (double*)malloc(sizeof(*tab) * 11);
-    
-    for (double i = 0; i < 10; i++) { 
-      vec[(int)i] = i;
-    }
-    for (int i = 0; i < 10; i ++) {
-      printf("[%f]", vec[i]);
-    }
-    int len = 10;
-    len = addValTo(45.2, &vec, 5, 10);
-    printf("\n TEst pointeur : %p\n", vec);
-    
-    printf("\n TEst pointeur : %p\n", &vec);
-    printf("\n");
-    printf("TAB\n");
-    for (int i = 0; i < len; i ++) {
-      printf("[%f]", vec[i]);
-    }
-    
-    printf("TEST\n");
-    
-    printf("\n");
+  // lecture 
+  char* input = "/home/tolhs/MesDocuments/ANACOM/lesions/another.nii";
+  
+  char* output = "/home/tolhs/MesDocuments/ANACOM/lesions/out.nii.gz";
+  FSLIO* in;
+  FSLIO* out;
+  short x,y,z,v,dt;
+  void *buffer;
+  int bufsize;
+  in = FslOpen(input,"rb");
+  FslGetDim(in,&x,&y,&z,&v);
+  bufsize = x * y * z * v * (FslGetDataType(in,&dt) / 8);
+  buffer = (void *) calloc(bufsize,1);
+  FslReadVolumes(in,buffer,v);
+  out = FslOpen(output,"wb");
+  
+  unsigned char * str = (unsigned char *)buffer;
+  for (int i = 0; i < 50; i++) {
+    str[i] = (unsigned char)100;
+  }
+  buffer = (void *)str;
+  FslCloneHeader(out,in);
+  FslWriteHeader(out);
+  
+  FslWriteVolumes(out,buffer,out->niftiptr->dim[4]);
+  
+  printf("fslgetdim in : %d|%d|%d|%d\n", x, y , z, v);
+  printf("DataType : %d\n", out->niftiptr->datatype);
+  printf("Sizeof int : %lu\n", sizeof(double));
+  printf("Datatype to string : %s\n", nifti_datatype_to_string(out->niftiptr->datatype));
+  printf("Datatype to string (in): %s\n", nifti_datatype_to_string(in->niftiptr->datatype));
+  printf("WriteMode of output : %d\n", out->write_mode);
+  
+  FslClose(out);
+  
+  FslClose(in);
+  void* b1 = (void *) calloc(bufsize,1);
+  void* b2 = (void *) calloc(bufsize,1);
+  in = out = NULL;
+  in = FslOpen(input,"rb");
+  out = FslOpen(output,"rb");
+  FslGetDim(in,&x,&y,&z,&v);
+  bufsize = x * y * z * v * (FslGetDataType(in,&dt) / 8);
+  
+  FslReadVolumes(in,b1,v);
+  FslReadVolumes(out,b2,v);
+  
+  unsigned char *bb1 = (unsigned char *) b1;
+  unsigned char *bb2 = (unsigned char *) b2;
+  
+  for (int i = 0; i < 50; i++) {
+    printf("[%d]", (unsigned char) bb1[i]);
+  }
+  printf("\n B2 \n");
+  for (int i = 0; i < 50; i++) {
+    printf("[%d]", (unsigned char) bb2[i]);
+  }
+  FslClose(out);
+  
+  FslClose(in);
+  
+  /*FSLIO* in = FslOpen(input, "r");
+  void *buffer;
+  buffer = FslReadAllVolumes(in, input);
+  double*** mat = FslGetVolumeAsScaledDouble(in, 0);
+  for (int i = 0; i < 50; i++) {
+    printf("[%f]", mat[i][i][i]);
+  }
+  
+  // écriture du nouveau fichier
+  char* output = "/home/tolhs/MesDocuments/ANACOM/lesions/out.nii.gz";
+  FSLIO* fslio;
+  fslio = FslOpen(output,"w");
+  printf("Open\n");
+  FslWriteHeader(fslio);
+  printf("WriteHeader\n");
+  FslCloneHeader(fslio, in);
+  printf("Clone\n");
+  FslWriteAllVolumes(fslio, buffer);
+  printf("FslWriteAllVolumes\n");
+  char* str = (char *)buffer;
+  for (int i = 0; i < 50; i++) {
+    printf("[%f]", str[i*i*i]);
+  }
+  short x,y,z,t=1;
+  FslGetDim(fslio,&x,&y,&z,&t);
+  printf("fslgetdim in : %d|%d|%d|%d\n", x, y , z, t);
+  printf("DataType : %d\n", fslio->niftiptr->datatype);
+  printf("Sizeof int : %lu\n", sizeof(double));
+  printf("Datatype to string : %s\n", nifti_datatype_to_string(fslio->niftiptr->datatype));
+  printf("WriteMode of output : %d\n", fslio->write_mode);
+  short int* dim = fslio->niftiptr->dim;
+  printf("Dimensions : [%d][%d][%d][%d][%d][%d][%d][%d]\n", (int)dim[0], (int)dim[1], (int)dim[2], (int)dim[3], (int)dim[4], (int)dim[5], (int)dim[6], (int)dim[7]);
+  dim = in->niftiptr->dim;
+  printf("Source Dimensions : [%d][%d][%d][%d][%d][%d][%d][%d]\n", (int)dim[0], (int)dim[1], (int)dim[2], (int)dim[3], (int)dim[4], (int)dim[5], (int)dim[6], (int)dim[7]);
+  printf("Nvox in : %d\n", in->niftiptr->nvox);
+  printf("Nvox fslio : %d\n", fslio->niftiptr->nvox);
+  
+  double*** mat2 = FslGetVolumeAsScaledDouble(fslio, 0);
+  FslClose(fslio);
+  FslClose(in);
+  printf("Close\n");*/
+  //Pour l'instant, sans ces lignes, il manque les références à la compilation O_____O"
+  znzFile fptr;
+  fptr = znzopen("/home/tolhs/Tractotron/BCBToolKit/Sources/bcbnifti/testnii","wb",1);
+  znzclose(fptr);
+  
+  printf("Hello World\n");
     exit(EXIT_SUCCESS);
 }

@@ -9,4 +9,4 @@ Tools/tmp/**
 Tools/installR/**
 Tools/binaries/ANTs/**
 Sources/bcbnifti/initFSLEnv
-
+Sources/bcbnifti/clu_*

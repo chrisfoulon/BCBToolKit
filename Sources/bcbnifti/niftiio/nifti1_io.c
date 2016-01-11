@@ -2809,7 +2809,7 @@ char * nifti_findhdrname(const char* fname)
 
    /**- if nothing has been found, return NULL */
    free(basename); 
-   free(hdrname);
+   free(hdrname); 
    return NULL;
 }
 

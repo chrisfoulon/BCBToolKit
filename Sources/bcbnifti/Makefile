@@ -22,7 +22,7 @@ LIBDIR=znzlib niftiio fslio
 
 EXEC=bcbnifti main
 
-all: lib main 
+all: lib main
 
 #Rule to compile and create all libs
 lib:
@@ -32,7 +32,7 @@ lib:
 	done
 
 main : main.o $(LIBFILES)
-	$(CC) $(CFLAGS) ${LDFLAGS} -o $@ $^ ${LIBS}
+	$(CC) $(CFLAGS) ${LDFLAGS} -o $@ $^ $(LIBS)
 
 main.o : main.c
 	$(CC) $(CFLAGS) ${LDFLAGS} -o $@ -c $^ $(INC)

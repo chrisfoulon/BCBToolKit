@@ -4,12 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.net.URL;
 
 import javax.swing.Icon;
@@ -20,14 +18,14 @@ import javax.swing.JPanel;
 import javax.swing.SwingWorker;
 
 import Config.BCBEnum;
-import Config.Config;
 import IHM.BCBToolKitIHM;
 import IHM.Browser;
 import IHM.ImagePanel;
 import IHM.LoadingBar;
+import IHM.Tools;
 import Models.StatisticalModel;
 
-public class Statistical {
+public class Statistical extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
 	public static final int FRAME_HEIGHT = 410;
@@ -36,7 +34,6 @@ public class Statistical {
 	public static final int INFRAME_PADDING = 20;
 	public static final int LINE_HEIGHT = 20;
 	public static final String HYPER_TITLE = "Statistical Analysis";
-	private JFrame frame;
 	private ImagePanel background;
 	private JPanel panel;
 	private JPanel topP;
@@ -44,45 +41,22 @@ public class Statistical {
 	private JButton run;
 	private LoadingBar loading;
 	private StatisticalModel model;
-	private String path;
-	private Config conf;
-
-	private BCBToolKitIHM bcb;
 
 	//Browsers
 	private Browser map1Bro;
 	private Browser map2Bro;
 	private Browser resBro;
 
-	//The swingWorker : a thread that will execute the script
-	SwingWorker<Void, Void> worker = null;
-
 	public Statistical(String path, BCBToolKitIHM b) {
-		this.path = path;
-		this.conf = b.getConfig();
-		this.bcb = b;
-		createModel();
-		createView();
-		placeComponents();
-		createController();
+		super(path, b, BCBEnum.Index.STATISTICAL);
 	}
 
 	//COMMANDES
-	public void display() {
-		frame.pack();
-		if (!conf.getVal(BCBEnum.Index.DISCONNECTOME.name()).equals("")) {
-			getBCB().setCustomLocation(frame, BCBEnum.Index.DISCONNECTOME);
-		} else {
-			frame.setLocationRelativeTo(null);
-		}
-		frame.setVisible(true);
-	}
-
-	private void createModel() {
+	protected void createModel() {
 		model = new StatisticalModel(path, this.getFrame());
 	}
 
-	private void createView() {
+	protected void createView() {
 		//Frame
 		frame = new JFrame(HYPER_TITLE); {
 			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
@@ -97,7 +71,7 @@ public class Statistical {
 		int setIcoW = setIco.getIconWidth();
 		//Cr��ation des boutons
 		int padding = 0;
-		if (!isOSX()) {
+		if (!Tools.isOSX()) {
 			padding = -5;
 		}
 		settings = new JButton(setIco);
@@ -124,7 +98,7 @@ public class Statistical {
 		getBCB().addBro(resBro.getParam(), resBro);
 	}
 
-	private void placeComponents() {			
+	protected void placeComponents() {			
 		JPanel top = new JPanel(new FlowLayout(FlowLayout.RIGHT)); {
 			top.add(settings);
 		}
@@ -156,7 +130,7 @@ public class Statistical {
 		frame.add(south, BorderLayout.SOUTH);
 	}
 
-	private void createController() {	
+	protected void createControllers() {	
 		frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e) {
 				closing();
@@ -193,19 +167,8 @@ public class Statistical {
 	}
 
 	//OUTILS
-	public static String getFileExtension(String nomFichier) {
-		File tmpFichier = new File(nomFichier);
-		tmpFichier.getName();
-		int posPoint = tmpFichier.getName().lastIndexOf('.');
-		if (0 < posPoint && posPoint <= tmpFichier.getName().length() - 2) {
-			return tmpFichier.getName().substring(posPoint + 1);
-		} else {
-			return "";
-		}
-	}
-
 	//Modifications des composants
-	private void changeRunButton(JPanel p, int state) {
+	protected void changeRunButton(JPanel p, int state) {
 		// 0 = lancement de run() 1 = Fin de run()
 		if (state == 0) {
 			loading = new LoadingBar();
@@ -226,37 +189,10 @@ public class Statistical {
 		}
 	}
 
-	public BCBToolKitIHM getBCB() {
-		return bcb;
-	}
-
-	public JFrame getFrame() {
-		return this.frame;
-	}
-
-	public static boolean isOSX() {
-		String osName = System.getProperty("os.name");
-		return osName.contains("OS X");
-	}
-
-	public Point getLocation() {
-		return frame.getLocationOnScreen();
-	}
-
+	@Override
 	public void cancel() {
 		if (worker != null) {
 			getBCB().cancelActions(path + "/Tools/tmp/tmpHyp", worker);
 		}
-	}
-
-	public void closing() {
-		getBCB().addLoc(BCBEnum.Index.STATISTICAL, this.getLocation());
-		getBCB().closingApp();
-		frame.setVisible(false);
-	}
-
-	public void shutDown() {
-		cancel();
-		frame.dispose();
 	}
 }

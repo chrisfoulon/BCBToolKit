@@ -16,25 +16,28 @@ import java.util.Set;
 
 import javax.swing.JFrame;
 
-import Config.BCBEnum.Script;
+import Config.BCBEnum;
 import IHM.LoadingBar;
 import IHM.Tools;
 
-public class CorticalModel {
-	public static final String logFile = "logCorticalThickness.txt"; 
-	private String t1Dir;
-	private String resultDir;
+public class AnacomModel {
+	public static final String logFile = "logAnacom.txt"; 
+	private String csvFile;
+	private String lesDir;
+	private String resDir;
 	//The execution path of the software
 	private String path;
 	//The folder of the script
 	private String exeDir;
+	//Threshold value
+	private String thresh;
+	//Should we save tempory files ? 
+	private String saveTmp;
 	private LoadingBar loading;
-	private FilenameFilter fileNameFilter;
-	// The frame which will displays error and end messages 
 	private JFrame frame;
-	
-	
-	public CorticalModel(String path, JFrame f) {
+	private FilenameFilter fileNameFilter;
+
+	public AnacomModel(String path, JFrame f) {
 		this.path = path;
 		this.exeDir = path + "/Tools/scripts";
 		this.frame = f;
@@ -52,23 +55,42 @@ public class CorticalModel {
 		};
 	}
 
-	public void setT1Dir(String str) {
-		t1Dir = str;
+	public void setTempFile(String str) {
+		csvFile = str;
+	}
+
+	public void setLesionDir(String str) {
+		lesDir = str;
+	}
+
+	public void setResultDir(String str) {
+		resDir = str;
 	}
 	
-	public void setResultDir(String str) {
-		resultDir = str;
+	public void setThreshold(String str) {
+		thresh = str;
+	}
+
+	public void setSaveTmp(String str) {
+		if (str == null || str.equals("") || (!str.equals("false") && !str.equals("true"))) {
+			throw new IllegalArgumentException("The value of saveTmp must be true or false");
+		}
+		saveTmp = str;
 	}
 
 	public void setLoadingBar(LoadingBar load) {
 		loading = load;
 	}
-	
+
 	public void setNbTicks(int nb) {
 		loading.setNbTicks(nb);
 	}
 
-	public void run(Boolean saveTmp) {
+	/**
+	 * Execute the script anacom.sh after checking it is executable by 
+	 * the user.
+	 */
+	public void run() {		
 		//On donne les droits d'exécution sur le script
 		Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
 		// add owners permissions
@@ -82,56 +104,51 @@ public class CorticalModel {
 		perms.add(PosixFilePermission.OTHERS_READ);
 		perms.add(PosixFilePermission.OTHERS_EXECUTE);
 
-		try {
-			Files.setPosixFilePermissions(Paths.get(exeDir + Script.CORTICAL.endPath()), perms);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		String[] array = {exeDir + Script.CORTICAL.endPath(), t1Dir,
-				resultDir, saveTmp.toString()};
-		
 		String erreur = "";
-		
+
 		try {
+
+			Files.setPosixFilePermissions(Paths.get(exeDir + BCBEnum.Script.ANACOM.endPath()), perms);
+
+			String[] array;
+
+			array = new String[]{exeDir + BCBEnum.Script.ANACOM.endPath(),
+					lesDir, resDir, csvFile, thresh, saveTmp};
+
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
-			setNbTicks(new File(t1Dir).listFiles(fileNameFilter).length);
+			setNbTicks(new File(lesDir).listFiles(fileNameFilter).length);
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
-				/*
-				 * Attention la boucle augmente la barre de progression plusieurs fois par patient
-				 * car le calcul est long et je voudrais bien que l'on voit quelques chose pendant les 
-				 * calculs même pour une seul patient 
-				 */
-				if (inLoop.startsWith("#PATIENT#")) {
+				if (inLoop.startsWith("#")) {
 					progress++;
 					loading.setWidth(progress);					
 				}
 				System.out.println(inLoop);
 			}
 			out.close();
-			Scanner err = new Scanner(proc.getErrorStream());
+
 			String log = new String("");
+			Scanner err = new Scanner(proc.getErrorStream());
 			while (err.hasNextLine()) {
-				String tmperr = err.nextLine();
-				if (tmperr.startsWith("+")) {
-					log += tmperr + "\n";
-				} else {
-					erreur += tmperr + "\n";
+				String tmp = err.nextLine();
+				if (tmp.startsWith("+")) {
+					log += tmp + "\n";
+				}else {
+					erreur += tmp + "\n";
 				}
 			}
-			
+			err.close();
 			try {
-				FileWriter writer = new FileWriter(resultDir + "/" + logFile, false); 
+				FileWriter writer = new FileWriter(resDir + "/" + logFile, false); 
 				writer.write(log);
 				writer.close();
 			} catch (IOException e) {
 				e.printStackTrace();
-			} 
-			err.close();
+			}
+
 		} catch (IOException e) {
 			Writer writer = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(writer);
@@ -140,6 +157,19 @@ public class CorticalModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		Tools.showLongMessage(frame, "Final Report", erreur);
+		if (!erreur.equals("")) {
+			String message = "**** SCRIPT ERROR ****\n"
+					+ erreur
+					+ "**** SCRIPT ERROR END ****\n";
+			Tools.showErrorMessage(frame, message);
+			return;
+		} else {
+			String finish = "Finished!!! Normalisation saved in " + resDir;
+			String str2 = ""; 
+
+			Tools.showMessage(frame, "End !", 
+					"<html>" + finish + "<br />" + str2 + "</html>");
+			return;
+		}
 	}
 }

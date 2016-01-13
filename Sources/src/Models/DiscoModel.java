@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javax.swing.JFrame;
 
+import Config.BCBEnum.Script;
 import IHM.LoadingBar;
 import IHM.Tools;
 
@@ -78,13 +79,6 @@ public class DiscoModel {
 		loading.setNbTicks(nb);
 	}
 	
-	/*
-	 * Fonction du bouton RUN si la checkBox hypertron est cochée. 
-	 * On utilise un autre fichier de résultat car on a besoin d'un fichier texte et non
-	 * d'un .xls. 
-	 * On ne passait pas les chemins en paramètres donc on va rester cohérent avec le reste
-	 * et utiliser les attributs. 
-	 */
 	public void hyperRun() {
 		if (lesionDir == null) {
 			throw new IllegalStateException(
@@ -108,9 +102,9 @@ public class DiscoModel {
 		
 		try {
 			
-			Files.setPosixFilePermissions(Paths.get(exeDir + "/HypertronModified.sh"), perms);
+			Files.setPosixFilePermissions(Paths.get(exeDir + Script.DISCONNECTOME.endPath()), perms);
 			
-			String[] array = {exeDir + "/HypertronModified.sh", lesionDir, resultDir};
+			String[] array = {exeDir + Script.DISCONNECTOME.endPath(), lesionDir, resultDir};
 
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			
@@ -120,12 +114,6 @@ public class DiscoModel {
 			setNbTicks(new File(lesionDir).listFiles(fileNameFilter).length * nbTracks);
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
-				//tmp += inLoop + "\n";
-				/*
-				 * Attention la boucle augmente la barre de progression plusieurs fois par patient
-				 * car le calcul est long et je voudrais bien que l'on voit quelques chose pendant les 
-				 * calculs même pour une seul patient 
-				 */
 				if (inLoop.startsWith("#")) {
 					progress++;
 					loading.setWidth(progress);					

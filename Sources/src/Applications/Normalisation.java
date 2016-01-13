@@ -24,7 +24,6 @@ import javax.swing.SwingWorker;
 
 import Config.BCBEnum;
 import Config.BCBEnum.fType;
-import Config.Config;
 import IHM.BCBToolKitIHM;
 import IHM.Browser;
 import IHM.ImagePanel;
@@ -32,7 +31,7 @@ import IHM.LoadingBar;
 import IHM.Tools;
 import Models.NormalisationModel;
 
-public class Normalisation {
+public class Normalisation extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
 	public static final int FRAME_HEIGHT = 500;
@@ -40,9 +39,8 @@ public class Normalisation {
 	public static final int ICON_PADDING = 4;
 	public static final int LINE_HEIGHT = 20;
 	public static final String NORMA_TITLE = "Normalisation";
-	public final String DEF_TEMP;
+	public static final String DEFAULT_TEMPLATE = "/Tools/extraFiles/MNI152.nii.gz";
 
-	private JFrame frame;
 	private ImagePanel background;
 	private JPanel panel;
 	private JPanel othP;
@@ -50,10 +48,6 @@ public class Normalisation {
 	private JButton run;
 	private LoadingBar loading;
 	private NormalisationModel model;
-	private String path;
-	private Config conf;
-
-	private BCBToolKitIHM bcb;
 
 	//Browsers
 	private Browser tempBro;
@@ -68,18 +62,8 @@ public class Normalisation {
 	private Browser othBro;
 	private Browser othResBro;
 
-	//The swingWorker : a thread that will execute the script
-	SwingWorker<Void, Void> worker = null;
-
 	public Normalisation(String path, BCBToolKitIHM b) {
-		this.path = path;
-		this.DEF_TEMP = path + "/Tools/extraFiles/MNI152.nii.gz";
-		this.conf = b.getConfig();
-		this.bcb = b;
-		createView();
-		placeComponents();
-		createControllers();
-		createModel();
+		super(path, b, BCBEnum.Index.NORMALISATION);
 	}
 
 	//COMMANDES
@@ -93,11 +77,11 @@ public class Normalisation {
 		frame.setVisible(true);
 	}
 
-	private void createModel() {
+	protected void createModel() {
 		model = new NormalisationModel(path, getFrame());
 	}
 
-	private void createView() {
+	protected void createView() {
 		//Frame
 		frame = new JFrame(NORMA_TITLE); {
 			frame.setMinimumSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
@@ -131,7 +115,7 @@ public class Normalisation {
 		arr.add(fType.NIIGZ);
 		tempBro = new Browser(frame, "Template directory :", arr, 
 				conf, BCBEnum.Param.NTEMPDIR, getBCB());
-		tempBro.setDefPath(DEF_TEMP);
+		tempBro.setDefPath(this.path + DEFAULT_TEMPLATE);
 		tempBro.firstReset();
 
 		getBCB().addBro(tempBro.getParam(), tempBro);
@@ -172,7 +156,7 @@ public class Normalisation {
 		saveTmp.setMargin(new Insets(0, 0, 0, 0));
 	}
 
-	private void placeComponents() {
+	protected void placeComponents() {
 		//NORTH
 		frame.add(background, BorderLayout.NORTH);
 
@@ -218,7 +202,7 @@ public class Normalisation {
 		frame.add(south, BorderLayout.SOUTH);
 	}
 
-	private void createControllers() {	
+	protected void createControllers() {	
 		frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e) {
 				closing();
@@ -311,7 +295,7 @@ public class Normalisation {
 	//OUTILS	
 
 	//Modifications des composants
-	private void changeRunButton(JPanel p, int state) {
+	protected void changeRunButton(JPanel p, int state) {
 		// 0 = lancement de run() 1 = Fin de run()
 		if (state == 0) {
 			loading = new LoadingBar();
@@ -332,13 +316,6 @@ public class Normalisation {
 		}
 	}
 
-	public BCBToolKitIHM getBCB() {
-		return bcb;
-	}
-
-	public JFrame getFrame() {
-		return this.frame;
-	}
 	// GET functions for textfields
 	public String getLesPath() {
 		return lesBro.getPath();
@@ -392,20 +369,10 @@ public class Normalisation {
 		return frame.getLocationOnScreen();
 	}
 
+	@Override
 	public void cancel() {
 		if (worker != null) {
 			getBCB().cancelActions(path + "/Tools/tmp/tmpNorm", worker);
 		}
-	}
-
-	public void closing() {
-		getBCB().addLoc(BCBEnum.Index.NORMALISATION, this.getLocation());
-		getBCB().closingApp();
-		frame.setVisible(false);
-	}
-
-	public void shutDown() {
-		cancel();
-		frame.dispose();
 	}
 }

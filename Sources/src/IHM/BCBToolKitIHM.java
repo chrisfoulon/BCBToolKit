@@ -38,6 +38,8 @@ import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import Applications.AbstractApp;
+import Applications.Anacom;
 import Applications.Cortical;
 import Applications.Disco;
 import Applications.Normalisation;
@@ -62,6 +64,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	private JButton disco;
 	private JButton corti;
 	private JButton norma;
+	private JButton anacom;
 	private JButton stat;
 	//Set of buttons
 	private HashSet<JButton> butSet;
@@ -71,11 +74,6 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	// Determine if files will be saved after shutdown
 	private boolean savePaths;
 	// Applications
-	private Tractotron appTracto;
-	private Disco appDisco;
-	private Cortical appCorti;
-	private Normalisation appNorma;
-	private Statistical appStat;
 	
 	// Map of positions of each frame, including BCBToolBox as GENERAL
 	private Map<BCBEnum.Index, Point> posMap;
@@ -90,6 +88,10 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	 * Updated by the function addBro each time an appli is opened 
 	 */
 	private HashMap<BCBEnum.Param, Browser> broMap;
+	/*
+	 * A map to store reference to each application
+	 */
+	private HashMap<BCBEnum.Index, AbstractApp> appMap;
 	
 	public BCBToolKitIHM(String wd) {
 		this.wd = wd;
@@ -103,6 +105,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		loadMaps();
 		this.broMap = new HashMap<BCBEnum.Param, Browser>();
 		this.posMap = new HashMap<BCBEnum.Index, Point>();
+		this.appMap = new HashMap<BCBEnum.Index, AbstractApp>();
 		
 		createView();
 		placeComponents();
@@ -121,19 +124,19 @@ public class BCBToolKitIHM  implements BCBToolKit {
 					File f = new File(tmp);
 					if (!f.exists()) {
 						Tools.showMessage(frame, "File issue warning", 
-								"Be careful, the " + p.key() + "doesn't exist");
+								"Warning : the " + p.key() + "doesn't exist");
 						pathsMap.put(p, "");
 						filesMap.put(p, null);
 						conf.setVal(p, "");
 					} else if (!f.canRead()) {
 						Tools.showMessage(frame, "File issue warning", 
-								"Be careful, the " + p.key() + "is unreadable");
+								"Warning : the " + p.key() + "is unreadable");
 						pathsMap.put(p, "");
 						filesMap.put(p, null);
 						conf.setVal(p, "");
 					} else if (!f.canWrite()) {
 						Tools.showMessage(frame, "File issue warning", 
-								"Be careful, the " + p.key() + "cannot be wrote");
+								"Warning : the " + p.key() + "cannot be open for writing");
 						pathsMap.put(p, "");
 						filesMap.put(p, null);
 						conf.setVal(p, "");
@@ -179,7 +182,6 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		disclaimer = new JMenuItem("Dislaimer");
 		about = new JMenuItem("About BCBToolKit");
 		// Buttons
-		//tracto = new JButton(twoLinesString("Tractotron", ""), buttonIcon("iconT.png"));
 		tracto = new JButton(buttonIcon("tracto.png", 150, 81));
 		//formatButton(tracto);
 		disco = new JButton(buttonIcon("disco.png", 140, 120));
@@ -190,6 +192,8 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		formatButton(norma);
 		URL url = getClass().getClassLoader().getResource("undercons.png");
 		ImageIcon logo = new ImageIcon(url);
+		anacom = new JButton(Tools.twoLinesString("ANACOM",  ""), logo);
+		formatButton(anacom);
 		stat = new JButton(Tools.twoLinesString("Statistical",  "Analysis"), logo);
 		formatButton(stat);
 		setFrame = new SettingsFrame(conf, this);
@@ -198,6 +202,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		butSet.add(disco);
 		butSet.add(corti);
 		butSet.add(norma);
+		butSet.add(anacom);
 		butSet.add(stat);
 		stat.setEnabled(false);
 	}
@@ -222,6 +227,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 			p.add(disco);
 			p.add(corti);
 			p.add(norma);
+			p.add(anacom);
 			p.add(stat);
 		}
 		frame.setJMenuBar(menu);
@@ -247,31 +253,37 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		
 		tracto.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				callTractotron();
+				callApp(BCBEnum.Index.TRACTOTRON);
             }
 		});
 		
 		disco.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				callDisco();
+				callApp(BCBEnum.Index.DISCONNECTOME);
             }
 		});
 		
 		corti.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				callCortical();
+				callApp(BCBEnum.Index.CORTICAL);
             }
 		});
 		
 		norma.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				callNormalization();
+				callApp(BCBEnum.Index.NORMALISATION);
+            }
+		});
+		
+		anacom.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				callApp(BCBEnum.Index.ANACOM);
             }
 		});
 		
 		stat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				callStatistical();
+				callApp(BCBEnum.Index.STATISTICAL);
             }
 		});
 		
@@ -429,48 +441,28 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	}
 	
 	/**
-     * Return the Tractotron 
-     * @post   null if callTractotron() wasn't used
-     * 		   instance of Tractotron 
+     * Return the app called index.name().
+     * Note : If you want to call a specific method from a specific 
+     * instance of AbstractApp class do this : 
+     * //Be careful to make the right cast
+     * Tractotron tra = (Tractotron) getApp(BCBEnum.Index.TRACTOTRON);
+     * 
+     * if (tra != null) {
+     * 	//for example
+     * 	System.out.println(tra.getDefaultLesions());
+     * }
+     * @param index : BCBEnum.Index corresponding to the app requested
+     * @return   null if callApp(index) wasn't used
+     * 		   instance of corresponding app 
      */
-	public Tractotron getTractotron() {
-		return appTracto;
-	}
-
-	/**
-     * Return the Disco
-     * @post   null if callDisco wasn't used
-     * 		   instance of Disco
-     */
-	public Disco getDisco() {
-		return appDisco;
-	}
 	
-	/**
-     * Return the Cortical
-     * @post   null if callCortical wasn't used
-     * 		   instance of Cortical
-     */
-	public Cortical getCortical() {
-		return appCorti;
-	}
-	
-	/**
-	 * Return the Normalization
-	 * @post null if callNormalization wasn't used
-	 * 		 instance of Normalization 
-	 */
-	public Normalisation getNormalization() {
-		return appNorma;
-	}
-	
-	/**
-     * Return the Statistical
-     * @post   null if callStatistical wasn't used
-     * 		   instance of Statistical
-     */
-	public Statistical getStatistical() {
-		return appStat;
+	public AbstractApp getApp(BCBEnum.Index index) {
+		Tractotron tra = (Tractotron) getApp(BCBEnum.Index.TRACTOTRON);
+	     if (tra != null) {
+	      	//for example
+	      	System.out.println(tra.getDefaultLesions());
+	     }
+		return appMap.get(index);
 	}
 	
 	private void formatButton(JButton but) {
@@ -488,76 +480,44 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	}
 	
 	// CALL FUNCTIONS which will call different functions in different frame
-	/**
-	 * Instanciate the Tractotron with getWD() as parameter
-	 * @post
-	 *    	getTractotron() != null
-	 */    
-	public void callTractotron() {
-		if (appTracto == null) {
-			appTracto = new Tractotron(getWD(), getBCB());
-			updateReset();
-		} else {
-			appTracto.getFrame().setVisible(true);
-		}		
-		//deactivateButtons(tracto);
-	}
-
-    /**
-     * Instanciate the disconnectome maps with getWD() as parameter
-     * @post
-     * 		getDisco() != null
-     */
-	public void callDisco() {
-		if (appDisco == null) {
-			appDisco = new Disco(getWD(), getBCB());
-			updateReset();
-		} else {
-			appDisco.getFrame().setVisible(true);
-		}
-		//deactivateButtons(disco);
-	}
 	
 	/**
-     * Instanciate the cortical thickness with getWD() as parameter
-     * @post
-     * 		getCortical() != null
-     */
-	public void callCortical() {
-		if (appCorti == null) {
-			appCorti = new Cortical(getWD(), getBCB());
-			updateReset();
-		} else {
-			appCorti.getFrame().setVisible(true);
-		}
-		//deactivateButtons(corti);
-	}
-	
-	/**
-	 * Instanciate the Normalization with getWD() as parameter
-	 * @post
-	 * 		getNormalization != null
+	 * Instanciate the AbstractApp called by index or make it visible
+	 * if it is already instanciate.
+	 * @param index : BCBEnum.Index designates the module
+	 * @return
+	 *    	getApp(index) != null
 	 */
-	public void callNormalization() {
-		if (appNorma == null) {
-			appNorma = new Normalisation(getWD(), getBCB());
-			updateReset();
+	public void callApp(BCBEnum.Index index) {
+		AbstractApp app = appMap.get(index);
+		if (app == null) {
+			switch (index) {
+				case TRACTOTRON : 
+					app = new Tractotron(getWD(), getBCB());
+					break;
+				case ANACOM:
+					app = new Anacom(getWD(), getBCB());
+					break;
+				case CORTICAL:
+					app = new Cortical(getWD(), getBCB());
+					break;
+				case DISCONNECTOME:
+					app = new Disco(getWD(), getBCB());
+					break;
+				case GENERAL:
+					throw new IllegalStateException("There isn't GENERAL app");
+				case NORMALISATION:
+					app = new Normalisation(getWD(), getBCB());
+					break;
+				case STATISTICAL:
+					app = new Statistical(getWD(), getBCB());
+					break;
+				default:
+					break;
+			}
+			appMap.put(index, app);
 		} else {
-			appNorma.getFrame().setVisible(true);
-		}
-	}
-	
-	/**
-     * Instanciate the Statistical analysis with getWD() as parameter
-     * @post
-     * 		getStatistical() != null
-     */
-	public void callStatistical() {
-		if (appStat == null) {
-			appStat = new Statistical(getWD(), getBCB());
-			updateReset();
-		} else {
-			appStat.getFrame().setVisible(true);
+			appMap.get(index).getFrame().setVisible(true);
 		}
 	}
 	
@@ -583,21 +543,11 @@ public class BCBToolKitIHM  implements BCBToolKit {
 
 	public void closing() {
 		saveDefPaths();
-
-		if (appTracto != null && appTracto.getFrame().isVisible()) {
-			appTracto.closing();
-		}
-		if (appDisco != null && appDisco.getFrame().isVisible()) {
-			appDisco.closing();
-		}
-		if (appCorti != null && appCorti.getFrame().isVisible()) {
-			appCorti.closing();
-		}
-		if (appNorma != null && appNorma.getFrame().isVisible()) {
-			appNorma.closing();
-		}
-		if (appStat != null && appStat.getFrame().isVisible()) {
-			appStat.closing();
+		
+		for (AbstractApp app : appMap.values()) {
+			if (app != null && app.getFrame().isVisible()) {
+				app.closing();
+			}
 		}
 		//Must be before shutdown because we need frames ...
 		if (setFrame.saveLocations()) {
@@ -608,20 +558,10 @@ public class BCBToolKitIHM  implements BCBToolKit {
 			}
 		}
 		
-		if (appTracto != null) {
-			appTracto.shutDown();
-		}
-		if (appDisco != null) {
-			appDisco.shutDown();
-		}
-		if (appCorti != null) {
-			appCorti.shutDown();
-		}
-		if (appNorma != null) {
-			appNorma.shutDown();
-		}
-		if (appStat != null) {
-			appStat.shutDown();
+		for (AbstractApp app : appMap.values()) {
+			if (app != null) {
+				app.shutDown();
+			}
 		}
 		conf.saveConfig();
 		frame.dispose();

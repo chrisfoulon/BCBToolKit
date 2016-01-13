@@ -72,9 +72,9 @@ public class TractoModel {
 		loading.setNbTicks(nb);
 	}
 	
-	/*
-	 * Fonction utilisée par le bouton RUN pour lancer le script TractotronParam.sh
-	 * en s'assurant que celui ci est éxecutable par l'utilisateur.
+	/**
+	 * Execute the bash script TractotronParam.sh after verifying it is 
+	 * executable by the user.
 	 */
 	public void run() {
 		if (lesionDir == null) {

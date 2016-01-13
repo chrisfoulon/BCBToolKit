@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public final class BCBEnum {
 	
-	//R
+	//
 	public static enum Index {
 		GENERAL(0),
 		TRACTOTRON(1),
@@ -24,6 +24,30 @@ public final class BCBEnum {
 			return this.index;
 		}
 	}
+	
+	public static enum Script {
+		TRACTOTRON("TractotronParam.sh"),
+		DISCONNECTOME("HypertronModified.sh"),
+		CORTICAL("thickLoop.sh"),
+		NORMALISATION("normalize.sh"),
+		ANACOM("anacom.sh"),
+		INITR("preR.sh"),
+		STATISTICAL("test.r");
+		
+		private String filename;
+		
+		private Script(String i) {
+			this.filename = i;
+		}
+		
+		public String filename() {
+			return this.filename;
+		}
+		
+		public String endPath() {
+			return "/" + this.filename;
+		}
+	}
 
 	public static enum Param {
 		/*
@@ -34,7 +58,7 @@ public final class BCBEnum {
 		 * as button name in the settingsFrame. (Each part is separated by 
 		 * a space)
 		 * WARNING3(The revenge) : The SECOND part of the String is used to 
-		 * define a which application the field is belongs and must match 
+		 * define a which application the field it belongs and must match 
 		 * with a Index name() value !
 		 */
 		//Tractotron
@@ -57,11 +81,17 @@ public final class BCBEnum {
 		NOTHRESDIR("default NORMALISATION otherResult"),
 		NBETOPT("brain extration threshold"),
 		NSAVETMP("save NORMALISATION tmpFiles"),
+		//ANACOM
+		ALESDIR("default ANACOM lesions"),
+		ARESDIR("default ANACOM result"),
+		ACSVFILE("default ANACOM csvFile"),
+		ATHRESH("default ANACOM threshold"),
+		ADEFTEST("default ANACOM test"),
+		ASAVETMP("save ANACOM tmpFiles"),
 		//Statistical analysis
 		SMAP1DIR("default STATISTICAL map1"),
 		SMAP2DIR("default STATISTICAL map2"),
 		SRESDIR("default STATISTICAL result"),
-		//ANACOM
 		//General
 		STARTDIR("start directory"),
 		// WARNING : for SAVE_PATHS the value "" means false "true" means what it means

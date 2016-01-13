@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javax.swing.JFrame;
 
+import Config.BCBEnum.Script;
 import IHM.LoadingBar;
 import IHM.Tools;
 
@@ -93,11 +94,11 @@ public class StatisticalModel {
 		
 		try {
 			
-			Files.setPosixFilePermissions(Paths.get(exeDir + "/test.r"), perms);
+			Files.setPosixFilePermissions(Paths.get(exeDir + Script.STATISTICAL.endPath()), perms);
 			
-			String[] array = {exeDir + "/test.r", map1Dir, map2Dir, resultDir};
+			String[] array = {exeDir + Script.STATISTICAL.endPath(), map1Dir, map2Dir, resultDir};
 			//String[] array = {exeDir + "/test.r", "8", "8", "6", "1"};
-			String[] array2 = {exeDir + "/preR.sh"};
+			String[] array2 = {exeDir + Script.INITR.endPath()};
 			String[] array3 = {"/bin/bash", "type", "-p", "R"};
 			Process rInstalled = Runtime.getRuntime().exec(array3, null, new File(this.path));
 			Process proc = null;
@@ -109,7 +110,6 @@ public class StatisticalModel {
 				try {
 					p.waitFor();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				proc = Runtime.getRuntime().exec(array,  

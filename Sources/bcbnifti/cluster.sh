@@ -32,11 +32,11 @@ do
     fslmaths $les/rSub_${i}.nii* -bin $clu/bin${i}.nii.gz;
 done;
 
-fslmaths $clu/bin1.nii.gz -add $clu/bin2.nii.gz $clu/sum.nii.gz;
+sum=$clu/sum.nii.gz
 
-for i in {3..324};
+for i in {1..324};
 do
-    fslmaths $clu/sum.nii.gz -add $clu/bin${i}.nii.gz $clu/sum.nii.gz;
+    fslmaths $clu/bin${i}.nii.gz -add $sum $sum;
 done;
 
 cluster -i /home/tolhs/MesDocuments/clustest/sum.nii.gz -t 3 -o /home/tolhs/MesDocuments/clustest/cluster.nii.gz > /home/tolhs/MesDocuments/clustest/index.txt

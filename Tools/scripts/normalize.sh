@@ -23,8 +23,8 @@ tmp=$path/tmp/tmpNorm
 mkdir -p $tmp
 #Toutes les lésions : fslmaths 
 #bet (retirer le crane) sur toutes les T1 
-#ANTs : matrice de déformation (sur l output de fslmath et bet
-#wSubject1 c la sortie de warp (et donc le résultat final
+#ANTs : matrice de déformation (sur l output de fslmath et bet)
+#wSubject1 c la sortie de warp (et donc le résultat final)
 
 
 cd $1
@@ -50,17 +50,15 @@ do
     if [ $# -eq 8 ]
     then
         cd $tmp
+        #If it is a 4D image, this will split it in vol0000.nii.gz vol0001.nii.gz etc ...
         fslsplit $7/$pat.nii*
-        #il va te splitter la 4D en vol0000.nii.gz vol0001.nii.gz vol0002.nii.gz ...
         for a in vol*
         do 
-
-            #puis le script normal s'applique à tous les $a
             #We add OTH prefix to the result in case of the result destination is the same that the previous transformation.
             $ants/WarpImageMultiTransform 3 $a OTH$a -R $4 -i $tmp/tmpwarp${pat}Affine.txt $tmp/tmpwarp${pat}InverseWarp.nii.gz
         done
 
-        #puis tu recompiles les 3D en 4D.
+        #And you remake the 4D image
         fslmerge -t $8/OTH$pat.nii.gz OTHvol*gz
         rm -f $tmp/*vol*
         cd $1

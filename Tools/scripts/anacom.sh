@@ -20,6 +20,13 @@ export FSLOUTPUTTYPE="NIFTI_GZ"
 export FSLREMOTECALL=""
 
 tmp=$path/tmp/tmpAnacom
+#Maybe remove this part for release
+if [[ -e $tmp ]];
+then
+  rm -rf $tmp;
+fi;
+
+
 mkdir -p $tmp
 
 #For controls, we can have scores for each control or just the mean value
@@ -41,6 +48,9 @@ echo ${sco[*]}
 num=0
 oR=$tmp/overlapROI.nii.gz
 oS=$tmp/overlapScores.nii.gz
+#creating void overlaps one time
+fslmaths $2/${pat[1]} -uthr 1 $oR
+fslmaths $2/${pat[1]} -uthr 1 $oS
 for f in ${pat[*]}
 do
     #binarisation
@@ -62,21 +72,40 @@ fslmaths $oS -div $oR $tmp/meanValMap.nii.gz
 fslmaths $oR -thr $4 $tmp/mask.nii.gz
 
 #### Applying the mask to meanValMap.nii.gz ####
-map=$tmp/$maskedMeanValMap.nii.gz
-fslmaths $tmp/$meanValMap.nii.gz -mas $tmp/mask.nii.gz $map
+map=$tmp/maskedMeanValMap.nii.gz
+overMap=$tmp/maskedOverlap.nii.gz
+fslmaths $tmp/meanValMap.nii.gz -mas $tmp/mask.nii.gz $map
+fslmaths $tmp/overlapScores -mas $tmp/mask.nii.gz $overMap
 
 #### Clustering and Labelisation ####
 #We keep cluster's results in the result directory
 cluD=$3/clusterDir
-mkdir $cluD
-cluster -i $map -t $4 -o $cluD/cluster.nii.gz > $cluD/index.txt
+
+#Remove this part too
+if [[ -e $cluD ]];
+then
+  rm -rf $cluD;
+fi;
+
+
+mkdir -p $cluD
+cluster -i $overMap -t 1 -o $cluD/cluster.nii.gz > $cluD/index.txt
 
 nclu=`fslstats $cluD/cluster.nii.gz -R | awk '{print $2}' | awk -F. '{print $1}'`
 
 for ((i=1;i<=nclu;i++)); 
 do
 
-    fslmaths $cluD/cluster.nii.gz -thr ${i} -uthr $cluD/${i} $clu_${i}
+  fslmaths $cluD/cluster.nii.gz -thr ${i} -uthr ${i} $cluD/clu_${i}
 
 done
 #./Tools/scripts/anacom.sh /home/tolhs/MesDocuments/ANACOM/anacom-ev/testAnacom/testAnacom.csv /home/tolhs/MesDocuments/ANACOM/anacom-ev/testAnacom /home/tolhs/MesDocuments/ANACOM/anacom-ev/testAnacom 3 true
+
+#### Crossing clusters and lesions to find cluster's composition ####
+
+for f in ${pat[*]}
+do
+  #fslstats input -m fait le taff pour savoir si une image n'a que des zéros, si le retour vaut zéro c'est bon. Ensuite reste à tester en bash le retour. Ainsi, si le retour n'est pas zéro alors la lésion est dans le cluster.
+  echo nothing;
+
+done

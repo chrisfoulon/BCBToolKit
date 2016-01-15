@@ -113,7 +113,7 @@ public class AnacomModel {
 			String[] array;
 
 			array = new String[]{exeDir + BCBEnum.Script.ANACOM.endPath(),
-					lesDir, resDir, csvFile, thresh, saveTmp};
+					csvFile, lesDir, resDir, thresh, saveTmp};
 
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 

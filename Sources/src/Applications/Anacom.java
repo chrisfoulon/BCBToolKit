@@ -105,23 +105,33 @@ public class Anacom extends AbstractApp {
 
 	protected void placeComponents() {
 		
-		JPanel center = new JPanel(new GridLayout(5, 0)); {
-			center.add(testCombo);
+		JPanel testSelector = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+			testSelector.add(testCombo);
+		}
+		
+		JPanel center = new JPanel(new GridLayout(3, 0)); {
 			center.add(lesBro);
 			center.add(resBro);
 			center.add(csvBro);
-			JPanel thr = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
-				JLabel l = new JLabel("Cluster threshold : ");
-				thr.add(l);
-				thr.add(threshFld);
-			}
-			center.add(thr);
 		}
 		topP = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		topP.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT));
 		frame.add(topP);
 		frame.add(background, BorderLayout.NORTH);
-		frame.add(center, BorderLayout.CENTER);
+
+		JPanel thr = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+			JLabel l = new JLabel("Cluster threshold : ");
+			thr.add(l);
+			thr.add(threshFld);
+		}
+		// A box layout could be more logical but ... it works
+		JPanel grid = new JPanel(new BorderLayout()); {
+			grid.add(testSelector, BorderLayout.NORTH);
+			grid.add(center, BorderLayout.CENTER);
+			grid.add(thr, BorderLayout.SOUTH);
+			
+		}
+		frame.add(grid, BorderLayout.CENTER);
 		// Panel contenant les deux checkbox
 		JPanel r1 = new JPanel(new FlowLayout(FlowLayout.RIGHT)); {
 			r1.add(saveTmp);

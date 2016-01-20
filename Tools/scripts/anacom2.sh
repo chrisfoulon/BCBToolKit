@@ -123,5 +123,7 @@ do
 done;
 
 
-# find_the_biggest reecrit une serie d'image en une seule image ou chaque image a un numero qui correspond à cette image de façon sequentielle. Si deux images se superposent sur certains voxels (ce qui n'est pas le cas ici) l'image avec la valeur la plus forte dans ce voxel gagne.
-find_the_biggest $cluD/realClu_* $3/ClusterCool
+# Creation of a file containing all clusters, I don't know if it's useful. 
+find_the_biggest $cluD/realClu_* $3/addedClusters
+
+##ALGO## Now we will retrieve data about content of clusters (patients and scores)

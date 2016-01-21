@@ -1,7 +1,10 @@
 #! /bin/bash
 #Anacom - Serge Kinkingnéhun & Michel Thiebaut de Schotten & Chris Foulon 
 [ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold keepTmp"; exit 1; }
-
+###############################################################################
+## WARNING : The csv file MUST not have empty lines, this is manage          ##
+## in the java interface.                                                    ##
+###############################################################################
 # set -x
 
 path=${PWD}/Tools
@@ -30,28 +33,39 @@ fi;
 mkdir -p $tmp
 
 #For controls, we can have scores for each control or just the mean value
-#(juste in ttest case). 
+#(just in ttest case). 
 
 #### READING the csv file containing patient name and their score ####
 #Counter for adding value in cells 
 i=0
 #Here we fill arrays with the two columns of the csv file, IFS define separators 
-while IFS=, read pat[$i] sco[$i]
+
+
+end=`tail -c 1 $1`
+if [ "$end" == "" ]; then sed -e :a -e '/^\n*$/ {$d;N;ba' -e '}' "$1"; fi;
+
+sed -e :a -e '/^\n*$/ {$d;N;ba' -e '}' $1 > $tmp/sure.csv
+declare -a pat
+declare -a sco
+while IFS=',' read pat[$i] sco[$i]
 do
     i=$((i+1))
-done < $1
-# $pat contains patient names (only filenames) and $sco contains scores associated with each patient. ${pat[i]} to acces
+done < $tmp/sure.csv
+# $pat contains patient names (only filenames) and $sco contains scores associated with each patient. 
 # ${#path[*]} for number of elements.
-echo ${pat[*]}
+echo "${pat[*]}"
+echo "TAILLE DE PAT: ${#pat[@]}"
+echo "TAILLE DE SCO: ${#sco[@]}"
 echo ${sco[*]}
+for ((i=0; i < 5;i++)); do echo "["${pat[$i]}"]"; done;
 
 #### BINARISATION of ROIs AND ScoredROI creation AND adding binROI in overlapROI and scoROI in overlapScores ####
 num=0
 oR=$tmp/overlapROI.nii.gz
 oS=$tmp/overlapScores.nii.gz
 #creating void overlaps one time
-fslmaths $2/${pat[1]} -uthr 1 $oR
-fslmaths $2/${pat[1]} -uthr 1 $oS
+fslmaths $2/${pat[0]} -uthr 1 $oR
+fslmaths $2/${pat[0]} -uthr 1 $oS
 for f in ${pat[*]}
 do
     #binarisation
@@ -103,6 +117,7 @@ for name in $tmp/maskthr_* ; do if [ `fslstats $name -V | awk '{ print $1 }'` = 
 
 
 i=0
+countClu=0
 for f in $tmp/maskthr_*;
 do
   ##ALGO## Now we make a mask on the OVERMASK with each layer created
@@ -110,14 +125,15 @@ do
   
   ##ALGO## We make 26-Neighborhood clusters for every layer(protoClu_...)
   cluster -i $f -t 1 -o ${cluD}/cluster_${i}.nii.gz > $cluD/index_${i}.txt;
-  echo "Je passe par là"
+
   ##ALGO## We create an array (nclu) to store the number of different values in every cluster
   nclu=`fslstats ${cluD}/cluster_${i}.nii.gz -R | awk '{print $2}' | awk -F. '{print $1}'`;
-  echo "nclu : $nclu"
+
   ##ALGO## We seperate each subClusters (so each different value) in separated files
   for ((n=1;n<=$nclu;n++));
-  do echo $n
-    fslmaths $cluD/cluster_${i} -thr $n -uthr $n $cluD/realClu_${i}_${n};
+  do
+    fslmaths $cluD/cluster_${i} -thr $n -uthr $n $cluD/realClu_${countClu};
+    countClu=$((countClu + 1));
   done;
   i=$((i + 1));
 done;
@@ -127,3 +143,41 @@ done;
 find_the_biggest $cluD/realClu_* $3/addedClusters
 
 ##ALGO## Now we will retrieve data about content of clusters (patients and scores)
+## On pourrait commencer à construire le script R dans ces boucles !
+rm -rf $tmp/realClu_*
+for ((i=0; i<$countClu; i++));
+do
+  index=0;
+  for p in ${pat[*]};
+  do
+    fslmaths $cluD/realClu_$i.nii* -mas $2/$p $tmp/tmpMask$p;
+    #If there is an overlap between cluster and lesion we write the name and 
+    #the score else we remove the file
+    if [ `fslstats $tmp/tmpMask$p -V | awk '{ print $1 }'` = 0 ];
+    then 
+      rm $tmp/tmpMask$p; 
+    else
+	#Just a if to avoid the last useless comma at the end of the line
+	echo $index"INDEX"
+	echo $((${#pat[@]}-1))
+	echo $((${#pat[@]}))
+	if [[ $index -ne $((${#pat[@]}-1)) ]];
+	then
+	  echo -n "$p," >> $tmp/realClu_${i}pat.txt
+	  echo -n "${sco[$index]}," >> $tmp/realClu_${i}sco.txt
+	else
+	  echo -n "$p" >> $tmp/realClu_${i}pat.txt
+	  echo -n "${sco[$index]}" >> $tmp/realClu_${i}sco.txt
+	fi;
+    fi;
+    index=$((index + 1));
+  done;
+done;
+
+
+for f in $tmp/realClu_*;
+do
+  echo $f
+  cat $f
+  echo "############"
+done;

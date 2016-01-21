@@ -6,6 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
@@ -184,5 +188,59 @@ public final class Tools {
 		}
 		
 		return false;
+	}
+	
+	/**
+	 * Given an absolute file path, create a copy of this file
+	 * in the file copypath
+	 * in the temporary folder of the anacom module
+	 * remove all empty lines
+	 * @param filename
+	 */
+	public static void removeEmptyEnd(String filename, String copypath) {
+		File source = new File(filename);
+		File dest = new File(copypath);
+		
+		FileReader fr = null;
+		try {
+			fr = new FileReader(source);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(dest);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		String line;
+		BufferedReader br = new BufferedReader(fr); 
+		if (fr == null || fw == null) {
+			return;
+		}
+		try {
+			while((line = br.readLine()) != null)
+			{ 
+			    line = line.trim(); // remove leading and trailing whitespace
+			    if (!line.equals("")) // don't write out blank lines
+			    {
+			        fw.write(line, 0, line.length());
+			    }
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		try {
+			fr.close();
+			fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return;
 	}
 }

@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.net.URL;
 
 import javax.swing.Icon;
@@ -173,7 +174,17 @@ public class Anacom extends AbstractApp {
 							Tools.showErrorMessage(frame, "The threshold must be an integer");
 						    return null;
 						}
-						
+						// We have to remove empty lines at the end of the csv file to 
+						// avoid errors in the script.
+						File tmpdir = new File(getBCB().getWD() + "/Tools/tmp/tmpAnacom");
+						boolean b = tmpdir.mkdir();
+						if (b == false) {
+							System.out.println("ERROR : impossible to create the anacom tmp dir");
+							return null;
+						}
+						String copypath = new String(getBCB().getWD() + "/Tools/tmp/tmpAnacom/tmpcsv.csv");
+						Tools.removeEmptyEnd(csvBro.getFldContent(), copypath);
+						model.setCSV(copypath);	
 						model.run();
 						return null;
 					}
@@ -193,5 +204,4 @@ public class Anacom extends AbstractApp {
 	protected void changeRunButton(JPanel p, int state) {
 		
 	}
-
 }

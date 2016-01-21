@@ -55,7 +55,7 @@ public class AnacomModel {
 		};
 	}
 
-	public void setTempFile(String str) {
+	public void setCSV(String str) {
 		csvFile = str;
 	}
 

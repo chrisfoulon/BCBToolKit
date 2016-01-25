@@ -70,6 +70,7 @@ public class Disco extends AbstractApp {
 			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
 			frame.setResizable(false);
 			display();
+			frame.setFocusable(true);
 		}
 		background = new ImagePanel("disco.png", 140, 112);
 		background.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 6));
@@ -131,7 +132,8 @@ public class Disco extends AbstractApp {
 		frame.add(south, BorderLayout.SOUTH);
 	}
 
-	protected void createControllers() {	
+	protected void createControllers() {
+		Tools.gatherRound(this);
 		frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e) {
 				closing();

@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,6 +22,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+
+import Applications.AbstractApp;
 
 public final class Tools {
 	private Tools() {
@@ -197,7 +201,7 @@ public final class Tools {
 	 * remove all empty lines
 	 * @param filename
 	 */
-	public static void removeEmptyEnd(String filename, String copypath) {
+	public static void removeEmptyLines(String filename, String copypath) {
 		File source = new File(filename);
 		File dest = new File(copypath);
 		
@@ -242,5 +246,18 @@ public final class Tools {
 			e.printStackTrace();
 		}
 		return;
+	}
+	
+	public static void gatherRound(AbstractApp app) {
+		final BCBToolKitIHM bcb = app.getBCB();
+		app.getFrame().addFocusListener(new FocusListener() {
+			public void focusGained(FocusEvent e) {
+				bcb.allOnFront();
+			}
+
+			public void focusLost(FocusEvent e) {
+				return;
+			}
+		});
 	}
 }

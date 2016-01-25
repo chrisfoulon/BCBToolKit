@@ -403,6 +403,15 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		return new HashMap<BCBEnum.Param, Browser>(this.broMap);
 	}
 	
+	public void allOnFront() {
+		for (AbstractApp app : appMap.values()) {
+			if (app != null) {
+				app.getFrame().toFront();
+			}
+		}
+		this.getFrame().toFront();
+	}
+	
 	/**
 	 * Set s as the path of the file corresponding to p. 
 	 * @param p != null

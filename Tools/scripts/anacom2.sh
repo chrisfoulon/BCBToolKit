@@ -40,11 +40,6 @@ mkdir -p $tmp
 i=0
 #Here we fill arrays with the two columns of the csv file, IFS define separators 
 
-
-end=`tail -c 1 $1`
-if [ "$end" == "" ]; then sed -e :a -e '/^\n*$/ {$d;N;ba' -e '}' "$1"; fi;
-
-sed -e :a -e '/^\n*$/ {$d;N;ba' -e '}' $1 > $tmp/sure.csv
 declare -a pat
 declare -a sco
 while IFS=',' read pat[$i] sco[$i]

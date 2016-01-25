@@ -63,6 +63,7 @@ public class Anacom extends AbstractApp {
 			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
 			frame.setResizable(false);
 			display();
+			frame.setFocusable(true);
 		}
 		background = new ImagePanel("tracto.png", 170, 92);
 		background.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 5));
@@ -156,6 +157,7 @@ public class Anacom extends AbstractApp {
 	}
 
 	protected void createControllers() {
+		Tools.gatherRound(this);
 		frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e) {
 				closing();
@@ -174,17 +176,33 @@ public class Anacom extends AbstractApp {
 							Tools.showErrorMessage(frame, "The threshold must be an integer");
 						    return null;
 						}
+						model.setThreshold(threshFld.getText());
 						// We have to remove empty lines at the end of the csv file to 
 						// avoid errors in the script.
 						File tmpdir = new File(getBCB().getWD() + "/Tools/tmp/tmpAnacom");
-						boolean b = tmpdir.mkdir();
+						System.out.println(tmpdir.getAbsolutePath());
+						boolean b = tmpdir.mkdirs();
 						if (b == false) {
 							System.out.println("ERROR : impossible to create the anacom tmp dir");
 							return null;
 						}
 						String copypath = new String(getBCB().getWD() + "/Tools/tmp/tmpAnacom/tmpcsv.csv");
-						Tools.removeEmptyEnd(csvBro.getFldContent(), copypath);
-						model.setCSV(copypath);	
+						Tools.removeEmptyLines(csvBro.getFldContent(), copypath);
+						model.setCSV(copypath);
+						
+						if (Tools.isReady(frame, lesBro)) {
+							model.setLesionDir(lesBro.getPath());
+						} else {
+							return null;
+						}
+						
+						
+						
+						if (Tools.isReady(frame, resBro)) {
+							model.setResultDir(resBro.getPath());
+						} else {
+							return null;
+						}
 						model.run();
 						return null;
 					}

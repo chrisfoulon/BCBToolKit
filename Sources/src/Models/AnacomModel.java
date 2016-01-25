@@ -54,7 +54,12 @@ public class AnacomModel {
 			}
 		};
 	}
-
+	
+	/**
+	 * Be careful that the csv file does not contain empty lines
+	 * To remove empty lines, use the function removeEmptyLines of Tools
+	 * @param str : the path of the csvFile
+	 */
 	public void setCSV(String str) {
 		csvFile = str;
 	}
@@ -73,7 +78,7 @@ public class AnacomModel {
 
 	public void setSaveTmp(String str) {
 		if (str == null || str.equals("") || (!str.equals("false") && !str.equals("true"))) {
-			throw new IllegalArgumentException("The value of saveTmp must be true or false");
+			throw new IllegalArgumentException("The value of saveTmp must be \"true\" or \"false\"");
 		}
 		saveTmp = str;
 	}

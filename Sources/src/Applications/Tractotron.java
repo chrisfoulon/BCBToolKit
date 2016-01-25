@@ -78,6 +78,7 @@ public class Tractotron extends AbstractApp {
 			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
 			frame.setResizable(false);
 			display();
+			frame.setFocusable(true);
 		}
 		background = new ImagePanel("tracto.png", 170, 92);
 		background.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 5));
@@ -155,7 +156,8 @@ public class Tractotron extends AbstractApp {
 		frame.add(south, BorderLayout.SOUTH);
 	}
 
-	protected void createControllers() {	
+	protected void createControllers() {
+		Tools.gatherRound(this);
 		frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e) {
 				closing();

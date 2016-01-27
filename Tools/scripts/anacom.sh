@@ -109,3 +109,36 @@ do
   echo nothing;
 
 done
+
+nblayer=0
+for f in $tmp/maskthr_*;
+do
+  max=`fslstats $f -R | awk '{print $2}'`;
+  echo "MAX : $max";
+  #Voxels with max value are set to 1, others are below
+  fslmaths $f -div $max $tmp/tmpDiv;
+  #We keep only voxels coresponding to the max value
+  fslmaths $tmp/tmpDiv -thr 1 $tmp/binLayer
+  #We create the layer with the score
+  fslmaths $f -mas $tmp/binLayer $tmp/layer${nblayer}
+  #And we erode the max value of the file maskthr, when eroded
+  #will contain only zeros, all layers are extracted.
+  fslmaths $f -thr $tmp/layer${nblayer} $tmp/eroded
+  fslmaths $f -uthr $max $tmp/thresh
+  #echo `fslstats $tmp/thresh -R`
+  echo "maskthr : "`fslstats $f -R`
+  echo `fslstats $tmp/eroded -R`
+  nblayer=$((nblayer + 1))
+  while [ `fslstats $tmp/eroded -V | awk '{ print $1 }'` != 0 ];
+  do
+    max=`fslstats $f -R | awk '{print $2}'`;
+    echo "MAX : $max";
+    fslmaths $f -div $max $tmp/tmpDiv;
+    fslmaths $tmp/tmpDiv -thr 1 $tmp/binLayer
+    fslmaths $f -mas $tmp/binLayer $tmp/layer${nblayer}
+    fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
+    echo `fslstats $tmp/eroded -R`
+    nblayer=$((nblayer + 1)) 
+  done;
+  rm -rf $tmp/eroded
+done;

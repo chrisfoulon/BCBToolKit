@@ -45,14 +45,28 @@ declare -a sco
 while IFS=',' read pat[$i] sco[$i]
 do
     i=$((i+1))
-done < $tmp/sure.csv
+done < $1
 # $pat contains patient names (only filenames) and $sco contains scores associated with each patient. 
 # ${#path[*]} for number of elements.
 echo "${pat[*]}"
 echo "TAILLE DE PAT: ${#pat[@]}"
 echo "TAILLE DE SCO: ${#sco[@]}"
 echo ${sco[*]}
-for ((i=0; i < 5;i++)); do echo "["${pat[$i]}"]"; done;
+for ((i=0; i < ${#pat[@]};i++)); 
+do
+  if [[ ${pat[$i]} == "" ]];
+  then 
+    echo "unset";
+    unset pat[$i];
+  fi;
+  if [[ ${sco[$i]} == "" ]];
+  then 
+    echo "unset";
+    unset sco[$i];
+  fi;
+done;
+
+for ((i=0; i < ${#pat[@]};i++)); do echo "[${pat[$i]}][${sco[$i]}]"; done; 
 
 #### BINARISATION of ROIs AND ScoredROI creation AND adding binROI in overlapROI and scoROI in overlapScores ####
 num=0
@@ -101,27 +115,59 @@ fi;
 
 mkdir -p $cluD
 # Here we extract each layer of the thresholded masked map, that's why we start at $4
-# i is always under ${#pat[*]}(number of patients) because we make an addition of 1 and 
+# i is less or equals ${#pat[*]}(number of patients) because we make an addition of 1 and 
 # we make at most ${#pat[*]} additions. 
-for ((i=$4; i<${#pat[*]}; i++));
+for ((i=$4; i<=${#pat[*]}; i++));
 do
   fslmaths $tmp/mask.nii.gz -thr $i -uthr $i $tmp/maskthr_${i}
 done;
-#Deletes maskthr images which contain only zeros.
+#Delete maskthr images which contain only zeros.
 for name in $tmp/maskthr_* ; do if [ `fslstats $name -V | awk '{ print $1 }'` = 0 ] ; then echo $name ; rm $name ; fi ; done
 
 
+# For each layer extracted before, we make other layers for each value found
+nblayer=0
+for f in $tmp/maskthr_*;
+do
+  name=$(basename "$f")
+  scored=$tmp/scored$name
+  fslmaths $overMask -mas $f $scored
+  max=`fslstats $scored -R | awk '{print $2}'`;
+  echo "MAX : $max";
+  fslmaths $scored -thr $max $tmp/layer${nblayer}
+  
+  fslmaths $scored -sub $tmp/layer${nblayer} $tmp/eroded${name}
+  
+  echo "maskthr : "`fslstats $scored -R`
+  echo "MinMax eroded"`fslstats $tmp/eroded${name} -R`
+  echo "Mean maskthr :"`fslstats $scored -M`
+  nblayer=$((nblayer + 1))
+  while [ `fslstats $tmp/eroded${name} -V | awk '{ print $1 }'` != 0 ];
+  do
+    max=`fslstats $tmp/eroded${name} -R | awk '{print $2}'`;
+    echo "MAX : $max";
+    fslmaths $tmp/eroded${name} -thr $max $tmp/layer${nblayer}
+    
+    fslmaths $tmp/eroded${name} -sub $tmp/layer${nblayer} $tmp/eroded${name}
+    
+    echo "ERODED in loop"`fslstats $tmp/eroded${name} -R`
+    nblayer=$((nblayer + 1))
+  done;
+done;
+
+  rm -rf $tmp/eroded*
+
 i=0
 countClu=0
-for f in $tmp/maskthr_*;
+for f in $tmp/layer*;
 do
   ##ALGO## Now we make a mask on the OVERMASK with each layer created
   fslmaths $overMask -mas $f $tmp/protoClu_${i};
   
   ##ALGO## We make 26-Neighborhood clusters for every layer(protoClu_...)
-  cluster -i $f -t 1 -o ${cluD}/cluster_${i}.nii.gz > $cluD/index_${i}.txt;
+  cluster -i $tmp/protoClu_${i} -t 1 -o ${cluD}/cluster_${i}.nii.gz > $cluD/index_${i}.txt;
 
-  ##ALGO## We create an array (nclu) to store the number of different values in every cluster
+  ##ALGO## nclu store the number of different values in every cluster
   nclu=`fslstats ${cluD}/cluster_${i}.nii.gz -R | awk '{print $2}' | awk -F. '{print $1}'`;
 
   ##ALGO## We seperate each subClusters (so each different value) in separated files
@@ -132,6 +178,9 @@ do
   done;
   i=$((i + 1));
 done;
+
+#Here we have all clusters, now we have to retrieve patients and scores
+#contained in each cluster.
 
 
 # Creation of a file containing all clusters, I don't know if it's useful. 
@@ -145,28 +194,23 @@ do
   index=0;
   for p in ${pat[*]};
   do
-    fslmaths $cluD/realClu_$i.nii* -mas $2/$p $tmp/tmpMask$p;
+    fslmaths $cluD/realClu_$i.nii* -mas $2/$p $tmp/tmpMask${i}_${p};
     #If there is an overlap between cluster and lesion we write the name and 
     #the score else we remove the file
-    if [ `fslstats $tmp/tmpMask$p -V | awk '{ print $1 }'` = 0 ];
+    if [ `fslstats $tmp/tmpMask${i}_${p} -V | awk '{ print $1 }'` == 0 ];
     then 
-      rm $tmp/tmpMask$p; 
+      echo  "RM"
+      rm $tmp/tmpMask${i}_${p}*; 
     else
-	#Just a if to avoid the last useless comma at the end of the line
-	echo $index"INDEX"
-	echo $((${#pat[@]}-1))
-	echo $((${#pat[@]}))
-	if [[ $index -ne $((${#pat[@]}-1)) ]];
-	then
 	  echo -n "$p," >> $tmp/realClu_${i}pat.txt
 	  echo -n "${sco[$index]}," >> $tmp/realClu_${i}sco.txt
-	else
-	  echo -n "$p" >> $tmp/realClu_${i}pat.txt
-	  echo -n "${sco[$index]}" >> $tmp/realClu_${i}sco.txt
-	fi;
     fi;
     index=$((index + 1));
   done;
+  ## Note: On OSX, you'd have to use -i '' instead of just -i. ##
+  ## Maybe sed does not work on OSX (LO_OL) so ...             ##
+  sed -i '$ s/.$//' $tmp/realClu_${i}sco.txt
+  sed -i '$ s/.$//' $tmp/realClu_${i}pat.txt
 done;
 
 
@@ -174,5 +218,6 @@ for f in $tmp/realClu_*;
 do
   echo $f
   cat $f
+  echo " "
   echo "############"
 done;

@@ -1,6 +1,6 @@
 #! /bin/bash
 #Anacom - Serge Kinkingnéhun & Michel Thiebaut de Schotten & Chris Foulon 
-[ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold keepTmp"; exit 1; }
+[ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp"; exit 1; }
 
 #set -x
 
@@ -227,3 +227,56 @@ done;
 
 #We need control scores, we can have a mean if we have wilcoxon or ttest
 #Or a vector of scores which will be a column in a csv file
+if [[ $5 =~ [0-9]*.[0-9]* ]]; 
+then
+    echo "Only published normative value"
+    control="mu=$5"
+    echo "$control"
+else
+    echo "Control scores"
+    declare -a contr
+    while read contr[$i]
+    do
+	i=$((i+1))
+    done < $5
+    #We have to manage empty lines in the csv file so we unset empty cells
+    for ((i=0; i < ${#contr[@]};i++)); 
+    do
+      if [[ ${contr[$i]} == "" ]];
+      then 
+	echo "unset";
+	unset contr[$i];
+      fi;
+    done;
+    #We create a R vector with control scores
+    for ((i=0; i < ${#contr[@]} - 1; i++));
+    do
+      y=${y}${contr[$i]}","
+    done;
+    control="c(${y}${contr[-1]})"
+    echo "$control"
+fi
+
+if [[ $6 == "wilcoxon" ]];
+then 
+  testname="wilcox.test";
+elif [[ $6 == "ttest" ]];
+then
+  testname="t.test";
+elif [[ $6 == "kolmogorov" ]];
+then
+  testname="ks.test"
+else
+  echo "This test is unknown"
+fi;
+
+vec="vec=(0:$((numclu - 1)))"
+
+#We can read clustersco files and apply statistical tests
+for ((i=0; i<$numclu; i++));
+do
+  read text < $tmp/cluster${i}sco.txt
+  x="c("$text")"
+  tt="res = $testname($x, $y)"
+  ss="vec[$((i + 1))] = res\$p.value"
+done;

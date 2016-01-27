@@ -2,7 +2,7 @@
 #Anacom - Serge Kinkingnéhun & Michel Thiebaut de Schotten & Chris Foulon 
 [ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold keepTmp"; exit 1; }
 
-set -x
+#set -x
 
 path=${PWD}/Tools
     
@@ -30,27 +30,49 @@ fi;
 mkdir -p $tmp
 
 #For controls, we can have scores for each control or just the mean value
-#(juste in ttest case). 
+#(just in ttest case). 
 
 #### READING the csv file containing patient name and their score ####
 #Counter for adding value in cells 
 i=0
 #Here we fill arrays with the two columns of the csv file, IFS define separators 
-while IFS=, read pat[$i] sco[$i]
+
+declare -a pat
+declare -a sco
+while IFS=',' read pat[$i] sco[$i]
 do
     i=$((i+1))
 done < $1
-# $pat contains patient names (only filenames) and $sco contains scores associated with each patient. ${pat[i]} to acces
-echo ${pat[*]}
+# $pat contains patient names (only filenames) and $sco contains scores associated with each patient. 
+# ${#path[*]} for number of elements.
+echo "${pat[*]}"
+echo "TAILLE DE PAT: ${#pat[@]}"
+echo "TAILLE DE SCO: ${#sco[@]}"
 echo ${sco[*]}
+#We have to manage empty lines in the csv file so we unset empty cells
+for ((i=0; i < ${#pat[@]};i++)); 
+do
+  if [[ ${pat[$i]} == "" ]];
+  then 
+    echo "unset";
+    unset pat[$i];
+  fi;
+  if [[ ${sco[$i]} == "" ]];
+  then 
+    echo "unset";
+    unset sco[$i];
+  fi;
+done;
+
+for ((i=0; i < ${#pat[@]};i++)); do echo "[${pat[$i]}][${sco[$i]}]"; done; 
 
 #### BINARISATION of ROIs AND ScoredROI creation AND adding binROI in overlapROI and scoROI in overlapScores ####
 num=0
 oR=$tmp/overlapROI.nii.gz
 oS=$tmp/overlapScores.nii.gz
 #creating void overlaps one time
-fslmaths $2/${pat[1]} -uthr 1 $oR
-fslmaths $2/${pat[1]} -uthr 1 $oS
+fslmaths $2/${pat[0]} -uthr 1 $oR
+fslmaths $2/${pat[0]} -uthr 1 $oS
 for f in ${pat[*]}
 do
     #binarisation
@@ -64,7 +86,7 @@ do
     num=$((num + 1))
 done
 
-#### Mean Values Map ####
+#### Mean Values Map ####
 #We just devide overlapScores by overlapROI in meanValMap.nii.gz
 fslmaths $oS -div $oR $tmp/meanValMap.nii.gz
 
@@ -73,15 +95,58 @@ fslmaths $oR -thr $4 $tmp/mask.nii.gz
 
 #### Applying the mask to meanValMap.nii.gz ####
 map=$tmp/maskedMeanValMap.nii.gz
-overMap=$tmp/maskedOverlap.nii.gz
+#It will be used for clustering
+overMask=$tmp/maskedOverlap.nii.gz
 fslmaths $tmp/meanValMap.nii.gz -mas $tmp/mask.nii.gz $map
-fslmaths $tmp/overlapScores -mas $tmp/mask.nii.gz $overMap
+fslmaths $tmp/overlapScores -mas $tmp/mask.nii.gz $overMask
 
-#### Clustering and Labelisation ####
+#Now we will make a layer for each score found in maskedOverlap
+#For that, we take the maximum score of the map and we cut its top
+nblayer=0
+max=`fslstats $overMask -R | awk '{print $2}'`;
+echo "MAX : $max";
+fslmaths $overMask -thr $max $tmp/layer${nblayer}
+
+fslmaths $overMask -sub $tmp/layer${nblayer} $tmp/eroded
+
+echo "overMask : "`fslstats $overMask -R`
+echo "Mean overMask :"`fslstats $overMask -M`
+echo "MinMax eroded"`fslstats $tmp/eroded -R`
+
+nblayer=$((nblayer + 1))
+while [ `fslstats $tmp/eroded -V | awk '{ print $1 }'` != 0 ];
+do
+  max=`fslstats $tmp/eroded -R | awk '{print $2}'`;
+  echo "MAX : $max";
+  fslmaths $tmp/eroded -thr $max $tmp/layer${nblayer}
+  
+  fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
+  
+  echo "ERODED in loop"`fslstats $tmp/eroded -R`
+  nblayer=$((nblayer + 1))
+done;
+#erorded is now full of 0
+rm -rf $tmp/eroded
+
+#Here, we will compute the standard deviation because if, in a layer, we can
+#have different area with the same score once added but not the same 
+#distribution of score / patient.
+
+#We make a 4D image with scored maps
+fslmerge -t $tmp/4Dscores $tmp/sco*
+#We make the standard deviation
+fslmaths $tmp/4Dscores -Tstd $tmp/std
+#We mask std to preserve the threshold created before
+fslmaths $tmp/std -mas $tmp/mask.nii.gz $tmp/maskedStd
+
+###############################################################################
+## Now we can create our clusters by adding layers and standard deviation    ##
+## With that we can garantee different values in areas with different        ##
+## distributions because if we have different standard deviations added to   ##
+## the same value (because we are in a layer)                                ##
+###############################################################################
 #We keep cluster's results in the result directory
 cluD=$3/clusterDir
-
-#Remove this part too
 if [[ -e $cluD ]];
 then
   rm -rf $cluD;
@@ -89,56 +154,76 @@ fi;
 
 
 mkdir -p $cluD
-cluster -i $overMap -t 1 -o $cluD/cluster.nii.gz > $cluD/index.txt
-
-nclu=`fslstats $cluD/cluster.nii.gz -R | awk '{print $2}' | awk -F. '{print $1}'`
-
-for ((i=1;i<=nclu;i++)); 
+numclu=0
+for la in $tmp/layer*;
 do
-
-  fslmaths $cluD/cluster.nii.gz -thr ${i} -uthr ${i} $cluD/clu_${i}
-
-done
-#./Tools/scripts/anacom.sh /home/tolhs/MesDocuments/ANACOM/anacom-ev/testAnacom/testAnacom.csv /home/tolhs/MesDocuments/ANACOM/anacom-ev/testAnacom /home/tolhs/MesDocuments/ANACOM/anacom-ev/testAnacom 3 true
-
-#### Crossing clusters and lesions to find cluster's composition ####
-
-for f in ${pat[*]}
-do
-  #fslstats input -m fait le taff pour savoir si une image n'a que des zéros, si le retour vaut zéro c'est bon. Ensuite reste à tester en bash le retour. Ainsi, si le retour n'est pas zéro alors la lésion est dans le cluster.
-  echo nothing;
-
-done
-
-nblayer=0
-for f in $tmp/maskthr_*;
-do
-  max=`fslstats $f -R | awk '{print $2}'`;
-  echo "MAX : $max";
-  #Voxels with max value are set to 1, others are below
-  fslmaths $f -div $max $tmp/tmpDiv;
-  #We keep only voxels coresponding to the max value
-  fslmaths $tmp/tmpDiv -thr 1 $tmp/binLayer
-  #We create the layer with the score
-  fslmaths $f -mas $tmp/binLayer $tmp/layer${nblayer}
-  #And we erode the max value of the file maskthr, when eroded
-  #will contain only zeros, all layers are extracted.
-  fslmaths $f -thr $tmp/layer${nblayer} $tmp/eroded
-  fslmaths $f -uthr $max $tmp/thresh
-  #echo `fslstats $tmp/thresh -R`
-  echo "maskthr : "`fslstats $f -R`
-  echo `fslstats $tmp/eroded -R`
-  nblayer=$((nblayer + 1))
-  while [ `fslstats $tmp/eroded -V | awk '{ print $1 }'` != 0 ];
+  # In first we mask std with the layer
+  fslmaths $tmp/maskedStd -mas $la $tmp/tmpStdMask
+  # We add std to the layer
+  fslmaths $la -add $tmp/tmpStdMask $tmp/stdlayer
+  # And now we make other layers, with each different values, which will be 
+  # our clusters
+  while [ `fslstats $tmp/stdlayer -V | awk '{ print $1 }'` != 0 ];
   do
-    max=`fslstats $f -R | awk '{print $2}'`;
+    max=`fslstats $tmp/stdlayer -R | awk '{print $2}'`;
     echo "MAX : $max";
-    fslmaths $f -div $max $tmp/tmpDiv;
-    fslmaths $tmp/tmpDiv -thr 1 $tmp/binLayer
-    fslmaths $f -mas $tmp/binLayer $tmp/layer${nblayer}
-    fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
-    echo `fslstats $tmp/eroded -R`
-    nblayer=$((nblayer + 1)) 
+    fslmaths $tmp/stdlayer -thr $max $cluD/cluster${numclu}
+    
+    fslmaths $tmp/stdlayer -sub $cluD/cluster${numclu} $tmp/stdlayer
+    
+    numclu=$((numclu + 1))
+    
   done;
-  rm -rf $tmp/eroded
 done;
+
+for ((i=0; i<$numclu; i++));
+do
+  index=0;
+  for p in ${pat[*]};
+  do
+    fslmaths $cluD/cluster$i.nii* -mas $2/$p $tmp/tmpMask${i}_${p};
+    #If there is an overlap between cluster and lesion we write the name and 
+    #the score else we remove the file
+    if [ `fslstats $tmp/tmpMask${i}_${p} -V | awk '{ print $1 }'` == 0 ];
+    then 
+      rm $tmp/tmpMask${i}_${p}*; 
+    else
+	  echo -n "$p," >> $tmp/cluster${i}pat.txt
+	  echo -n "${sco[$index]}," >> $tmp/cluster${i}sco.txt
+    fi;
+    index=$((index + 1));
+  done;
+  ## Note: On OSX, you'd have to use -i '' instead of just -i. ##
+  ## Maybe sed does not work on OSX (LO_OL) so ...             ##
+  sed -i '$ s/.$//' $tmp/cluster${i}sco.txt
+  sed -i '$ s/.$//' $tmp/cluster${i}pat.txt
+done;
+
+
+for f in $tmp/cluster*;
+do
+  echo $f
+  cat $f
+  echo " "
+  echo "############"
+done;
+
+# A loop to test if there is no overlap between clusters
+# for ((i=0; i < $numclu; i++));
+# do
+#   for ((j=$i + 1; j < $numclu; j++));
+#   do 
+#     fslmaths $cluD/cluster${i}.nii* -mas $cluD/cluster${j}.nii* $tmp/clustOverlap
+#     if [ `fslstats $tmp/clustOverlap -V | awk '{ print $1 }'` == 0 ];
+#     then 
+#       echo "Ok c'est tout bon"
+#     else
+#       echo "La c'est la galère"
+#     fi;
+#   done;
+# done;
+
+#We have our clusters, now let's make stats ! \o/
+
+#We need control scores, we can have a mean if we have wilcoxon or ttest
+#Or a vector of scores which will be a column in a csv file

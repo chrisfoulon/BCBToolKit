@@ -1,5 +1,5 @@
 #! /bin/bash
-#Anacom - Serge Kinkingnéhun & Michel Thiebaut de Schotten & Chris Foulon 
+#Anacom - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten & Chris Foulon 
 [ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp"; exit 1; }
 
 #set -x
@@ -142,7 +142,7 @@ fslmaths $tmp/std -mas $tmp/mask.nii.gz $tmp/maskedStd
 ###############################################################################
 ## Now we can create our clusters by adding layers and standard deviation    ##
 ## With that we can garantee different values in areas with different        ##
-## distributions because if we have different standard deviations added to   ##
+## distributions because we have different standard deviations added to      ##
 ## the same value (because we are in a layer)                                ##
 ###############################################################################
 #We keep cluster's results in the result directory
@@ -176,9 +176,12 @@ do
   done;
 done;
 
+#Here we want to find which patients belong to clusters
+#For that we try to overlap lesions with clusters
 for ((i=0; i<$numclu; i++));
 do
   index=0;
+  score=0;
   for p in ${pat[*]};
   do
     fslmaths $cluD/cluster$i.nii* -mas $2/$p $tmp/tmpMask${i}_${p};
@@ -257,26 +260,36 @@ else
     echo "$control"
 fi
 
-if [[ $6 == "wilcoxon" ]];
+if [[ $6 == "Wilcoxon" ]];
 then 
   testname="wilcox.test";
-elif [[ $6 == "ttest" ]];
+elif [[ $6 == "t-test" ]];
 then
   testname="t.test";
-elif [[ $6 == "kolmogorov" ]];
+elif [[ $6 == "Kolmogorov-Smirnov" ]];
 then
   testname="ks.test"
 else
   echo "This test is unknown"
 fi;
 
-vec="vec=(0:$((numclu - 1)))"
+vec="vec <- (0:$((numclu - 1)))"
 
 #We can read clustersco files and apply statistical tests
 for ((i=0; i<$numclu; i++));
 do
   read text < $tmp/cluster${i}sco.txt
   x="c("$text")"
-  tt="res = $testname($x, $y)"
+  tt="res <- try($testname($x, $y))"
+  ttss="if (class(res) == \"try-error\") { 
+    error <- res[1]
+    res\$p.value <- NaN  
+  }"
   ss="vec[$((i + 1))] = res\$p.value"
+  echo $ss
 done;
+Rcommand += 'write(p, "%s",1)\n'%(pvalues)
+		Rcommand += 'q()\n'
+
+
+R --no-save --no-restore < test.r

@@ -228,6 +228,40 @@ done;
 
 #We have our clusters, now let's make stats ! \o/
 
+
+#Just define the test we will compute
+if [[ $6 == "Wilcoxon" ]];
+then 
+  testname="wilcox.test";
+elif [[ $6 == "t-test" ]];
+then
+  testname="t.test";
+elif [[ $6 == "Kolmogorov-Smirnov" ]];
+then
+  testname="ks.test"
+else
+  echo "This test is unknown"
+fi;
+
+echo '#!/usr/bin/env Rscript' > $tmp/stats.r
+chmod +x $tmp/stats.r
+
+
+#The dirtiness a its pure state
+echo 'myTest <- function(fun = stat(x, y), patfile) {' >> $tmp/stats.r
+echo '  res <- try(fun);' >> $tmp/stats.r
+echo '  w <- NULL;'  >> $tmp/stats.r
+echo '  if (class(res) == "try-error") {'  >> $tmp/stats.r
+echo '    res$p.value <- NaN;' >> $tmp/stats.r
+echo '  } else if (exists("last.warning") && !is.null(last.warning)) {'  >> $tmp/stats.r
+echo '    w <- paste("Warning", names(last.warning), sep=" : ");' >> $tmp/stats.r
+echo '    assign("last.warning", NULL, envir = baseenv());'  >> $tmp/stats.r
+echo '  } ' >> $tmp/stats.r
+echo '  write(paste("\n", res$p.value, sep=""), patfile, append=TRUE, sep="\n");'  >> $tmp/stats.r
+echo '  if (!is.null(w)) {'  >> $tmp/stats.r
+echo '    write(paste("\n", w, sep=""), patfile, append=TRUE, sep="\n");' >> $tmp/stats.r
+echo '  }'  >> $tmp/stats.r
+echo '}' >> $tmp/stats.r
 #We need control scores, we can have a mean if we have wilcoxon or ttest
 #Or a vector of scores which will be a column in a csv file
 if [[ $5 =~ [0-9]*.[0-9]* ]]; 
@@ -260,36 +294,13 @@ else
     echo "$control"
 fi
 
-if [[ $6 == "Wilcoxon" ]];
-then 
-  testname="wilcox.test";
-elif [[ $6 == "t-test" ]];
-then
-  testname="t.test";
-elif [[ $6 == "Kolmogorov-Smirnov" ]];
-then
-  testname="ks.test"
-else
-  echo "This test is unknown"
-fi;
-
-vec="vec <- (0:$((numclu - 1)))"
-
 #We can read clustersco files and apply statistical tests
 for ((i=0; i<$numclu; i++));
 do
   read text < $tmp/cluster${i}sco.txt
   x="c("$text")"
-  tt="res <- try($testname($x, $y))"
-  ttss="if (class(res) == \"try-error\") { 
-    error <- res[1]
-    res\$p.value <- NaN  
-  }"
-  ss="vec[$((i + 1))] = res\$p.value"
-  echo $ss
+  compute="myTest($testname($x, $control), \"$tmp/cluster${i}pat.txt\")"
+  echo $compute >> $tmp/stats.r
 done;
-Rcommand += 'write(p, "%s",1)\n'%(pvalues)
-		Rcommand += 'q()\n'
 
-
-R --no-save --no-restore < test.r
+$tmp/stats.r

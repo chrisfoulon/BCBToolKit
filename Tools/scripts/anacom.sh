@@ -2,7 +2,7 @@
 #Anacom - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten & Chris Foulon 
 [ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp"; exit 1; }
 
-#set -x
+set -x
 
 path=${PWD}/Tools
     
@@ -304,3 +304,14 @@ do
 done;
 
 $tmp/stats.r
+
+for ((i=0; i<$numclu; i++));
+do
+  #We read the second line of every cluster*pat.txt which contain the pvalue
+  pval=`sed -n 2p $tmp/cluster${i}pat.txt`
+  fslmaths $cluD/cluster${i}.nii* -bin $cluD/cluster${i}pval
+  fslmaths $cluD/cluster${i}pval -mul $pval $cluD/cluster${i}pval
+  fslmaths $cluD/cluster${i}pval -add $3/mergedPvalClusters $3/mergedPvalClusters
+done;
+
+# Creation of a file containing all clusters with pvalues. ($3/mergedPvalClusters)

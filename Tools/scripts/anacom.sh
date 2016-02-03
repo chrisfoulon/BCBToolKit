@@ -309,9 +309,14 @@ for ((i=0; i<$numclu; i++));
 do
   #We read the second line of every cluster*pat.txt which contain the pvalue
   pval=`sed -n 2p $tmp/cluster${i}pat.txt`
-  fslmaths $cluD/cluster${i}.nii* -bin $cluD/cluster${i}pval
-  fslmaths $cluD/cluster${i}pval -mul $pval $cluD/cluster${i}pval
-  fslmaths $cluD/cluster${i}pval -add $3/mergedPvalClusters $3/mergedPvalClusters
+  fslmaths $cluD/cluster${i}.nii* -bin $cluD/pvalcluster${i}.nii*
+  fslmaths $cluD/pvalcluster${i}.nii* -mul $pval $cluD/pvalcluster${i}.nii*
+  
+  # Creation of a file containing all clusters with pvalues. ($3/mergedPvalClusters)
+  fslmaths $cluD/pvalcluster${i}.nii* -add $3/mergedPvalClusters $3/mergedPvalClusters
 done;
-
-# Creation of a file containing all clusters with pvalues. ($3/mergedPvalClusters)
+# Bonferroni correction
+fslmaths $3/mergedPvalClusters -mul $numclu $tmp/tmpbonf
+fslmaths $tmp/tmpbonf -uthr 1 -bin $tmp/ubonfmask
+fslamths $tmp/tmpbonf -thr 1 -bin $tmp/bonfmask
+fslmaths $tmp/tmpbonf -mas $tmp/ubonfmask -add $tmp/bonmask $3/bonferroniClusters

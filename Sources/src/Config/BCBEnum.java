@@ -88,6 +88,8 @@ public final class BCBEnum {
 		ATHRESH("default ANACOM threshold"),
 		ADEFTEST("default ANACOM test"),
 		ASAVETMP("save ANACOM tmpFiles"),
+		ACTRLFILE("save ANACOM ctrlFile"),
+		ACTRLMEAN("save ANACOM ctrlMean"),
 		//Statistical analysis
 		SMAP1DIR("default STATISTICAL map1"),
 		SMAP2DIR("default STATISTICAL map2"),

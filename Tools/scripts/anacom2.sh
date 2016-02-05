@@ -221,3 +221,32 @@ do
   echo " "
   echo "############"
 done;
+
+######################## Linear Regression (USELESS ?) ##########################
+vec="${sco[0]}"
+for ((i=1; i < ${#sco[@]};i++));
+do
+  vec="${vec},${sco[$i]}"
+done;
+
+for ((i=0; i < ${#pat[@]};i++));
+do
+  vox[$i]=`fslstats $2/${pat[$i]} -V | awk '{ print $1 }'`
+done;
+
+voxvec="${vox[0]}"
+for ((i=1; i < ${#vox[@]};i++));
+do
+  voxvec="${voxvec},${vox[$i]}"
+done;
+
+echo '#!/usr/bin/env Rscript' > $tmp/linReg.r
+chmod +x $tmp/linReg.r
+
+echo "linM <- lm(c($vec) ~ c($voxvec))" >> $tmp/linReg.r
+echo "resid(linM)" >> $tmp/linReg.r
+echo "cat(linM\$residuals, \"\n\", file=\"$tmp/resid.txt\")" >> $tmp/linReg.r
+
+$tmp/linReg.r
+
+######################## Linear Regression (END) ##########################

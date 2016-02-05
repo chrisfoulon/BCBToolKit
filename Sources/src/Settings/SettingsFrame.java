@@ -185,6 +185,14 @@ public class SettingsFrame implements Settings {
 					getBCB().getFrame(), getBCB()));*/
 		}
 		
+		JPanel anacomTab = new JPanel(); {
+			BoxLayout boxLay5 = new BoxLayout(anacomTab, BoxLayout.Y_AXIS);
+			anacomTab.setLayout(boxLay5);
+			//statTab.add(butMap.get(BCBEnum.Param.SMAP1DIR));
+			//statTab.add(butMap.get(BCBEnum.Param.SMAP2DIR));
+			//statTab.add(butMap.get(BCBEnum.Param.SRESDIR));
+		}
+		
 		JPanel statTab = new JPanel(); {
 			BoxLayout boxLay3 = new BoxLayout(statTab, BoxLayout.Y_AXIS);
 			statTab.setLayout(boxLay3);
@@ -204,6 +212,7 @@ public class SettingsFrame implements Settings {
 		tabs.addTab("Disconnectome maps", discoTab);
 		tabs.addTab("Cortical thickness", cortiTab);
 		tabs.addTab("Normalisation", normaTab);
+		tabs.addTab("anaCOM2", anacomTab);
 		tabs.addTab("Statistical analysis", statTab);
 		tabs.setOpaque(true);
 		

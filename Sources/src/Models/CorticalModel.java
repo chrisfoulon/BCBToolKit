@@ -99,6 +99,7 @@ public class CorticalModel {
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
 			setNbTicks(new File(t1Dir).listFiles(fileNameFilter).length);
+			int count = 0;
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
 				/*
@@ -110,6 +111,8 @@ public class CorticalModel {
 					progress++;
 					loading.setWidth(progress);					
 				}
+				count++;
+				System.out.println("~~~~~~~~COUNT :" + count);
 				System.out.println(inLoop);
 			}
 			out.close();

@@ -1,8 +1,8 @@
 #! /bin/bash
 #Anacom - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten & Chris Foulon 
 [ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp"; exit 1; }
-
-set -x
+# set -x
+set -e
 
 path=${PWD}/Tools
     
@@ -75,6 +75,8 @@ fslmaths $2/${pat[0]} -uthr 1 $oR
 fslmaths $2/${pat[0]} -uthr 1 $oS
 for f in ${pat[*]}
 do
+    echo "File : $f"
+    echo "Score : ${sco[$num]}"
     #binarisation
     fslmaths $2/$f -bin $tmp/bin$f
     #scoring
@@ -138,7 +140,7 @@ fslmerge -t $tmp/4Dscores $tmp/sco*
 fslmaths $tmp/4Dscores -Tstd $tmp/std
 #We mask std to preserve the threshold created before
 fslmaths $tmp/std -mas $tmp/mask.nii.gz $tmp/maskedStd
-
+echo "WOOOT ?"
 ###############################################################################
 ## Now we can create our clusters by adding layers and standard deviation    ##
 ## With that we can garantee different values in areas with different        ##
@@ -155,27 +157,34 @@ fi;
 
 mkdir -p $cluD
 numclu=0
+#The order of layer files is layer0, layer1, layer10, layer11, layer12 ...
+
 for la in $tmp/layer*;
 do
+  printf "Path : "$la;
   # In first we mask std with the layer
   fslmaths $tmp/maskedStd -mas $la $tmp/tmpStdMask
+  echo "Oh my godness";
   # We add std to the layer
   fslmaths $la -add $tmp/tmpStdMask $tmp/stdlayer
+  echo "Oh my damned";
   # And now we make other layers, with each different values, which will be 
   # our clusters
+  echo `fslstats $tmp/stdlayer -V | awk '{ print $1 }'`;
   while [ `fslstats $tmp/stdlayer -V | awk '{ print $1 }'` != 0 ];
-  do
+  do echo "boucle" ; 
     max=`fslstats $tmp/stdlayer -R | awk '{print $2}'`;
     echo "MAX : $max";
-    fslmaths $tmp/stdlayer -thr $max $cluD/cluster${numclu}
-    
-    fslmaths $tmp/stdlayer -sub $cluD/cluster${numclu} $tmp/stdlayer
-    
-    numclu=$((numclu + 1))
-    
+    fslmaths $tmp/stdlayer -thr $max $cluD/cluster${numclu};
+    echo "THR" ; 
+    fslmaths $tmp/stdlayer -sub $cluD/cluster${numclu} $tmp/stdlayer;
+    echo "SUB" ; 
+    numclu=$((numclu + 1));
+    echo "Fuuuuu";
+    echo `fslstats $tmp/stdlayer -V | awk '{ print $1 }'`;
   done;
 done;
-
+echo "Dayum"
 #Here we want to find which patients belong to clusters
 #For that we try to overlap lesions with clusters
 for ((i=0; i<$numclu; i++));
@@ -184,32 +193,28 @@ do
   score=0;
   for p in ${pat[*]};
   do
-    fslmaths $cluD/cluster$i.nii* -mas $2/$p $tmp/tmpMask${i}_${p};
+    echo "I got bronchysis"
+    fslmaths $cluD/cluster$i -mas $2/$p $tmp/tmpMask${i}_${p};
     #If there is an overlap between cluster and lesion we write the name and 
     #the score else we remove the file
+    echo "Jesus Jesus Jesus"
     if [ `fslstats $tmp/tmpMask${i}_${p} -V | awk '{ print $1 }'` == 0 ];
     then 
       rm $tmp/tmpMask${i}_${p}*; 
     else
-	  echo -n "$p," >> $tmp/cluster${i}pat.txt
+	echo "Saint Oh lord Jesus it's a fire"
+	echo -n "$p," >> $tmp/cluster${i}pat.txt
 	  echo -n "${sco[$index]}," >> $tmp/cluster${i}sco.txt
     fi;
     index=$((index + 1));
   done;
+  echo "Ain\'t nobody get time for that"
   ## Note: On OSX, you'd have to use -i '' instead of just -i. ##
   ## Maybe sed does not work on OSX (LO_OL) so ...             ##
   sed -i '$ s/.$//' $tmp/cluster${i}sco.txt
   sed -i '$ s/.$//' $tmp/cluster${i}pat.txt
 done;
 
-
-for f in $tmp/cluster*;
-do
-  echo $f
-  cat $f
-  echo " "
-  echo "############"
-done;
 
 # A loop to test if there is no overlap between clusters
 # for ((i=0; i < $numclu; i++));
@@ -246,6 +251,7 @@ fi;
 echo '#!/usr/bin/env Rscript' > $tmp/stats.r
 chmod +x $tmp/stats.r
 
+echo 'options(warn=-1)' >> $tmp/stats.r
 
 #The dirtiness a its pure state
 echo 'myTest <- function(fun = stat(x, y), patfile) {' >> $tmp/stats.r
@@ -264,7 +270,7 @@ echo '  }'  >> $tmp/stats.r
 echo '}' >> $tmp/stats.r
 #We need control scores, we can have a mean if we have wilcoxon or ttest
 #Or a vector of scores which will be a column in a csv file
-if [[ $5 =~ [0-9]*.[0-9]* ]]; 
+if [[ $5 =~ [0-9]+\.[0-9]+||[0-9]+ ]]; 
 then
     echo "Only published normative value"
     control="mu=$5"
@@ -276,6 +282,7 @@ else
     do
 	i=$((i+1))
     done < $5
+    for ((i=0; i < ${#contr[@]};i++)); do echo "[${contr[$i]}]"; done;
     #We have to manage empty lines in the csv file so we unset empty cells
     for ((i=0; i < ${#contr[@]};i++)); 
     do
@@ -286,11 +293,18 @@ else
       fi;
     done;
     #We create a R vector with control scores
-    for ((i=0; i < ${#contr[@]} - 1; i++));
+    cc=0
+    declare -a full
+    for ct in ${contr[*]};
     do
-      y=${y}${contr[$i]}","
+      full[$cc]=$ct
+      cc=$((cc + 1))
     done;
-    control="c(${y}${contr[-1]})"
+    for ((i=0; i < ${#full[@]} - 1; i++));
+    do
+      y=${y}${full[$i]}","
+    done;
+    control="c(${y}${full[${#full[@]}]})"
     echo "$control"
 fi
 
@@ -304,19 +318,27 @@ do
 done;
 
 $tmp/stats.r
-
+echo "R call"
+fslmaths $tmp/eroded -mul 0 $3/mergedPvalClusters
 for ((i=0; i<$numclu; i++));
 do
   #We read the second line of every cluster*pat.txt which contain the pvalue
   pval=`sed -n 2p $tmp/cluster${i}pat.txt`
-  fslmaths $cluD/cluster${i}.nii* -bin $cluD/pvalcluster${i}.nii*
-  fslmaths $cluD/pvalcluster${i}.nii* -mul $pval $cluD/pvalcluster${i}.nii*
-  
+  echo "Mon petit oiseau"
+  fslmaths $cluD/cluster${i} -bin $cluD/pvalcluster${i}
+  echo "A prit sa volée"
+  fslmaths $cluD/pvalcluster${i} -mul $pval $cluD/pvalcluster${i}
   # Creation of a file containing all clusters with pvalues. ($3/mergedPvalClusters)
-  fslmaths $cluD/pvalcluster${i}.nii* -add $3/mergedPvalClusters $3/mergedPvalClusters
+  fslmaths $cluD/pvalcluster${i} -add $3/mergedPvalClusters $3/mergedPvalClusters
+  echo "A la volette"
 done;
 # Bonferroni correction
+echo "ALMOST FINISH"
 fslmaths $3/mergedPvalClusters -mul $numclu $tmp/tmpbonf
+echo "Elle est ou la poulette ?"
 fslmaths $tmp/tmpbonf -uthr 1 -bin $tmp/ubonfmask
-fslamths $tmp/tmpbonf -thr 1 -bin $tmp/bonfmask
-fslmaths $tmp/tmpbonf -mas $tmp/ubonfmask -add $tmp/bonmask $3/bonferroniClusters
+echo "elle est bien cachée ?"
+fslmaths $tmp/tmpbonf -thr 1 -bin $tmp/bonfmask
+echo "Vous rendez la poulette"
+fslmaths $tmp/tmpbonf -mas $tmp/ubonfmask -add $tmp/bonfmask $3/bonferroniClusters
+echo "Ou c'est tout nu dans les orties"

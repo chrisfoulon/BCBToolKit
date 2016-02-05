@@ -10,6 +10,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -174,6 +176,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		frame = new JFrame("BCBToolKit"); {
 			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
 			frame.setResizable(false);
+			frame.setFocusable(true);
 		}
 		// Menu
 		menu = new JMenuBar();
@@ -192,7 +195,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		formatButton(norma);
 		URL url = getClass().getClassLoader().getResource("undercons.png");
 		ImageIcon logo = new ImageIcon(url);
-		anacom = new JButton(Tools.twoLinesString("ANACOM",  ""), logo);
+		anacom = new JButton(buttonIcon("anacom.jpg", 150, 120));
 		formatButton(anacom);
 		stat = new JButton(Tools.twoLinesString("Statistical",  "Analysis"), logo);
 		formatButton(stat);
@@ -242,6 +245,17 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e) {
 				closing();
+			}
+		});
+		
+		frame.addFocusListener(new FocusListener() {
+			public void focusGained(FocusEvent e) {
+				getBCB().allOnFront();
+				getFrame().requestFocus();
+			}
+
+			public void focusLost(FocusEvent e) {
+				return;
 			}
 		});
 		
@@ -403,13 +417,14 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		return new HashMap<BCBEnum.Param, Browser>(this.broMap);
 	}
 	
+	//For now it's totally useless and I failed ....
 	public void allOnFront() {
+		//this.getFrame().setExtendedState(JFrame.NORMAL);
 		for (AbstractApp app : appMap.values()) {
 			if (app != null) {
-				app.getFrame().toFront();
+				//app.getFrame().setExtendedState(JFrame.NORMAL);
 			}
 		}
-		this.getFrame().toFront();
 	}
 	
 	/**

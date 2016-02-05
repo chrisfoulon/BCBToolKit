@@ -292,6 +292,16 @@ public class Normalisation extends AbstractApp {
 				frame.pack();
 			}
 		});
+		
+		saveTmp.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (saveTmp.isSelected()) {
+					conf.setVal(BCBEnum.Param.NSAVETMP, "true");
+				} else {
+					conf.setVal(BCBEnum.Param.NSAVETMP, "false");
+				}
+			}
+		});
 	}
 
 	//OUTILS	

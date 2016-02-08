@@ -195,7 +195,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		formatButton(norma);
 		URL url = getClass().getClassLoader().getResource("undercons.png");
 		ImageIcon logo = new ImageIcon(url);
-		anacom = new JButton(buttonIcon("anacom.jpg", 150, 120));
+		anacom = new JButton(buttonIcon("anacomtxt.png", 120, 110));
 		formatButton(anacom);
 		stat = new JButton(Tools.twoLinesString("Statistical",  "Analysis"), logo);
 		formatButton(stat);

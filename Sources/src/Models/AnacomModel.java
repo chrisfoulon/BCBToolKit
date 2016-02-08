@@ -3,7 +3,6 @@ package Models;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -40,7 +39,7 @@ public class AnacomModel {
 	private String saveTmp;
 	private LoadingBar loading;
 	private JFrame frame;
-	private FilenameFilter fileNameFilter;
+	//private FilenameFilter fileNameFilter;
 
 	public AnacomModel(String path, JFrame f) {
 		this.path = path;
@@ -49,7 +48,7 @@ public class AnacomModel {
 		this.frame = f;
 
 		// create new filename filter to recognize .nii and .nii.gz files
-		this.fileNameFilter = new FilenameFilter() {
+		/*this.fileNameFilter = new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				if (name.endsWith(".nii") || name.endsWith(".nii.gz")) {
@@ -58,7 +57,7 @@ public class AnacomModel {
 					return false;
 				}
 			}
-		};
+		};*/
 	}
 	
 	public void setCSV(String str) {
@@ -123,14 +122,6 @@ public class AnacomModel {
 		try {
 
 			Files.setPosixFilePermissions(Paths.get(exeDir + BCBEnum.Script.ANACOM.endPath()), perms);
-			
-			System.out.println(csvFile); 
-			System.out.println(lesDir);
-			System.out.println(resDir); 
-			System.out.println(thresh);
-			System.out.println(controls);
-			System.out.println(test);
-			System.out.println(saveTmp);
 
 			String[] array = {exeDir + BCBEnum.Script.ANACOM.endPath(),
 					csvFile, lesDir, resDir, thresh, controls, test, saveTmp};
@@ -143,13 +134,13 @@ public class AnacomModel {
 			BufferedReader buff = new BufferedReader(out);
 			String inLoop = null;
 			int progress = 0;
-			setNbTicks(new File(lesDir).listFiles(fileNameFilter).length);
+			setNbTicks(5);
 			while ((inLoop = buff.readLine()) != null) {
 				if (inLoop.startsWith("#")) {
 					progress++;
 					loading.setWidth(progress);					
 				}
-				System.out.println(inLoop);
+				//System.out.println(inLoop);
 			}
 			out.close();
 			//We erase the content of the log file if it exists
@@ -166,7 +157,7 @@ public class AnacomModel {
 			while ((tmp = br.readLine()) != null) {
 				if (tmp.startsWith("+")) {
 					log = tmp + "\n";
-					System.out.println(tmp);
+					//System.out.println(tmp);
 					try {
 						writer.write(log);
 					} catch (IOException e) {

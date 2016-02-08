@@ -35,7 +35,7 @@ import Models.AnacomModel;
 public class Anacom extends AbstractApp {
 	public static final String ANACOM_TITLE = "AnaCOM2";
 	public static final int FRAME_WIDTH = 330;
-	public static final int FRAME_HEIGHT = 510;
+	public static final int FRAME_HEIGHT = 540;
 
 	private ImagePanel background;
 	private JPanel panel;
@@ -71,7 +71,7 @@ public class Anacom extends AbstractApp {
 	protected void createView() {
 		int osxisthedevil = 0;
 		if (Tools.isOSX()) {
-			osxisthedevil = 20;
+			osxisthedevil = 30;
 		}
 		//Frame
 		frame = new JFrame(ANACOM_TITLE); {
@@ -80,7 +80,7 @@ public class Anacom extends AbstractApp {
 			display();
 			frame.setFocusable(true);
 		}
-		background = new ImagePanel("anacom.jpg", 140, 112);
+		background = new ImagePanel("anacom.png", 135, 110);
 		background.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 6));
 		//Création des icones
 		URL url = getClass().getClassLoader().getResource("settings.png");
@@ -240,7 +240,6 @@ public class Anacom extends AbstractApp {
 				worker = new SwingWorker<Void, Void>() {
 					@Override
 					public Void doInBackground() {
-						System.out.println(testCombo.getSelectedItem());
 						model.setTest((String) testCombo.getSelectedItem());
 						// We test if the string is an integer
 						try {
@@ -374,5 +373,12 @@ public class Anacom extends AbstractApp {
 			conf.setVal(Param.ACTRLFILE, ctrlBro.getPath());
 		}
 		super.closing();
+	}
+	
+	@Override
+	public void cancel() {
+		if (worker != null) {
+			getBCB().cancelActions(path + "/Tools/tmp/tmpAnacom", worker);
+		}
 	}
 }

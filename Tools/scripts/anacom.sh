@@ -2,8 +2,8 @@
 #Anacom - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten & Chris Foulon 
 [ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp"; exit 1; }
 #This command crash the software but for now I don't know why
-# set -x
-# set -e
+#set -x
+#set -e
 
 path=${PWD}/Tools
     
@@ -30,6 +30,17 @@ fi;
 
 mkdir -p $tmp
 
+if [[ $7 == "true" ]];
+then 
+  saveTmp=$3/anacomTemporaryFiles
+  if [[ -e $saveTmp ]];
+  then
+    rm -rf $saveTmp;
+  fi;
+  
+  mkdir -p $saveTmp
+fi;
+  
 #For controls, we can have scores for each control or just the mean value
 #(just in ttest case). 
 
@@ -44,28 +55,19 @@ while IFS=',' read pat[$i] sco[$i]
 do
     i=$((i+1))
 done < $1
-# $pat contains patient names (only filenames) and $sco contains scores associated with each patient. 
-# ${#path[*]} for number of elements.
-echo "${pat[*]}"
-echo "TAILLE DE PAT: ${#pat[@]}"
-echo "TAILLE DE SCO: ${#sco[@]}"
-echo ${sco[*]}
+
 #We have to manage empty lines in the csv file so we unset empty cells
 for ((i=0; i < ${#pat[@]};i++)); 
 do
   if [[ ${pat[$i]} == "" ]];
   then 
-    echo "unset";
     unset pat[$i];
   fi;
   if [[ ${sco[$i]} == "" ]];
   then 
-    echo "unset";
     unset sco[$i];
   fi;
 done;
-
-for ((i=0; i < ${#pat[@]};i++)); do echo "[${pat[$i]}][${sco[$i]}]"; done; 
 
 #### BINARISATION of ROIs AND ScoredROI creation AND adding binROI in overlapROI and scoROI in overlapScores ####
 num=0
@@ -76,8 +78,6 @@ fslmaths $2/${pat[0]} -uthr 1 $oR
 fslmaths $2/${pat[0]} -uthr 1 $oS
 for f in ${pat[*]}
 do
-    echo "File : $f"
-    echo "Score : ${sco[$num]}"
     #binarisation
     fslmaths $2/$f -bin $tmp/bin$f
     #scoring
@@ -88,6 +88,7 @@ do
     fslmaths $tmp/sco$f -add $oS $oS
     num=$((num + 1))
 done
+echo "#"
 
 #### Mean Values Map ####
 #We just devide overlapScores by overlapROI in meanValMap.nii.gz
@@ -107,29 +108,23 @@ fslmaths $tmp/overlapScores -mas $tmp/mask.nii.gz $overMask
 #For that, we take the maximum score of the map and we cut its top
 nblayer=0
 max=`fslstats $overMask -R | awk '{print $2}'`;
-echo "MAX : $max";
 fslmaths $overMask -thr $max $tmp/layer${nblayer}
 
 fslmaths $overMask -sub $tmp/layer${nblayer} $tmp/eroded
-
-echo "overMask : "`fslstats $overMask -R`
-echo "Mean overMask :"`fslstats $overMask -M`
-echo "MinMax eroded"`fslstats $tmp/eroded -R`
 
 nblayer=$((nblayer + 1))
 while [ `fslstats $tmp/eroded -V | awk '{ print $1 }'` != 0 ];
 do
   max=`fslstats $tmp/eroded -R | awk '{print $2}'`;
-  echo "MAX : $max";
   fslmaths $tmp/eroded -thr $max $tmp/layer${nblayer}
   
   fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
   
-  echo "ERODED in loop"`fslstats $tmp/eroded -R`
   nblayer=$((nblayer + 1))
 done;
 #erorded is now full of 0
 rm -rf $tmp/eroded
+echo "#"
 
 #Here, we will compute the standard deviation because if, in a layer, we can
 #have different area with the same score once added but not the same 
@@ -141,7 +136,6 @@ fslmerge -t $tmp/4Dscores $tmp/sco*
 fslmaths $tmp/4Dscores -Tstd $tmp/std
 #We mask std to preserve the threshold created before
 fslmaths $tmp/std -mas $tmp/mask.nii.gz $tmp/maskedStd
-echo "WOOOT ?"
 ###############################################################################
 ## Now we can create our clusters by adding layers and standard deviation    ##
 ## With that we can garantee different values in areas with different        ##
@@ -149,7 +143,7 @@ echo "WOOOT ?"
 ## the same value (because we are in a layer)                                ##
 ###############################################################################
 #We keep cluster's results in the result directory
-cluD=$3/clusterDir
+cluD=$3/anacomClustersDir
 if [[ -e $cluD ]];
 then
   rm -rf $cluD;
@@ -162,30 +156,22 @@ numclu=0
 
 for la in $tmp/layer*;
 do
-  printf "Path : "$la;
   # In first we mask std with the layer
   fslmaths $tmp/maskedStd -mas $la $tmp/tmpStdMask
-  echo "Oh my godness";
   # We add std to the layer
   fslmaths $la -add $tmp/tmpStdMask $tmp/stdlayer
-  echo "Oh my damned";
   # And now we make other layers, with each different values, which will be 
   # our clusters
-  echo `fslstats $tmp/stdlayer -V | awk '{ print $1 }'`;
   while [ `fslstats $tmp/stdlayer -V | awk '{ print $1 }'` != 0 ];
-  do echo "boucle" ; 
+  do 
     max=`fslstats $tmp/stdlayer -R | awk '{print $2}'`;
-    echo "MAX : $max";
     fslmaths $tmp/stdlayer -thr $max $cluD/cluster${numclu};
-    echo "THR" ; 
     fslmaths $tmp/stdlayer -sub $cluD/cluster${numclu} $tmp/stdlayer;
-    echo "SUB" ; 
+    
     numclu=$((numclu + 1));
-    echo "Fuuuuu";
-    echo `fslstats $tmp/stdlayer -V | awk '{ print $1 }'`;
   done;
 done;
-echo "Dayum"
+echo "#"
 #Here we want to find which patients belong to clusters
 #For that we try to overlap lesions with clusters
 for ((i=0; i<$numclu; i++));
@@ -195,27 +181,23 @@ do
   patient="";
   for p in ${pat[*]};
   do
-    echo "I got bronchysis"
     fslmaths $cluD/cluster$i -mas $2/$p $tmp/tmpMask${i}_${p};
     #If there is an overlap between cluster and lesion we write the name and 
     #the score else we remove the file
-    echo "Jesus Jesus Jesus"
     if [ `fslstats $tmp/tmpMask${i}_${p} -V | awk '{ print $1 }'` == 0 ];
     then 
       rm $tmp/tmpMask${i}_${p}*; 
     else
-      echo "Saint Oh lord Jesus it's a fire"
       patient="$patient$p,"
       score="$score${sco[$index]},"
     fi;
     index=$((index + 1));
   done;
   #We remove the last comma of strings and we store values in files
-  echo -n "${patient::-1}" >> $tmp/cluster${i}pat.txt
-  echo -n "${score::-1}" >> $tmp/cluster${i}sco.txt
-
-  echo "Ain\'t nobody get time for that"
+  echo -n "${patient:0:${#patient}-1}" >> $tmp/cluster${i}pat.txt
+  echo -n "${score:0:${#score}-1}" >> $tmp/cluster${i}sco.txt
 done;
+echo "#"
 
 # A loop to test if there is no overlap between clusters
 # for ((i=0; i < $numclu; i++));
@@ -271,25 +253,22 @@ echo '  }'  >> $tmp/stats.r
 echo '}' >> $tmp/stats.r
 #We need control scores, we can have a mean if we have wilcoxon or ttest
 #Or a vector of scores which will be a column in a csv file
-if [[ $5 =~ [0-9]+\.[0-9]+||[0-9]+ ]]; 
+if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
 then
-    echo "Only published normative value"
     control="mu=$5"
-    echo "$control"
 else
-    echo "Control scores"
+    i=0
     declare -a contr
     while read contr[$i]
     do
 	i=$((i+1))
     done < $5
-    for ((i=0; i < ${#contr[@]};i++)); do echo "[${contr[$i]}]"; done;
+    
     #We have to manage empty lines in the csv file so we unset empty cells
     for ((i=0; i < ${#contr[@]};i++)); 
     do
       if [[ ${contr[$i]} == "" ]];
       then 
-	echo "unset";
 	unset contr[$i];
       fi;
     done;
@@ -303,10 +282,9 @@ else
     done;
     for ((i=0; i < ${#full[@]} - 1; i++));
     do
-      y=${y}${full[$i]}","
+      y="${y}${full[$i]},"
     done;
-    control="c(${y}${full[${#full[@]}]})"
-    echo "$control"
+    control="c(${y}${full[${#full[@]} - 1]})"
 fi
 
 #We can read clustersco files and apply statistical tests
@@ -318,28 +296,93 @@ do
   echo $compute >> $tmp/stats.r
 done;
 
+#We launch the R script to compute pvalues
 $tmp/stats.r
-echo "R call"
-fslmaths $tmp/eroded -mul 0 $3/mergedPvalClusters
+
+#We declare an array to store pvalues for bonferroni-holm correction
+declare -a bonf
+#Creation of an empty file #ugly
+fslmaths $overMask -mul 0 $3/mergedPvalClusters
 for ((i=0; i<$numclu; i++));
 do
   #We read the second line of every cluster*pat.txt which contain the pvalue
   pval=`sed -n 2p $tmp/cluster${i}pat.txt`
-  echo "Mon petit oiseau"
+  
+  if [[ $pval != "NaN" ]];
+  then
+    bonf[$i]=$pval;
+  fi;
+  
   fslmaths $cluD/cluster${i} -bin $cluD/pvalcluster${i}
-  echo "A prit sa volée"
+  
   fslmaths $cluD/pvalcluster${i} -mul $pval $cluD/pvalcluster${i}
   # Creation of a file containing all clusters with pvalues. ($3/mergedPvalClusters)
   fslmaths $cluD/pvalcluster${i} -add $3/mergedPvalClusters $3/mergedPvalClusters
-  echo "A la volette"
 done;
+#Here we have all pvalues (without NaN) stored in bonf indexed by cluster number
+#To correct pvalues with Bonferroni-Holm method we have to sort them in ascending order
+declare -a sorted;
+declare -a indexes;
+# Sort with -g (for floats) and -s for stable sort (to preserve order in case of equality)
+var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g -s`
+# Sort give a string so we convert it as an array in $sorted
+IFS=' ' read -r -a sorted <<< $var
+# Now we create an array to associate $sorted's values with bonf's indexes
+# We destroy bonf cell by cell (sorry bro)
+
+# We store indexes of bonf 
+read -r -a arrInd <<< ${!bonf[@]}
+# We fill indexes with indexex of bonf sorted like in ... $sorted
+for i in ${!sorted};
+do 
+  ind=0;
+  while [[ ${bonf[${arrInd[$ind]}]} != ${sorted[$i]} ]];
+  do
+    ind=$((ind + 1));
+  done;
+  indexes[$i]=${arrInd[$ind]};
+done;
+
+# We make Bonferroni-Holm corrections
+numb=${#sorted[@]}
+for ((i=0;i<${#sorted[@]};i++));
+do
+  sorted[$i]=$(awk "BEGIN {printf ${sorted[$i]}*$((num - $i))}");
+done;
+
+# We re-create bonf with corrected pvalues
+for ((i=0;i<${#sorted[@]};i++));
+do
+  bonf[${indexes[$i]}]=${sorted[$i]};
+done;
+
+
+# We create new maps with corrected pvalues
+fslmaths $overMask -mul 0 $3/mergedBHcorrClusters
+for index in ${!bonf[@]};
+do
+  fslmaths $cluD/pvalcluster${index} -bin $cluD/BHcorrCluster${index}
+  fslmaths $cluD/BHcorrCluster${index} -mul ${bonf[$index]} $cluD/BHcorrCluster${index}
+  # We fill the map with all corrected pvalues
+  fslmaths $cluD/BHcorrCluster${index} -add $3/mergedBHcorrClusters $3/mergedBHcorrClusters
+done;
+
+
 # Bonferroni correction
-echo "ALMOST FINISH"
 fslmaths $3/mergedPvalClusters -mul $numclu $tmp/tmpbonf
-echo "Elle est ou la poulette ?"
+
 fslmaths $tmp/tmpbonf -uthr 1 -bin $tmp/ubonfmask
-echo "elle est bien cachée ?"
+
 fslmaths $tmp/tmpbonf -thr 1 -bin $tmp/bonfmask
-echo "Vous rendez la poulette"
+
 fslmaths $tmp/tmpbonf -mas $tmp/ubonfmask -add $tmp/bonfmask $3/bonferroniClusters
-echo "Ou c'est tout nu dans les orties"
+echo "#"
+
+mv $map $saveTmp
+mv $tmp/maskedStd $saveTmp
+
+rm -rf $cluD/cluster*
+
+#I realised that all issues with arrays when I unset values could be resolve
+#by using ${!array[@]} which give indexes of array even if there are not 
+#contiguous.

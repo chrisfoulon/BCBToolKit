@@ -378,10 +378,17 @@ fslmaths $tmp/tmpbonf -thr 1 -bin $tmp/bonfmask
 fslmaths $tmp/tmpbonf -mas $tmp/ubonfmask -add $tmp/bonfmask $3/bonferroniClusters
 echo "#"
 
-mv $map $saveTmp
-mv $tmp/maskedStd $saveTmp
-
 rm -rf $cluD/cluster*
+
+if [[ -e $saveTmp ]];
+then
+  mv $map $saveTmp
+  mv $tmp/maskedStd $saveTmp
+else
+rm -rf $cluD
+fi;
+
+rm -rf $tmp
 
 #I realised that all issues with arrays when I unset values could be resolve
 #by using ${!array[@]} which give indexes of array even if there are not 

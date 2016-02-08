@@ -35,7 +35,7 @@ import Models.AnacomModel;
 public class Anacom extends AbstractApp {
 	public static final String ANACOM_TITLE = "AnaCOM2";
 	public static final int FRAME_WIDTH = 330;
-	public static final int FRAME_HEIGHT = 530;
+	public static final int FRAME_HEIGHT = 510;
 
 	private ImagePanel background;
 	private JPanel panel;
@@ -69,9 +69,13 @@ public class Anacom extends AbstractApp {
 	}
 
 	protected void createView() {
+		int osxisthedevil = 0;
+		if (Tools.isOSX()) {
+			osxisthedevil = 20;
+		}
 		//Frame
 		frame = new JFrame(ANACOM_TITLE); {
-			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
+			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT + osxisthedevil));
 			frame.setResizable(false);
 			display();
 			frame.setFocusable(true);

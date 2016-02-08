@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
-import java.util.Scanner;
 import java.util.Set;
 
 import javax.swing.JFrame;
@@ -120,8 +119,6 @@ public class AnacomModel {
 		perms.add(PosixFilePermission.OTHERS_EXECUTE);
 
 		String erreur = "";
-		
-		System.out.println("????");
 
 		try {
 
@@ -138,17 +135,14 @@ public class AnacomModel {
 			String[] array = {exeDir + BCBEnum.Script.ANACOM.endPath(),
 					csvFile, lesDir, resDir, thresh, controls, test, saveTmp};
 
-			System.out.println("????");
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 
-			System.out.println("#######################Exec ok");
 			//Scanner out = new Scanner(proc.getInputStream());
 			InputStreamReader out = new InputStreamReader(proc.getInputStream());
 			InputStreamReader err = new InputStreamReader(proc.getErrorStream());
 			BufferedReader buff = new BufferedReader(out);
 			String inLoop = null;
 			int progress = 0;
-			int count = 0;
 			setNbTicks(new File(lesDir).listFiles(fileNameFilter).length);
 			while ((inLoop = buff.readLine()) != null) {
 				if (inLoop.startsWith("#")) {
@@ -156,8 +150,6 @@ public class AnacomModel {
 					loading.setWidth(progress);					
 				}
 				System.out.println(inLoop);
-				count++;
-				System.out.println("~~~~~~~~COUNT :" + count);
 			}
 			out.close();
 			//We erase the content of the log file if it exists
@@ -166,7 +158,6 @@ public class AnacomModel {
 			eraser.close();
 			
 			FileWriter writer = new FileWriter(resDir + "/" + logFile, true);
-			System.out.println("#######################inputStream OK");
 
 			String log = new String("");
 			//InputStreamReader err = new InputStreamReader(proc.getErrorStream());
@@ -183,14 +174,10 @@ public class AnacomModel {
 					}
 				} else {
 					erreur += tmp + "\n";
-					System.out.println(erreur);
 				}
 			}
 			writer.close();
-			System.out.println("#######################Errorstream OK");
 			err.close();
-			
-			System.out.println("#######################FileWriter OK");
 
 		} catch (IOException e) {
 			Writer writer = new StringWriter();
@@ -199,10 +186,9 @@ public class AnacomModel {
 			String s = writer.toString();
 			Tools.showErrorMessage(frame, s);
 			return;
-		} catch (Throwable t)
-          {
+		} catch (Throwable t) {
             t.printStackTrace();
-          }
+        }
 		if (!erreur.equals("")) {
 			String message = "**** SCRIPT ERROR ****\n"
 					+ erreur

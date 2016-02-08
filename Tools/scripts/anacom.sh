@@ -1,8 +1,9 @@
 #! /bin/bash
 #Anacom - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten & Chris Foulon 
 [ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp"; exit 1; }
+#This command crash the software but for now I don't know why
 # set -x
-set -e
+# set -e
 
 path=${PWD}/Tools
     
@@ -190,7 +191,8 @@ echo "Dayum"
 for ((i=0; i<$numclu; i++));
 do
   index=0;
-  score=0;
+  score="";
+  patient="";
   for p in ${pat[*]};
   do
     echo "I got bronchysis"
@@ -202,19 +204,18 @@ do
     then 
       rm $tmp/tmpMask${i}_${p}*; 
     else
-	echo "Saint Oh lord Jesus it's a fire"
-	echo -n "$p," >> $tmp/cluster${i}pat.txt
-	  echo -n "${sco[$index]}," >> $tmp/cluster${i}sco.txt
+      echo "Saint Oh lord Jesus it's a fire"
+      patient="$patient$p,"
+      score="$score${sco[$index]},"
     fi;
     index=$((index + 1));
   done;
-  echo "Ain\'t nobody get time for that"
-  ## Note: On OSX, you'd have to use -i '' instead of just -i. ##
-  ## Maybe sed does not work on OSX (LO_OL) so ...             ##
-  sed -i '$ s/.$//' $tmp/cluster${i}sco.txt
-  sed -i '$ s/.$//' $tmp/cluster${i}pat.txt
-done;
+  #We remove the last comma of strings and we store values in files
+  echo -n "${patient::-1}" >> $tmp/cluster${i}pat.txt
+  echo -n "${score::-1}" >> $tmp/cluster${i}sco.txt
 
+  echo "Ain\'t nobody get time for that"
+done;
 
 # A loop to test if there is no overlap between clusters
 # for ((i=0; i < $numclu; i++));

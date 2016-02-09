@@ -380,10 +380,10 @@ echo "#"
 
 rm -rf $cluD/cluster*
 
-if [[ -e $saveTmp ]];
+if ! [[ -e $saveTmp ]];
 then
-  mv $map $saveTmp
-  mv $tmp/maskedStd $saveTmp
+  mv $map $saveTmp;
+  mv $tmp/maskedStd.* $saveTmp;
 else
 rm -rf $cluD
 fi;

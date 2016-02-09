@@ -74,8 +74,8 @@ num=0
 oR=$tmp/overlapROI.nii.gz
 oS=$tmp/overlapScores.nii.gz
 #creating void overlaps one time
-fslmaths $2/${pat[0]} -uthr 1 $oR
-fslmaths $2/${pat[0]} -uthr 1 $oS
+fslmaths $2/${pat[0]} -mul 0 $oR
+fslmaths $2/${pat[0]} -mul 0 $oS
 for f in ${pat[*]}
 do
     #binarisation
@@ -167,7 +167,9 @@ do
     max=`fslstats $tmp/stdlayer -R | awk '{print $2}'`;
     fslmaths $tmp/stdlayer -thr $max $cluD/cluster${numclu};
     fslmaths $tmp/stdlayer -sub $cluD/cluster${numclu} $tmp/stdlayer;
-    
+    #Be careful, here, in clusters, we have the added scores of patients 
+    #ADDED to the standard deviation. For now we don't use this value but it could
+    #make errors if we use it. (Solution is to substract each cluster by maskedStd
     numclu=$((numclu + 1));
   done;
 done;
@@ -236,7 +238,7 @@ chmod +x $tmp/stats.r
 
 echo 'options(warn=-1)' >> $tmp/stats.r
 
-#The dirtiness a its pure state
+#The dirtiness at its pure state
 echo 'myTest <- function(fun = stat(x, y), patfile) {' >> $tmp/stats.r
 echo '  res <- try(fun);' >> $tmp/stats.r
 echo '  w <- NULL;'  >> $tmp/stats.r
@@ -261,7 +263,7 @@ else
     declare -a contr
     while read contr[$i]
     do
-	i=$((i+1))
+      i=$((i+1))
     done < $5
     
     #We have to manage empty lines in the csv file so we unset empty cells
@@ -311,6 +313,8 @@ do
   if [[ $pval != "NaN" ]];
   then
     bonf[$i]=$pval;
+  else
+    pval=-1
   fi;
   
   fslmaths $cluD/cluster${i} -bin $cluD/pvalcluster${i}

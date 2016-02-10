@@ -316,6 +316,15 @@ do
   else
     pval=-1
   fi;
+  # if pval != 0 
+  if [ `awk "BEGIN { print ($pval == 0)}"` == 0 ];
+  then
+    # We round $pval
+    pval=$(awk "BEGIN {printf \"%.6f\", $pval}")
+    # If $pval is round to 0.000000 we set pval to 0.000001 because it means that
+    # the real pval is less than 0.000001
+    pval=$(awk "BEGIN { if ($pval == 0) print \"0.000001\"; else print $pval }")
+  fi;
   
   fslmaths $cluD/cluster${i} -bin $cluD/pvalcluster${i}
   
@@ -337,7 +346,7 @@ IFS=' ' read -r -a sorted <<< $var
 # We store indexes of bonf 
 read -r -a arrInd <<< ${!bonf[@]}
 # We fill indexes with indexex of bonf sorted like in ... $sorted
-for i in ${!sorted};
+for i in ${!sorted[@]};
 do 
   ind=0;
   while [[ ${bonf[${arrInd[$ind]}]} != ${sorted[$i]} ]];
@@ -351,16 +360,17 @@ done;
 numb=${#sorted[@]}
 for ((i=0;i<${#sorted[@]};i++));
 do
-  sorted[$i]=$(awk "BEGIN {printf ${sorted[$i]}*$((num - $i))}");
-done;
+  sorted[$i]=$(awk "BEGIN {printf \"%.6f\", ${sorted[$i]}*$((numb - $i))}");
 
+  # If sorted[$i] is round to 0.000000 we set sorted[$i] to 0.000001 because it means that
+  # the real sorted[$i] is less than 0.000001
+  sorted[$i]=$(awk "BEGIN { if (${sorted[$i]} == 0) print \"0.000001\"; else print ${sorted[$i]} }")
+done;
 # We re-create bonf with corrected pvalues
 for ((i=0;i<${#sorted[@]};i++));
 do
   bonf[${indexes[$i]}]=${sorted[$i]};
 done;
-
-
 # We create new maps with corrected pvalues
 fslmaths $overMask -mul 0 $3/mergedBHcorrClusters
 for index in ${!bonf[@]};
@@ -384,12 +394,12 @@ echo "#"
 
 rm -rf $cluD/cluster*
 
-if ! [[ -e $saveTmp ]];
+if [[ -e $saveTmp ]];
 then
   mv $map $saveTmp;
   mv $tmp/maskedStd.* $saveTmp;
 else
-rm -rf $cluD
+  rm -rf $cluD
 fi;
 
 rm -rf $tmp

@@ -22,8 +22,7 @@ do
 nbPat=$((nbPat + 1))
 done
 echo "#$nbPat"
-cd $2
-#L'option -e permet d'interpréter des \ ainsi on peut ajouter les tabulations séparant les cellules. 
+cd $2 
 printf "\t">>$3
 for d in *.nii*
 do
@@ -40,7 +39,6 @@ do
     $bin/fslmaths $2/$b -mul $1/$a $tmpMult/multresh_$b || (rm -r $tmpMult; exit 1)
     max=`$bin/fslstats $tmpMult/multresh_$b -R` || (rm -r $tmpMult; exit 1)
     printf "%s\t" ${max#* }>>$3
-    #Attention changement ici (normalement il est sur la ligne du dessous.
     echo "#"
   done
   echo "">>$3

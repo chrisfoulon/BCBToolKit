@@ -141,7 +141,7 @@ public class Statistical extends AbstractApp {
 
 		settings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				getBCB().openSettings(BCBEnum.Index.STATISTICAL);
+				getBCB().openSettings();
 			}
 		});
 

@@ -264,7 +264,7 @@ public class Browser extends JPanel {
 	 * @param 	p a String which will be the current path
 	 * 			f a File which will be the current file
 	 */
-	private void setPath(String p, File f) {
+	public void setPath(String p, File f) {
 		this.path = p;
 		this.file = f;
 		if (!getFldContent().equals(p)) {

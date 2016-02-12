@@ -240,7 +240,8 @@ public class Anacom extends AbstractApp {
 				worker = new SwingWorker<Void, Void>() {
 					@Override
 					public Void doInBackground() {
-						model.setTest((String) testCombo.getSelectedItem());
+						String testName = (String)testCombo.getSelectedItem();
+						model.setTest(testName);
 						// We test if the string is an integer
 						try {
 							Integer.parseInt(threshFld.getText());
@@ -255,7 +256,12 @@ public class Anacom extends AbstractApp {
 						if (meanMode.isSelected()) {
 							if (parseMeanField(jftf.getText()).equals("")) {
 								Tools.showErrorMessage(frame, "The mean must be a number" +
-										" (Integer or Decimal");
+										" (Integer or Decimal)");
+								return null;
+							}
+							if (testName.equals("Kolmogorov-Smirnov")) {
+								Tools.showErrorMessage(frame, "You cannot execute the " +
+										"Kolmogorov-Smirnov test with only a \n mean for controls");
 								return null;
 							}
 							model.setControls(jftf.getText());
@@ -330,7 +336,7 @@ public class Anacom extends AbstractApp {
 		
 		settings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				getBCB().openSettings(BCBEnum.Index.ANACOM);
+				getBCB().openSettings();
 			}
 		});
 	}
@@ -367,10 +373,10 @@ public class Anacom extends AbstractApp {
 	public void closing() {
 		if (vectMode.isSelected()) {
 			conf.setVal(Param.ACTRLMEAN, "");
-			conf.setVal(Param.ACTRLFILE, ctrlBro.getPath());
 		} else {
 			conf.setVal(Param.ACTRLMEAN, parseMeanField(jftf.getText()));
-			conf.setVal(Param.ACTRLFILE, ctrlBro.getPath());
+			//We reset the path of ctrlBro
+			ctrlBro.setPath("", null);
 		}
 		super.closing();
 	}

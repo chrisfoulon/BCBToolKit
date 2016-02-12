@@ -202,7 +202,7 @@ public class Tractotron extends AbstractApp {
 
 		settings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				getBCB().openSettings(BCBEnum.Index.NORMALISATION);
+				getBCB().openSettings(BCBEnum.Index.TRACTOTRON);
 			}
 		});
 	}

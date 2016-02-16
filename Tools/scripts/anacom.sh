@@ -235,24 +235,41 @@ fi;
 
 echo '#!/usr/bin/env Rscript' > $tmp/stats.r
 chmod +x $tmp/stats.r
+#It is the function that will handle the result of the statistical test
+cat <<EOT >> $tmp/stats.r
+options(warn=0)                                  
+myTest <- function(fun = stat(x, y), patfile) {
+  warn <- NULL;
+  w <- NULL;
+  res <- NULL;
+  withCallingHandlers({
+    res <- try(fun, silent = TRUE);
+  }, warning = function(w) {
+    warn <<- append(warn, conditionMessage(w));
+    invokeRestart("muffleWarning");
+  })
+  if (class(res) == "try-error") {
+    w <- "Error : data are essentially constant";
+    withCallingHandlers({
+        res\$p.value <- NaN;
+    }, warning = function(w) {
+        warnosef <<- append(warn, conditionMessage(w));
+        invokeRestart("muffleWarning");
+    })
+  }
+  write(paste("\n", res\$p.value, sep=""), patfile, append=TRUE, sep="\n");
+    if (!is.null(w)) {
+    write(w, patfile, append=TRUE, sep="");
+  }
+  if (!is.null(warn)) {
+    w <- paste("Warning", warn, sep=" : ");
+    write(w, patfile, append=TRUE, sep="");
+  }
+}
+EOT
 
-echo 'options(warn=-1)' >> $tmp/stats.r
 
-#The dirtiness at its pure state
-echo 'myTest <- function(fun = stat(x, y), patfile) {' >> $tmp/stats.r
-echo '  res <- try(fun);' >> $tmp/stats.r
-echo '  w <- NULL;'  >> $tmp/stats.r
-echo '  if (class(res) == "try-error") {'  >> $tmp/stats.r
-echo '    res$p.value <- NaN;' >> $tmp/stats.r
-echo '  } else if (exists("last.warning") && !is.null(last.warning)) {'  >> $tmp/stats.r
-echo '    w <- paste("Warning", names(last.warning), sep=" : ");' >> $tmp/stats.r
-echo '    assign("last.warning", NULL, envir = baseenv());'  >> $tmp/stats.r
-echo '  } ' >> $tmp/stats.r
-echo '  write(paste("\n", res$p.value, sep=""), patfile, append=TRUE, sep="\n");'  >> $tmp/stats.r
-echo '  if (!is.null(w)) {'  >> $tmp/stats.r
-echo '    write(paste("\n", w, sep=""), patfile, append=TRUE, sep="\n");' >> $tmp/stats.r
-echo '  }'  >> $tmp/stats.r
-echo '}' >> $tmp/stats.r
+
 #We need control scores, we can have a mean if we have wilcoxon or ttest
 #Or a vector of scores which will be a column in a csv file
 if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
@@ -301,6 +318,23 @@ done;
 #We launch the R script to compute pvalues
 $tmp/stats.r
 
+
+#Give the real representation of a number that was in scientific notation
+realVal() {
+  nu=`echo $1 | sed 's/e-.*//g'`
+  #In exp we have the exponent of $1
+  exp=`printf "%s" ${1#*e-}`
+  exp=`awk "BEGIN {print $exp - 1}"`
+  #we compute the number of decimals : It's the number of digits of $numb
+  # (so without the '.') plus the exponent minus 1 because of the notation 
+  # ex : 1.3e-4 == 0.00013
+  nbdec=`awk "BEGIN {print ${#nu} - 1 + $exp}"`
+#   nbdec=$((${#nu}-1+$exp - 1))
+  #Now we can write $1 without the scientific notation and without 
+  # precision loss
+  echo `awk "BEGIN {printf \"%.${nbdec}f\", ${nu}/10e${exp}}"`
+}
+
 #We declare an array to store pvalues for bonferroni-holm correction
 declare -a bonf
 #Creation of an empty file #ugly
@@ -312,7 +346,12 @@ do
   
   if [[ $pval != "NaN" ]];
   then
-    bonf[$i]=$pval;
+    if [[ $pval =~ [0-9]+\.[0-9]+e-[0-9]+ ]]; 
+    then
+      bonf[$i]=`realVal $pval`
+    else
+      bonf[$i]=$pval;
+    fi;
   else
     pval=-1
   fi;
@@ -336,10 +375,14 @@ done;
 #To correct pvalues with Bonferroni-Holm method we have to sort them in ascending order
 declare -a sorted;
 declare -a indexes;
-# Sort with -g (for floats) and -s for stable sort (to preserve order in case of equality)
-var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g -s`
+# Sort with -g (for floats)
+var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g`
 # Sort give a string so we convert it as an array in $sorted
 IFS=' ' read -r -a sorted <<< $var
+#we make a copy of sorted to use it later
+copysorted=( "${sorted[@]}" )
+#We will make calculation without precision loss in the array
+realcorr=( "${sorted[@]}" )
 # Now we create an array to associate $sorted's values with bonf's indexes
 # We destroy bonf cell by cell (sorry bro)
 
@@ -354,12 +397,22 @@ do
     ind=$((ind + 1));
   done;
   indexes[$i]=${arrInd[$ind]};
+  unset bonf[${arrInd[$ind]}];
 done;
+# In fact we have not to be careful about the stability of the sort (I feared)
+# The bash sort is not stable but because we unset bonf's cells 
+# we preserve the order and make the final sort stable
+# for example if bonf[23]=0.45 and bonf[34]=0.45, in the loop we will find :
+# bonf[23] == sorted[i], we remove bonf[23], at i+1 we will have again 
+# sorted[i+1] = 0.45, in the loop we will only find now bonf[34] == 0.45
 
 # We make Bonferroni-Holm corrections
 numb=${#sorted[@]}
 for ((i=0;i<${#sorted[@]};i++));
 do
+  tt=${sorted[$i]};
+  numdec=${#tt};
+  realcorr[$i]=$(awk "BEGIN {printf \"%.${numdec}f\", ${sorted[$i]}*$((numb - $i))}");
   sorted[$i]=$(awk "BEGIN {printf \"%.6f\", ${sorted[$i]}*$((numb - $i))}");
 
   # If sorted[$i] is round to 0.000000 we set sorted[$i] to 0.000001 because it means that
@@ -372,13 +425,13 @@ do
   bonf[${indexes[$i]}]=${sorted[$i]};
 done;
 # We create new maps with corrected pvalues
-fslmaths $overMask -mul 0 $3/mergedBHcorrClusters
+fslmaths $overMask -mul 0 $cluD/mergedBHcorrClusters
 for index in ${!bonf[@]};
 do
   fslmaths $cluD/pvalcluster${index} -bin $cluD/BHcorrCluster${index}
   fslmaths $cluD/BHcorrCluster${index} -mul ${bonf[$index]} $cluD/BHcorrCluster${index}
   # We fill the map with all corrected pvalues
-  fslmaths $cluD/BHcorrCluster${index} -add $3/mergedBHcorrClusters $3/mergedBHcorrClusters
+  fslmaths $cluD/BHcorrCluster${index} -add $cluD/mergedBHcorrClusters $cluD/mergedBHcorrClusters
 done;
 
 
@@ -392,17 +445,91 @@ fslmaths $tmp/tmpbonf -thr 1 -bin $tmp/bonfmask
 fslmaths $tmp/tmpbonf -mas $tmp/ubonfmask -add $tmp/bonfmask $3/bonferroniClusters
 echo "#"
 
+#We create csv files to display results (One with cluster names associated 
+#to patient names and scores with pvalues and BHcorrected pvalues and another
+#for warnings if they occurs
+  ## Here we have sorted pvalues in copysorted, BHcorrected pvalues, in
+  ## increasing (non-corrected) pvalues, in sorted and in indexes we have
+  ## corresponding between pvalues and cluster number
+  
+##
+echo 'Patients, p-values, Bonferroni-holm' > $3/clusters.csv
+fslmaths $3/bonferroniClusters -mul 0 $3/correctedClusters
+exclude=''
+for i in ${!sorted[@]};
+do
+  if [[ $(awk "BEGIN {print (${realcorr[$i]} >= 0.05)}") == 1 ]];
+  then
+    exclude="(exclude)"
+  else
+    fslmaths $cluD/pvalcluster${indexes[$i]} -add $3/correctedClusters $3/correctedClusters
+  fi;
+  read patients < $tmp/cluster${i}pat.txt;
+  read scores < $tmp/cluster${i}sco.txt;
+  echo "pvalcluster${indexes[$i]}, ${copysorted[$i]}, ${realcorr[$i]}${exclude}, $patients" >> $3/clusters.csv;
+  echo "pvalcluster${indexes[$i]}, ${copysorted[$i]}, ${realcorr[$i]}${exclude}, $scores" >> $3/clusters.csv;
+done;
+
+declare -a array;
+number=0
+#We add every clusters without valid pvalues at the end of the first csv file
+for ((i=0; i<$numclu; i++));
+do
+  if [[ ${bonf[$i]} == '' ]];
+  then
+    array[$number]=$i;
+    number=$((number + 1));
+  fi;
+done;
+
+for i in ${array[@]};
+do
+  read patients < $tmp/cluster${i}pat.txt;
+  read scores < $tmp/cluster${i}sco.txt;
+  echo "pvalcluster$i, NaN(-1), NaN, $patients" >> $3/clusters.csv;
+  echo "pvalcluster$i, NaN(-1), NaN, $scores" >> $3/clusters.csv;
+done;
+
+#We create the second csv file if there is warnings
+declare -a warn;
+bool="false"
+for ((i=0; i<$numclu; i++));
+do
+  warn[$i]=`sed -n '3,$p' $tmp/cluster${i}pat.txt`
+  if [[ ${warn[$i]} != '' ]];
+  then
+    bool="true"
+  fi;
+done;
+
+if [[ $bool == "true" ]];
+then
+  echo  "Cluster Name, Warning / Error" > $3/warnings.csv;
+  for w in ${!warn[@]};
+  do
+    if [[ ${warn[$w]} != '' ]];
+    then
+      echo "pvalcluster$w, ${warn[$w]}" >> $3/warnings.csv;
+    fi;
+  done;
+fi;
+
+#CLEANING
+
 rm -rf $cluD/cluster*
+rm -rf $cluD/BHcorrCluster*
 
 if [[ -e $saveTmp ]];
 then
+  mv $cluD $saveTmp;
   mv $map $saveTmp;
   mv $tmp/maskedStd.* $saveTmp;
 else
-  rm -rf $cluD
+  mv $cluD $tmp/;
 fi;
-
-rm -rf $tmp
+# If you forget to check saveTmp, you can recover tmp files if you don't 
+# launch anacom2 again
+# rm -rf $tmp
 
 #I realised that all issues with arrays when I unset values could be resolve
 #by using ${!array[@]} which give indexes of array even if there are not 

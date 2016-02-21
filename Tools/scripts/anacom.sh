@@ -116,6 +116,7 @@ nblayer=$((nblayer + 1))
 while [ `fslstats $tmp/eroded -V | awk '{ print $1 }'` != 0 ];
 do
   max=`fslstats $tmp/eroded -R | awk '{print $2}'`;
+  
   fslmaths $tmp/eroded -thr $max $tmp/layer${nblayer}
   
   fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
@@ -125,6 +126,7 @@ done;
 #erorded is now full of 0
 rm -rf $tmp/eroded
 echo "#"
+
 
 #Here, we will compute the standard deviation because if, in a layer, we can
 #have different area with the same score once added but not the same 
@@ -173,6 +175,7 @@ do
     numclu=$((numclu + 1));
   done;
 done;
+
 echo "#"
 #Here we want to find which patients belong to clusters
 #For that we try to overlap lesions with clusters
@@ -312,6 +315,7 @@ do
   read text < $tmp/cluster${i}sco.txt
   x="c("$text")"
   compute="myTest($testname($x, $control), \"$tmp/cluster${i}pat.txt\")"
+  echo "print('Compute : $compute')" >> $tmp/stats.r
   echo $compute >> $tmp/stats.r
 done;
 
@@ -329,7 +333,6 @@ realVal() {
   # (so without the '.') plus the exponent minus 1 because of the notation 
   # ex : 1.3e-4 == 0.00013
   nbdec=`awk "BEGIN {print ${#nu} - 1 + $exp}"`
-#   nbdec=$((${#nu}-1+$exp - 1))
   #Now we can write $1 without the scientific notation and without 
   # precision loss
   echo `awk "BEGIN {printf \"%.${nbdec}f\", ${nu}/10e${exp}}"`
@@ -378,11 +381,13 @@ declare -a indexes;
 # Sort with -g (for floats)
 var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g`
 # Sort give a string so we convert it as an array in $sorted
-IFS=' ' read -r -a sorted <<< $var
+IFS=$'\n ' read -r -a sorted <<< $var
+
 #we make a copy of sorted to use it later
 copysorted=( "${sorted[@]}" )
 #We will make calculation without precision loss in the array
 realcorr=( "${sorted[@]}" )
+
 # Now we create an array to associate $sorted's values with bonf's indexes
 # We destroy bonf cell by cell (sorry bro)
 
@@ -460,7 +465,7 @@ for i in ${!sorted[@]};
 do
   if [[ $(awk "BEGIN {print (${realcorr[$i]} >= 0.05)}") == 1 ]];
   then
-    exclude="(exclude)"
+    exclude="(excluded)"
   else
     fslmaths $cluD/pvalcluster${indexes[$i]} -add $3/correctedClusters $3/correctedClusters
   fi;

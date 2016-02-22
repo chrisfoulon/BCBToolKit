@@ -69,6 +69,23 @@ do
   fi;
 done;
 
+#We maybe have unset some cells of arrays so maybe some indexes are not valid anymore
+#We will correct arrays to be sure that array cells are contiguous
+tmppat=( "${pat[@]}" )
+tmpsco=( "${sco[@]}" )
+unset pat
+unset sco 
+declare -a pat
+declare -a sco
+
+ii=0;
+for i in ${!tmppat[@]};
+do
+  pat[$ii]=${tmppat[$i]};
+  sco[$ii]=${tmpsco[$i]};
+  ii=$((ii + 1));
+done;
+
 #### BINARISATION of ROIs AND ScoredROI creation AND adding binROI in overlapROI and scoROI in overlapScores ####
 num=0
 oR=$tmp/overlapROI.nii.gz

@@ -51,7 +51,7 @@ i=0
 
 declare -a pat
 declare -a sco
-while IFS=',' read pat[$i] sco[$i]
+while IFS=$'\n,' read pat[$i] sco[$i]
 do
     i=$((i+1))
 done < $1
@@ -85,6 +85,8 @@ do
   sco[$ii]=${tmpsco[$i]};
   ii=$((ii + 1));
 done;
+
+for i in ${!pat[@]}; do echo "Index $i : [${pat[$i]} | ${sco[$i]}]" >&2; done;
 
 #### BINARISATION of ROIs AND ScoredROI creation AND adding binROI in overlapROI and scoROI in overlapScores ####
 num=0
@@ -352,7 +354,7 @@ realVal() {
   nbdec=`awk "BEGIN {print ${#nu} - 1 + $exp}"`
   #Now we can write $1 without the scientific notation and without 
   # precision loss
-  echo `awk "BEGIN {printf \"%.${nbdec}f\", ${nu}/10e${exp}}"`
+  echo `LC_ALL=en_GB awk "BEGIN {printf \"%.${nbdec}f\", ${nu}/10e${exp}}"`
 }
 
 #We declare an array to store pvalues for bonferroni-holm correction
@@ -375,18 +377,23 @@ do
   else
     pval=-1
   fi;
-  # if pval != 0 
+  # if pval != 0
   if [ `awk "BEGIN { print ($pval == 0)}"` == 0 ];
   then
     # We round $pval
-    pval=$(awk "BEGIN {printf \"%.6f\", $pval}")
+#MODIF HERE
+pval=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $pval}");
     # If $pval is round to 0.000000 we set pval to 0.000001 because it means that
     # the real pval is less than 0.000001
-    pval=$(awk "BEGIN { if ($pval == 0) print \"0.000001\"; else print $pval }")
+    if [ `awk "BEGIN { print ($pval == 0)}"` == 1 ];
+    then
+        pval="0.000001";
+    fi;
+#pval=$(awk "BEGIN { if ($pval == 0) {print \"0.000001\";} else {print $pval }")
   fi;
-  
+
   fslmaths $cluD/cluster${i} -bin $cluD/pvalcluster${i}
-  
+
   fslmaths $cluD/pvalcluster${i} -mul $pval $cluD/pvalcluster${i}
   # Creation of a file containing all clusters with pvalues. ($3/mergedPvalClusters)
   fslmaths $cluD/pvalcluster${i} -add $3/mergedPvalClusters $3/mergedPvalClusters
@@ -399,7 +406,6 @@ declare -a indexes;
 var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g`
 # Sort give a string so we convert it as an array in $sorted
 IFS=$'\n ' read -r -a sorted <<< $var
-
 #we make a copy of sorted to use it later
 copysorted=( "${sorted[@]}" )
 #We will make calculation without precision loss in the array
@@ -434,12 +440,16 @@ for ((i=0;i<${#sorted[@]};i++));
 do
   tt=${sorted[$i]};
   numdec=${#tt};
-  realcorr[$i]=$(awk "BEGIN {printf \"%.${numdec}f\", ${sorted[$i]}*$((numb - $i))}");
-  sorted[$i]=$(awk "BEGIN {printf \"%.6f\", ${sorted[$i]}*$((numb - $i))}");
+  realcorr[$i]=$(LC_ALL=en_GB awk "BEGIN {printf \"%.${numdec}f\", ${sorted[$i]}*$((numb - $i))}");
+  sorted[$i]=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", ${sorted[$i]}*$((numb - $i))}");
 
   # If sorted[$i] is round to 0.000000 we set sorted[$i] to 0.000001 because it means that
   # the real sorted[$i] is less than 0.000001
-  sorted[$i]=$(awk "BEGIN { if (${sorted[$i]} == 0) print \"0.000001\"; else print ${sorted[$i]} }")
+if [ `awk "BEGIN { print (${sorted[$i]} == 0)}"` == 1 ];
+then
+sorted[$i]="0.000001";
+fi;
+#sorted[$i]=$(awk "BEGIN { if (${sorted[$i]} == 0) print \"0.000001\"; else print ${sorted[$i]} }")
 done;
 # We re-create bonf with corrected pvalues
 for ((i=0;i<${#sorted[@]};i++));

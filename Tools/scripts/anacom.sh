@@ -51,7 +51,7 @@ i=0
 
 declare -a pat
 declare -a sco
-while IFS=$'\n,' read pat[$i] sco[$i]
+while IFS=$'\n\r,' read pat[$i] sco[$i]
 do
     i=$((i+1))
 done < $1
@@ -86,7 +86,7 @@ do
   ii=$((ii + 1));
 done;
 
-for i in ${!pat[@]}; do echo "Index $i : [${pat[$i]} | ${sco[$i]}]" >&2; done;
+# for i in ${!pat[@]}; do echo "Index $i : [${pat[$i]} | ${sco[$i]}]"; done;
 
 #### BINARISATION of ROIs AND ScoredROI creation AND adding binROI in overlapROI and scoROI in overlapScores ####
 num=0
@@ -461,7 +461,13 @@ fslmaths $overMask -mul 0 $cluD/mergedBHcorrClusters
 for index in ${!bonf[@]};
 do
   fslmaths $cluD/pvalcluster${index} -bin $cluD/BHcorrCluster${index}
-  fslmaths $cluD/BHcorrCluster${index} -mul ${bonf[$index]} $cluD/BHcorrCluster${index}
+  if [ `awk "BEGIN { print (${bonf[$index]} > 1)}"` == 1 ];
+  then 
+    #If the corrected value is greater than 1 we threshold it to 1 in the map
+    fslmaths $cluD/BHcorrCluster${index} -mul 1 $cluD/BHcorrCluster${index}
+  else
+    fslmaths $cluD/BHcorrCluster${index} -mul ${bonf[$index]} $cluD/BHcorrCluster${index}
+  fi;
   # We fill the map with all corrected pvalues
   fslmaths $cluD/BHcorrCluster${index} -add $cluD/mergedBHcorrClusters $cluD/mergedBHcorrClusters
 done;
@@ -553,6 +559,7 @@ rm -rf $cluD/BHcorrCluster*
 
 if [[ -e $saveTmp ]];
 then
+  mv $cluD/mergedBHcorrClusters* $saveTmp
   mv $cluD $saveTmp;
   mv $map $saveTmp;
   mv $tmp/maskedStd.* $saveTmp;

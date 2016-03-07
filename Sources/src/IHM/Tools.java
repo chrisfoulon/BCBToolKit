@@ -9,11 +9,16 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.util.Scanner;
 
 import javax.swing.BorderFactory;
@@ -196,58 +201,55 @@ public final class Tools {
 	
 	/**
 	 * Given an absolute file path, create a copy of this file
-	 * in the file copypath
-	 * in the temporary folder of the anacom module
-	 * remove all empty lines
+	 * in copypath encoded in UTF-8 (to avoiding weird characters)
 	 * @param filename
 	 */
-	public static void removeEmptyLines(String filename, String copypath) {
+	public static void cleanCopy(String filename, String copypath) {
 		File source = new File(filename);
-		File dest = new File(copypath);
+		//Create the copy or erase the file with the same name
+		try {
+			FileWriter writer = new FileWriter(copypath, false); 
+			writer.write("");
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
-		FileReader fr = null;
+		Writer out = null;
 		try {
-			fr = new FileReader(source);
-		} catch (FileNotFoundException e) {
+			out = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(copypath), "UTF-8"));
+		} catch (UnsupportedEncodingException e2) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-
-		FileWriter fw = null;
-		try {
-			fw = new FileWriter(dest);
-		} catch (IOException e) {
+			e2.printStackTrace();
+		} catch (FileNotFoundException e2) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		String line;
-		BufferedReader br = new BufferedReader(fr); 
-		if (fr == null || fw == null) {
-			return;
+			e2.printStackTrace();
 		}
+		
+		BufferedReader br = null;
 		try {
-			while((line = br.readLine()) != null)
-			{ 
-			    String tmpLine = line.trim(); // remove leading and trailing whitespace
-			    if (!tmpLine.equals("")) // don't write out blank lines
-			    {
-			        fw.write(line, 0, line.length());
-			        String rc = "\n";
-			        fw.write(rc, 0, rc.length());
-			    }
-			}
-		} catch (IOException e) {
+			br = new BufferedReader(new FileReader(source));
+		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		try {
+		    for(String line; (line = br.readLine()) != null; ) {
+		    	out.write(line + "\n");
+		    }
+		} catch (IOException e) {
 			e.printStackTrace();
 		} 
+		
 		try {
-			fr.close();
-			fw.close();
+			out.close();
+			br.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return;
 	}
 	
 	public static void gatherRound(final AbstractApp app) {

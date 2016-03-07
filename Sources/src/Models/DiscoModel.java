@@ -79,7 +79,7 @@ public class DiscoModel {
 		loading.setNbTicks(nb);
 	}
 	
-	public void hyperRun() {
+	public void run() {
 		if (lesionDir == null) {
 			throw new IllegalStateException(
 					"You have to select the lesions directory");

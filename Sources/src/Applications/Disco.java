@@ -162,7 +162,7 @@ public class Disco extends AbstractApp {
 							return null;
 						}
 						
-						model.hyperRun();
+						model.run();
 						return null;
 					}
 					@Override

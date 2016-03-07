@@ -1,10 +1,7 @@
 package Models;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -12,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.Set;
 
 import javax.swing.JFrame;
@@ -39,25 +37,12 @@ public class AnacomModel {
 	private String saveTmp;
 	private LoadingBar loading;
 	private JFrame frame;
-	//private FilenameFilter fileNameFilter;
 
 	public AnacomModel(String path, JFrame f) {
 		this.path = path;
 
 		this.exeDir = path + "/Tools/scripts";
 		this.frame = f;
-
-		// create new filename filter to recognize .nii and .nii.gz files
-		/*this.fileNameFilter = new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				if (name.endsWith(".nii") || name.endsWith(".nii.gz")) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-		};*/
 	}
 	
 	public void setCSV(String str) {
@@ -98,7 +83,7 @@ public class AnacomModel {
 	public void setNbTicks(int nb) {
 		loading.setNbTicks(nb);
 	}
-
+	
 	/**
 	 * Execute the script anacom.sh after checking it is executable by 
 	 * the user.
@@ -118,7 +103,6 @@ public class AnacomModel {
 		perms.add(PosixFilePermission.OTHERS_EXECUTE);
 
 		String erreur = "";
-
 		try {
 
 			Files.setPosixFilePermissions(Paths.get(exeDir + BCBEnum.Script.ANACOM.endPath()), perms);
@@ -128,46 +112,28 @@ public class AnacomModel {
 
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 
-			//Scanner out = new Scanner(proc.getInputStream());
-			InputStreamReader out = new InputStreamReader(proc.getInputStream());
-			InputStreamReader err = new InputStreamReader(proc.getErrorStream());
-			BufferedReader buff = new BufferedReader(out);
-			String inLoop = null;
+			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
 			setNbTicks(5);
-			while ((inLoop = buff.readLine()) != null) {
+					
+			while (out.hasNextLine()) {
+				String inLoop = out.nextLine();
 				if (inLoop.startsWith("#")) {
 					progress++;
 					loading.setWidth(progress);					
 				}
-				//System.out.println(inLoop);
 			}
 			out.close();
 			//We erase the content of the log file if it exists
 			PrintWriter eraser = new PrintWriter(resDir + "/" + logFile);
 			eraser.print("");
 			eraser.close();
-			
-			FileWriter writer = new FileWriter(resDir + "/" + logFile, true);
 
-			String log = new String("");
-			//InputStreamReader err = new InputStreamReader(proc.getErrorStream());
-			BufferedReader br = new BufferedReader(err);
-			String tmp = null;
-			while ((tmp = br.readLine()) != null) {
-				if (tmp.startsWith("+")) {
-					log = tmp + "\n";
-					//System.out.println(tmp);
-					try {
-						writer.write(log);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				} else {
-					erreur += tmp + "\n";
-				}
+			Scanner err = new Scanner(proc.getErrorStream());
+			while (err.hasNextLine()) {
+				String tmp = err.nextLine();
+				erreur += tmp + "\n";
 			}
-			writer.close();
 			err.close();
 
 		} catch (IOException e) {
@@ -175,23 +141,21 @@ public class AnacomModel {
 			PrintWriter printWriter = new PrintWriter(writer);
 			e.printStackTrace(printWriter);
 			String s = writer.toString();
+			//System.out.println(s);
 			Tools.showErrorMessage(frame, s);
 			return;
 		} catch (Throwable t) {
-            t.printStackTrace();
-        }
-		if (!erreur.equals("")) {
+			t.printStackTrace();
+		}
+
+		if (erreur != "") {
 			String message = "**** SCRIPT ERROR ****\n"
 					+ erreur
 					+ "**** SCRIPT ERROR END ****\n";
 			Tools.showErrorMessage(frame, message);
 			return;
 		} else {
-			String finish = "Finished!!! Normalisation saved in " + resDir;
-			String str2 = ""; 
-
-			Tools.showMessage(frame, "End !", 
-					"<html>" + finish + "<br />" + str2 + "</html>");
+			Tools.showMessage(frame, "End !", "Finished!!! Results saved in " + resDir);
 			return;
 		}
 	}

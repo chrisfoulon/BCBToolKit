@@ -635,11 +635,13 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	 */
 	public void cancelActions(String tmpPath, SwingWorker<Void, Void> w) {
 		w.cancel(true);
-		String[] array2 = {"rm", "-rf", tmpPath};
-		try {
-			Runtime.getRuntime().exec(array2);
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (tmpPath != null && !tmpPath.equals("")) {
+			String[] array2 = {"rm", "-rf", tmpPath};
+			try {
+				Runtime.getRuntime().exec(array2);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

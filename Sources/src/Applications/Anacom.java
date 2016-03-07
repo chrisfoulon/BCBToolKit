@@ -240,6 +240,13 @@ public class Anacom extends AbstractApp {
 				worker = new SwingWorker<Void, Void>() {
 					@Override
 					public Void doInBackground() {
+						// We have to check if resBro is correctly filled because
+						// we use its path after
+						if (Tools.isReady(frame, resBro)) {
+							model.setResultDir(resBro.getPath());
+						} else {
+							return null;
+						}
 						String testName = (String)testCombo.getSelectedItem();
 						model.setTest(testName);
 						// We test if the string is an integer
@@ -250,8 +257,14 @@ public class Anacom extends AbstractApp {
 							return null;
 						}
 						model.setThreshold(threshFld.getText());
-						
-						model.setCSV(csvBro.getPath());
+
+						if (Tools.isReady(frame, csvBro)) {
+							String copypath = resBro.getPath() + "/copypatients.csv";
+							Tools.cleanCopy(csvBro.getPath(), copypath);
+							model.setCSV(copypath);
+						} else {
+							return null;
+						}
 						
 						if (meanMode.isSelected()) {
 							if (parseMeanField(jftf.getText()).equals("")) {
@@ -267,6 +280,8 @@ public class Anacom extends AbstractApp {
 							model.setControls(jftf.getText());
 						} else {
 							if (Tools.isReady(frame, ctrlBro)) {
+								String copypath = resBro.getPath() + "/copycontrols.csv";
+								Tools.cleanCopy(csvBro.getPath(), copypath);
 								model.setControls(ctrlBro.getPath());
 							} else {
 								return null;
@@ -284,24 +299,17 @@ public class Anacom extends AbstractApp {
 						} else {
 							return null;
 						}
-
-						if (Tools.isReady(frame, resBro)) {
-							model.setResultDir(resBro.getPath());
-						} else {
-							return null;
-						}
 						model.run();
 						return null;
 					}
 
 					@Override
 					protected void done() {
-						changeRunButton(panel, 1); 
+						changeRunButton(panel, 1);
 					}
 				};
 				changeRunButton(panel, 0);
 				worker.execute();
-
 			}
 		});	
 

@@ -98,7 +98,7 @@ public class TractoModel {
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} 
+		}
 		
 		try {
 			

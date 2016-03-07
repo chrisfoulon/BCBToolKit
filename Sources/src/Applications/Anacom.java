@@ -392,7 +392,7 @@ public class Anacom extends AbstractApp {
 	@Override
 	public void cancel() {
 		if (worker != null) {
-			getBCB().cancelActions(path + "/Tools/tmp/tmpAnacom", worker);
+			getBCB().cancelActions("", worker);
 		}
 	}
 }

@@ -300,7 +300,7 @@ then
 else
     i=0
     declare -a contr
-    while read contr[$i]
+    while IFS=$'\n\r,' read contr[$i]
     do
       i=$((i+1))
     done < $5
@@ -334,7 +334,7 @@ do
   read text < $tmp/cluster${i}sco.txt
   x="c("$text")"
   compute="myTest($testname($x, $control), \"$tmp/cluster${i}pat.txt\")"
-  echo "print('Compute : $compute')" >> $tmp/stats.r
+  #echo "print('Compute : $compute')" >> $tmp/stats.r
   echo $compute >> $tmp/stats.r
 done;
 
@@ -381,8 +381,7 @@ do
   if [ `awk "BEGIN { print ($pval == 0)}"` == 0 ];
   then
     # We round $pval
-#MODIF HERE
-pval=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $pval}");
+    pval=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $pval}");
     # If $pval is round to 0.000000 we set pval to 0.000001 because it means that
     # the real pval is less than 0.000001
     if [ `awk "BEGIN { print ($pval == 0)}"` == 1 ];
@@ -559,7 +558,7 @@ rm -rf $cluD/BHcorrCluster*
 
 if [[ -e $saveTmp ]];
 then
-  mv $cluD/mergedBHcorrClusters* $saveTmp
+  mv $cluD/mergedBHcorrClusters* $3
   mv $cluD $saveTmp;
   mv $map $saveTmp;
   mv $tmp/maskedStd.* $saveTmp;

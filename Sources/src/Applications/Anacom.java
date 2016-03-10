@@ -281,8 +281,8 @@ public class Anacom extends AbstractApp {
 						} else {
 							if (Tools.isReady(frame, ctrlBro)) {
 								String copypath = resBro.getPath() + "/copycontrols.csv";
-								Tools.cleanCopy(csvBro.getPath(), copypath);
-								model.setControls(ctrlBro.getPath());
+								Tools.cleanCopy(ctrlBro.getPath(), copypath);
+								model.setControls(copypath);
 							} else {
 								return null;
 							}

@@ -133,6 +133,7 @@ public class AnacomModel {
 			while (err.hasNextLine()) {
 				String tmp = err.nextLine();
 				erreur += tmp + "\n";
+				//System.out.println("ErrorLine : " + tmp);
 			}
 			err.close();
 

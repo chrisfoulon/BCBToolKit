@@ -1,5 +1,9 @@
 #! /bin/bash
 #Cortical Thickness - Michel Thiebaut de Schotten & Chris Foulon
+[ $# -lt 2 ] && { echo "Usage : $0 T1Folder ResultDir"; exit 1; }
+#Those lines are the handling of the script's trace (42 is the file descriptor number)
+exec 42> $2/logThickness.txt
+export BASH_XTRACEFD=42
 set -x
 path=${PWD}/Tools
 lib=$path/libraries/lib
@@ -18,9 +22,9 @@ for f in *.nii*
 do
     filename=$(basename $f .${f#*.})
     res=$2/$filename
-    mkdir $res
+    mkdir -p $res
     intermediate=$res/intermediateFiles
-    mkdir $intermediate
+    mkdir -p $intermediate
     $ants/antsCorticalThickness.sh -d 3 -a $f -e $priors/brainWithSkullTemplate.nii.gz -m $priors/brainPrior.nii.gz -p $priors/priors%d.nii.gz -o $intermediate/$filename
     #On sépare les fichiers finaux des intermédiaires
     mv $intermediate/${filename}CorticalThickness.nii.gz $res

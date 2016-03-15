@@ -1,8 +1,10 @@
 #! /bin/bash
 #AnaCOM2 - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten & Chris Foulon 
 [ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp"; exit 1; }
-#This command crash the software but for now I don't know why
-#set -x
+#Those lines are the handling of the script's trace (42 is the file descriptor number)
+exec 42> $3/logAnacom.txt
+export BASH_XTRACEFD=42
+set -x
 #set -e
 
 path=${PWD}/Tools

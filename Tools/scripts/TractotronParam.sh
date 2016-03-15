@@ -1,5 +1,10 @@
 #! /bin/bash
 #tractotron v1.0 - Michel Thiebaut de Schotten & Chris Foulon
+
+[ $# -lt 3 ] && { echo "Usage : $0 LesionFolder TractsFolder ResultDir"; exit 1; }
+#Those lines are the handling of the script's trace (42 is the file descriptor number)
+exec 42> $3/logTractotron.txt
+export BASH_XTRACEFD=42
 set -x
 
 path=${PWD}/Tools
@@ -15,6 +20,16 @@ export FSLREMOTECALL=""
 
 mkdir -p $path/tmp/multresh
 tmpMult=$path/tmp/multresh
+
+fileName() {
+echo -n "$(basename $1 .${1#*.})"
+}
+
+proba=$3/probability.xls
+prop=$3/proportion.xls
+echo -n "" > $prop
+echo -n "" > $proba
+
 cd $1
 nbPat=0
 for d in *.nii*
@@ -23,27 +38,48 @@ nbPat=$((nbPat + 1))
 done
 echo "#$nbPat"
 cd $2 
-printf "\t">>$3
+printf "\t">>$proba
+printf "\t" >> $prop
+#We print tract names in xls files and we create tmp Tracts thresholded at 50%
 for d in *.nii*
 do
-printf "%s\t" $d>>$3
+printf "%s\t" `fileName $d`>>$proba
+printf "%s\t" `fileName $d` >> $prop
+$bin/fslmaths $d -thr 0.5 $tmpMult/tmp$d
+echo "#"
 done
-echo "">>$3
+echo "">>$proba
+echo "" >> $prop
 cd $1
 for a in *.nii*
 do
-  printf  "%s\t" $a>>$3
+  printf  "%s\t" `fileName $a`>>$proba
+  printf  "%s\t" `fileName $a` >> $prop
   cd $2
   for b in *.nii*
   do
     $bin/fslmaths $2/$b -mul $1/$a $tmpMult/multresh_$b || (rm -r $tmpMult; exit 1)
+    
+    echo "#"
     max=`$bin/fslstats $tmpMult/multresh_$b -R` || (rm -r $tmpMult; exit 1)
-    printf "%s\t" ${max#* }>>$3
+    printf "%s\t" ${max#* }>>$proba
+    #Severity calculation
+    #First we compute the volume of the tract
+    tractVol=`$bin/fslstats $2/$b -V | awk '{print $1}'`;
+    echo "#"
+    #Then the volume of the lesion masked with the 50% thresholded tract
+    lesTracVol=`$bin/fslstats $1/$a -k $tmpMult/tmp$b -V | awk '{print $1}'`;
+    #And we compute the volume ratio between the lesion and the tract
+    if [[ $tractVol == "" || $tractVol =~ 0\.0+ ]];
+    then 
+      printf  "%s\t" "0.000000" >> $prop
+    else
+      printf  "%s\t" `LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $lesTracVol / $tractVol}"` >> $prop
+    fi;
     echo "#"
   done
-  echo "">>$3
+  echo "">>$proba
+  echo "" >> $prop
 done
+
 rm -r $tmpMult
-perl -pi -w -e 's/.nii.gz//g;' $3 || (rm -r $tmpMult; exit 1)
-perl -pi -w -e 's/.nii//g;' $3 || (rm -r $tmpMult; exit 1)
-perl -pi -w -e 's/\t\n/\n/g;' $3 || (rm -r $tmpMult; exit 1)

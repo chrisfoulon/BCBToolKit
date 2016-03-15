@@ -1,7 +1,9 @@
 #! /bin/bash
 #Normalize Patients - Michel Thiebaut de Schotten & Chris Foulon
-#$1 = T1Folder $2 LesionFolder $3 ResultFolder $4 templateFile $5 betValue $6 keepTmp $7 otherFilesFolder $8 otherResultFolder
-[ $# -lt 6 ] && { echo "Usage : $0 T1Folder LesionFolder ResultFolder templateFile betValue keepTmp [-OPTIONAL otherFilesFolder] [-OPTIONAL otherResultFolder]"; exit 1; }
+#$1 = T1Folder $2 LesionFolder $3 ResultFolder $4 templateFile $5 betValue $6 synValue $7keepTmp $8 otherFilesFolder $9 otherResultFolder
+[ $# -lt 7 ] && { echo "Usage : $0 T1Folder LesionFolder ResultFolder templateFile betValue synValue keepTmp [-OPTIONAL otherFilesFolder] [-OPTIONAL otherResultFolder]"; exit 1; }
+exec 42> $3/logNormalisation.txt
+export BASH_XTRACEFD=42
 set -x
 path=${PWD}/Tools
     
@@ -43,7 +45,7 @@ do
     #Brain extraction Threshold
     $bin/bet $f $tmp/tmp_T1${pat}.nii.gz -f $5
     #ANTMAN will be proud
-    $ants/ANTS 3 -m PR[$tmp/tmp_T1$pat.nii.gz,$4,1,4] -i 50x90x50 -o $tmp/tmpwarp${pat}.nii.gz -t Syn[0.25] -r Gauss[3,0]$lesCommand
+    $ants/ANTS 3 -m PR[$tmp/tmp_T1$pat.nii.gz,$4,1,4] -i 50x90x50 -o $tmp/tmpwarp${pat}.nii.gz -t Syn["$6"] -r Gauss[3,0]$lesCommand
     $ants/WarpImageMultiTransform 3 $f $3/$pat.nii.gz -R $4 -i $tmp/tmpwarp${pat}Affine.txt $tmp/tmpwarp${pat}InverseWarp.nii.gz
     
     #OPTIONAL apply this deformation also to
@@ -51,7 +53,7 @@ do
     then
         cd $tmp
         #If it is a 4D image, this will split it in vol0000.nii.gz vol0001.nii.gz etc ...
-        fslsplit $7/$pat.nii*
+        fslsplit $8/$pat.nii*
         for a in vol*
         do 
             #We add OTH prefix to the result in case of the result destination is the same that the previous transformation.
@@ -59,12 +61,12 @@ do
         done
 
         #And you remake the 4D image
-        fslmerge -t $8/OTH$pat.nii.gz OTHvol*gz
+        fslmerge -t $9/OTH$pat.nii.gz OTHvol*gz
         rm -f $tmp/*vol*
         cd $1
     fi
     
-    if [[ $6 == "true" ]]
+    if [[ $7 == "true" ]]
     then
         cp -vf $tmp/tmpwarp${pat}Affine.txt  $3
         cp -vf $tmp/tmpwarp${pat}InverseWarp.nii.gz $3

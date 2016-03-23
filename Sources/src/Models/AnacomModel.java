@@ -35,6 +35,8 @@ public class AnacomModel {
 	private String test;
 	//Should we save tempory files ? 
 	private String saveTmp;
+	//Have we found zero inside data ? 
+	private String detZero;
 	private LoadingBar loading;
 	private JFrame frame;
 
@@ -75,6 +77,13 @@ public class AnacomModel {
 		}
 		saveTmp = str;
 	}
+	
+	public void setDetZero(String str) {
+		if (str == null || str.equals("") || (!str.equals("false") && !str.equals("true"))) {
+			throw new IllegalArgumentException("The value of saveTmp must be \"true\" or \"false\"");
+		}
+		detZero = str;
+	}
 
 	public void setLoadingBar(LoadingBar load) {
 		loading = load;
@@ -108,7 +117,7 @@ public class AnacomModel {
 			Files.setPosixFilePermissions(Paths.get(exeDir + BCBEnum.Script.ANACOM.endPath()), perms);
 
 			String[] array = {exeDir + BCBEnum.Script.ANACOM.endPath(),
-					csvFile, lesDir, resDir, thresh, controls, test, saveTmp};
+					csvFile, lesDir, resDir, thresh, controls, test, saveTmp, detZero};
 
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 
@@ -121,43 +130,23 @@ public class AnacomModel {
 				if (inLoop.startsWith("#")) {
 					progress++;
 					loading.setWidth(progress);					
+				} else {
+					System.out.println(inLoop);
 				}
 			}
 			out.close();
-			//We erase the content of the log file if it exists
-			PrintWriter eraser = new PrintWriter(resDir + "/" + logFile);
-			eraser.print("");
-			eraser.close();
-
-			Scanner err = new Scanner(proc.getErrorStream());
-			while (err.hasNextLine()) {
-				String tmp = err.nextLine();
-				erreur += tmp + "\n";
-				//System.out.println("ErrorLine : " + tmp);
-			}
-			err.close();
-
-		} catch (IOException e) {
+			
+			erreur = Tools.parseLog(resDir + "/logAnacom.txt");
+			
+        } catch (IOException e) {
 			Writer writer = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(writer);
 			e.printStackTrace(printWriter);
 			String s = writer.toString();
-			//System.out.println(s);
 			Tools.showErrorMessage(frame, s);
 			return;
-		} catch (Throwable t) {
-			t.printStackTrace();
 		}
-
-		if (erreur != "") {
-			String message = "**** SCRIPT ERROR ****\n"
-					+ erreur
-					+ "**** SCRIPT ERROR END ****\n";
-			Tools.showErrorMessage(frame, message);
-			return;
-		} else {
-			Tools.showMessage(frame, "End !", "Finished!!! Results saved in " + resDir);
-			return;
-		}
+		Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resDir);
+		return;
 	}
 }

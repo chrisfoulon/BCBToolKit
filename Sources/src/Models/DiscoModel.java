@@ -98,7 +98,7 @@ public class DiscoModel {
 		perms.add(PosixFilePermission.OTHERS_READ);
 		perms.add(PosixFilePermission.OTHERS_EXECUTE);
 		
-		Boolean error = false;
+		String erreur = "";
 		
 		try {
 			
@@ -119,10 +119,11 @@ public class DiscoModel {
 					loading.setWidth(progress);					
 				}
 			}
+			
 			out.close();
-			error = Tools.scriptError(proc, resultDir, logFile, frame);
-		
-		} catch (IOException e) {
+			erreur = Tools.parseLog(resultDir + "/logDisconnectome.txt");
+			
+        } catch (IOException e) {
 			Writer writer = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(writer);
 			e.printStackTrace(printWriter);
@@ -130,9 +131,7 @@ public class DiscoModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		if (!error) {
-			Tools.showMessage(frame, "End !", "Finished!!! Disconnectome maps saved in " + resultDir);
-		}
+		Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resultDir);
 		return;
 	}
 }

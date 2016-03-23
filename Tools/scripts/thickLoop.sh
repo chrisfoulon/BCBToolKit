@@ -1,10 +1,12 @@
 #! /bin/bash
 #Cortical Thickness - Michel Thiebaut de Schotten & Chris Foulon
 [ $# -lt 2 ] && { echo "Usage : $0 T1Folder ResultDir"; exit 1; }
-#Those lines are the handling of the script's trace (42 is the file descriptor number)
-exec 42> $2/logThickness.txt
-export BASH_XTRACEFD=42
+#Those lines are the handling of the script's trace and errors
+#Traces and errors will be stored in $2/logThickness.txt
+echo -n "" > $2/logThickness.txt
+exec 2>> $2/logThickness.txt
 set -x
+
 path=${PWD}/Tools
 lib=$path/libraries/lib
 bin=$path/binaries/bin
@@ -29,7 +31,7 @@ do
     #On sépare les fichiers finaux des intermédiaires
     mv $intermediate/${filename}CorticalThickness.nii.gz $res
     mv $intermediate/*png $res
-    #Si on a coché l'option dans la BCBTB on supprime les fichiers intermédiaires
+    #Si on a coché l'option dans la BCBTB on conserve les fichiers intermédiaires
     if [[ $3 == "false" ]]
     then
         rm -r $intermediate

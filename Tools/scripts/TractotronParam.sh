@@ -2,10 +2,13 @@
 #tractotron v1.0 - Michel Thiebaut de Schotten & Chris Foulon
 
 [ $# -lt 3 ] && { echo "Usage : $0 LesionFolder TractsFolder ResultDir"; exit 1; }
-#Those lines are the handling of the script's trace (42 is the file descriptor number)
-exec 42> $3/logTractotron.txt
-export BASH_XTRACEFD=42
+#Those lines are the handling of the script's trace and errors
+#Traces and errors will be stored in $3/logTractotron.txt
+export PS4='+(${LINENO})'
+echo -n "" > $3/logTractotron.txt
+exec 2>> $3/logTractotron.txt
 set -x
+
 
 path=${PWD}/Tools
 lib=$path/libraries/lib
@@ -29,7 +32,6 @@ proba=$3/probability.xls
 prop=$3/proportion.xls
 echo -n "" > $prop
 echo -n "" > $proba
-
 cd $1
 nbPat=0
 for d in *.nii*

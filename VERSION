@@ -1,12 +1,23 @@
 ** Current version **
+v2.0.20
+** Module modifications **
+*All modules : -Log files are now available and work better for every modules
+*Tractotron : -We added a new calculation to git the proportion of overlaping 
+between lesions and tracts, the result is in a separate file
+              -Now you can just select the result folder and results files will
+be generated inside
+*Normalisation : -In the settings frame, you can now manually select the 
+The step-size impacts accuracy (SyN parameter of ANTs)
+*AnaCOM2 : 
+
+** Previous updates **
+
 v2.0.5
 ** New module **
--AnaCOM2 : compare scores of lesioned patients with controls scores at a neuropsychological test and try to find which lesioned area affect the score.
+-AnaCOM2 : compare scores of lesioned patients with controls scores at a neuropsychological test and try to find which lesioned area affect the score
 ** GUI **
 -Log files for all modules before AnaCOM2
 
-
-** Previous update **
 v1.1.1:
 ** Files **
 -New template added : BCBToolKit/Tools/extraFiles/MNI152_wskull.nii.gz

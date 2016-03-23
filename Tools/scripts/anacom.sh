@@ -1,11 +1,12 @@
 #! /bin/bash
 #AnaCOM2 - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten & Chris Foulon 
-[ $# -lt 5 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp"; exit 1; }
-#Those lines are the handling of the script's trace (42 is the file descriptor number)
-exec 42> $3/logAnacom.txt
-export BASH_XTRACEFD=42
+[ $# -lt 8 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp detZero"; exit 1; }
+
+#Those lines are the handling of the script's trace and errors
+#Traces and errors will be stored in $3/logAnacom.txt
+echo -n "" > $3/logAnacom.txt
+exec 2>> $3/logAnacom.txt
 set -x
-#set -e
 
 path=${PWD}/Tools
     
@@ -87,9 +88,96 @@ do
   sco[$ii]=${tmpsco[$i]};
   ii=$((ii + 1));
 done;
+#We store original scores to write them correctly in txt files and in the cluster.csv result file
+originalSco=( "${sco[@]}" )
 
-# for i in ${!pat[@]}; do echo "Index $i : [${pat[$i]} | ${sco[$i]}]"; done;
+#We need control scores, we can have a mean if we have wilcoxon or ttest
+#Or a vector of scores which will be a column in a csv file
+if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
+then
+    control="mu=$5"
+else
+    i=0
+    declare -a contr
+    while IFS=$'\n\r,' read contr[$i]
+    do
+      i=$((i+1))
+    done < $5
+    
+    #We have to manage empty lines in the csv file so we unset empty cells
+    for ((i=0; i < ${#contr[@]};i++)); 
+    do
+      if [[ ${contr[$i]} == "" ]];
+      then 
+	unset contr[$i];
+      fi;
+    done;
+    #Here we fill a new tab with contiguous cells
+    cc=0
+    declare -a full
+    for ct in ${contr[*]};
+    do
+      full[$cc]=$ct
+      cc=$((cc + 1))
+    done;
+fi
 
+#It will be the number when you add it to scores you remove zeros, when you substract it you retrieve original scores
+subZero=0
+if [[ $8 == "true" ]];
+then
+  stillZero=$8
+  valMu=$5 #In case of mean control value
+  while [[ $stillZero == "true" ]]; #While we have a zero in data
+  do
+    subZero=$((subZero + 1));
+    stillZero="false"
+    #If there are zeros, we will add 1 to all scores until they are all gone
+    for i in ${!sco[@]}; #for all scores
+    do
+      #We add 1 to the value of the cell
+      sco[$i]=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", ${sco[$i]} + 1}"`
+      if [[ ${sco[$i]} == "0.000000" ]]; #if the new value is equal to 0
+      then
+	stillZero="true" #So we generated a new zero value and we need to make another loop
+      fi;
+    done;
+    if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
+    then
+      valMu=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $valMu + 1}"`
+      if [[ $valMu == "0.000000" ]]; #if the new value is equal to 0
+      then
+	stillZero="true" #So we generated a new zero value and we need to make another loop
+      fi;
+    else
+      for i in ${!full[@]}; #for all scores
+      do
+	#We add 1 to the value of the cell
+	full[$i]=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", ${full[$i]} + 1}"`
+	if [[ ${full[$i]} == "0.000000" ]]; #if the new value is equal to 0
+	then
+	  stillZero="true" #So we generated a new zero value and we need to make another loop
+	fi;
+      done;
+    fi;
+  done;
+fi;
+#So here we have removed ALL zeros of every scores we have !
+
+if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
+then
+  control="mu=$valMu"
+else
+  #We create a R vector with control scores
+  for ((i=0; i < ${#full[@]} - 1; i++));
+  do
+    y="${y}${full[$i]},"
+  done;
+  control="c(${y}${full[${#full[@]} - 1]})"
+fi;
+
+# for i in ${!sco[@]}; do echo "Index $i : [${pat[$i]} | ${sco[$i]}]"; done;
+# for i in ${!full[@]}; do echo "Index $i : [${full[$i]}]"; done;
 #### BINARISATION of ROIs AND ScoredROI creation AND adding binROI in overlapROI and scoROI in overlapScores ####
 num=0
 oR=$tmp/overlapROI.nii.gz
@@ -215,7 +303,7 @@ do
       rm $tmp/tmpMask${i}_${p}*; 
     else
       patient="$patient$p,"
-      score="$score${sco[$index]},"
+      score="$score${originalSco[$index]},"
     fi;
     index=$((index + 1));
   done;
@@ -224,23 +312,6 @@ do
   echo -n "${score:0:${#score}-1}" >> $tmp/cluster${i}sco.txt
 done;
 echo "#"
-
-# A loop to test if there is no overlap between clusters
-# for ((i=0; i < $numclu; i++));
-# do
-#   for ((j=$i + 1; j < $numclu; j++));
-#   do 
-#     fslmaths $cluD/cluster${i}.nii* -mas $cluD/cluster${j}.nii* $tmp/clustOverlap
-#     if [ `fslstats $tmp/clustOverlap -V | awk '{ print $1 }'` == 0 ];
-#     then 
-#       echo "Ok c'est tout bon"
-#     else
-#       echo "La c'est la galère"
-#     fi;
-#   done;
-# done;
-
-#We have our clusters, now let's make stats ! \o/
 
 
 #Just define the test we will compute
@@ -291,44 +362,6 @@ myTest <- function(fun = stat(x, y), patfile) {
   }
 }
 EOT
-
-
-
-#We need control scores, we can have a mean if we have wilcoxon or ttest
-#Or a vector of scores which will be a column in a csv file
-if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
-then
-    control="mu=$5"
-else
-    i=0
-    declare -a contr
-    while IFS=$'\n\r,' read contr[$i]
-    do
-      i=$((i+1))
-    done < $5
-    
-    #We have to manage empty lines in the csv file so we unset empty cells
-    for ((i=0; i < ${#contr[@]};i++)); 
-    do
-      if [[ ${contr[$i]} == "" ]];
-      then 
-	unset contr[$i];
-      fi;
-    done;
-    #We create a R vector with control scores
-    cc=0
-    declare -a full
-    for ct in ${contr[*]};
-    do
-      full[$cc]=$ct
-      cc=$((cc + 1))
-    done;
-    for ((i=0; i < ${#full[@]} - 1; i++));
-    do
-      y="${y}${full[$i]},"
-    done;
-    control="c(${y}${full[${#full[@]} - 1]})"
-fi
 
 #We can read clustersco files and apply statistical tests
 for ((i=0; i<$numclu; i++));
@@ -562,15 +595,18 @@ if [[ -e $saveTmp ]];
 then
   mv $cluD/mergedBHcorrClusters* $3
   mv $cluD $saveTmp;
-  mv $map $saveTmp;
+  #We have to substract subZero to the maskedMeanValMap if we had zeros in scores
+  if [[ $8 == "true" ]];
+  then
+    fslmaths $map -sub $subZero $saveTmp/maskedMeanValMap-$subZero;
+  else
+    mv $map $saveTmp;
+  fi;
   mv $tmp/maskedStd.* $saveTmp;
 else
   mv $cluD $tmp/;
 fi;
 # If you forget to check saveTmp, you can recover tmp files if you don't 
 # launch anacom2 again
-# rm -rf $tmp
 
-#I realised that all issues with arrays when I unset values could be resolve
-#by using ${!array[@]} which give indexes of array even if there are not 
-#contiguous.
+# rm -rf $tmp

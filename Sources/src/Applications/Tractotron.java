@@ -37,7 +37,6 @@ public class Tractotron extends AbstractApp {
 	public static final String TRACTO_TITLE = "Tractotron";
 	public static final String DEF_LES = "/Lesions";
 	public static final String DEF_TRA = "/Tracts";
-	public static final String DEF_RES = "/Example.xls";
 	private ImagePanel background;
 	private JPanel panel;
 	private JPanel topP;
@@ -97,25 +96,19 @@ public class Tractotron extends AbstractApp {
 
 		run = new JButton("RUN");
 		run.setPreferredSize(new Dimension(FRAME_WIDTH - 10, 45));
-		//checkLbl = new JLabel("Systematically replace contents");
-		//checkLbl.setForeground(new Color(255, 0, 0));
-
-		//La checkbox
-		//checkBox = new JCheckBox();
-		//checkBox.setSelected(true);
+		
 		//Browsers
-		lesBro = new Browser(frame, "Lesions directory :", BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.TLESDIR, getBCB());
+		lesBro = new Browser(this.getFrame(), "Lesions directory :", BCBEnum.fType.DIR.a(), this.getConf(), 
+				BCBEnum.Param.TLESDIR, this.getBCB());
 		lesBro.setDefPath(path + getDefaultLesions());
-		traBro = new Browser(frame, "Tracts directory :", BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.TTRADIR, getBCB());
+		traBro = new Browser(this.getFrame(), "Tracts directory :", BCBEnum.fType.DIR.a(), this.getConf(), 
+				BCBEnum.Param.TTRADIR, this.getBCB());
 		traBro.setDefPath(path + getDefaultTracts());
-
-		resBro = new Browser(frame, "Save tractotron result as .xls :", BCBEnum.fType.XLS.a(), conf, 
-				BCBEnum.Param.TRESDIR, getBCB());
-		resBro.setDefPath(path + getDefaultResult());
+		resBro = new Browser(this.getFrame(), "Result directory :", BCBEnum.fType.DIR.a(),
+				this.getConf(), BCBEnum.Param.TRESDIR, this.getBCB());
 
 		lesBro.firstReset();
 		traBro.firstReset();
-		resBro.firstReset();
 		// On ajoute les browser à la map de la bcbtb
 		getBCB().addBro(lesBro.getParam(), lesBro);
 		getBCB().addBro(traBro.getParam(), traBro);
@@ -180,7 +173,7 @@ public class Tractotron extends AbstractApp {
 							return null;
 						}
 						if (Tools.isReady(frame, resBro)) {
-							model.setResult(resBro.getFile());
+							model.setResultDir(resBro.getPath());
 						} else {
 							return null;
 						}
@@ -239,11 +232,6 @@ public class Tractotron extends AbstractApp {
 	//Utilis�� pour le dossier par d��faut de tracts.
 	public String getDefaultTracts() {
 		return DEF_TRA;
-	}
-
-	//Utilis�� pour le fichier de r��sultat par d��faut.
-	public String getDefaultResult() {
-		return DEF_RES;
 	}
 
 	// GET functions for textfields

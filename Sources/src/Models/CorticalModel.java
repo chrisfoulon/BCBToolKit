@@ -1,7 +1,6 @@
 package Models;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -99,42 +98,21 @@ public class CorticalModel {
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
 			setNbTicks(new File(t1Dir).listFiles(fileNameFilter).length);
-			int count = 0;
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
 				/*
 				 * Attention la boucle augmente la barre de progression plusieurs fois par patient
 				 * car le calcul est long et je voudrais bien que l'on voit quelques chose pendant les 
-				 * calculs même pour une seul patient 
+				 * calculs même pour un seul patient 
 				 */
 				if (inLoop.startsWith("#PATIENT#")) {
 					progress++;
 					loading.setWidth(progress);					
 				}
-				count++;
-				System.out.println("~~~~~~~~COUNT :" + count);
 				System.out.println(inLoop);
 			}
 			out.close();
-			Scanner err = new Scanner(proc.getErrorStream());
-			String log = new String("");
-			while (err.hasNextLine()) {
-				String tmperr = err.nextLine();
-				if (tmperr.startsWith("+")) {
-					log += tmperr + "\n";
-				} else {
-					erreur += tmperr + "\n";
-				}
-			}
-			
-			try {
-				FileWriter writer = new FileWriter(resultDir + "/" + logFile, false); 
-				writer.write(log);
-				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} 
-			err.close();
+			erreur = Tools.parseLog(resultDir + "/logThickness.txt");
 		} catch (IOException e) {
 			Writer writer = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(writer);
@@ -143,6 +121,11 @@ public class CorticalModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
+		/*
+		 * We have to handle manually the error stream because a function in the script 
+		 * use the error file descriptor to write reports about the computation so we 
+		 * will always have a non-empty error stream even without real error ...
+		 */
 		Tools.showLongMessage(frame, "Final Report", erreur);
 	}
 }

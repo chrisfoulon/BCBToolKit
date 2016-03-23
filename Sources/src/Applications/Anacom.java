@@ -240,6 +240,7 @@ public class Anacom extends AbstractApp {
 				worker = new SwingWorker<Void, Void>() {
 					@Override
 					public Void doInBackground() {
+						boolean containsZero = false;
 						// We have to check if resBro is correctly filled because
 						// we use its path after
 						if (Tools.isReady(frame, resBro)) {
@@ -260,7 +261,8 @@ public class Anacom extends AbstractApp {
 
 						if (Tools.isReady(frame, csvBro)) {
 							String copypath = resBro.getPath() + "/copypatients.csv";
-							Tools.cleanCopy(csvBro.getPath(), copypath);
+							containsZero = Tools.cleanCopy(csvBro.getPath(), copypath, true) 
+									|| containsZero ;
 							model.setCSV(copypath);
 						} else {
 							return null;
@@ -277,11 +279,13 @@ public class Anacom extends AbstractApp {
 										"Kolmogorov-Smirnov test with only a \n mean for controls");
 								return null;
 							}
+							containsZero = (Float.valueOf(jftf.getText()) != 0) || containsZero;
 							model.setControls(jftf.getText());
 						} else {
 							if (Tools.isReady(frame, ctrlBro)) {
 								String copypath = resBro.getPath() + "/copycontrols.csv";
-								Tools.cleanCopy(ctrlBro.getPath(), copypath);
+								containsZero = Tools.cleanCopy(ctrlBro.getPath(), copypath, true)
+										|| containsZero;
 								model.setControls(copypath);
 							} else {
 								return null;
@@ -298,6 +302,16 @@ public class Anacom extends AbstractApp {
 							model.setLesionDir(lesBro.getPath());
 						} else {
 							return null;
+						}
+						if (containsZero) {
+							/*
+							 * Here we will display a popup to report that there are zeros 
+							 * inside patient or control scores and we will give the choice to
+							 * cancel their action or modify all scores with the same addition
+							 * to avoid zeros (and keep the same statistics). 
+							 */
+							model.setDetZero("true");
+						} else {
 						}
 						model.run();
 						return null;

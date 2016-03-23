@@ -1,9 +1,11 @@
 #! /bin/bash
 #hypertron v1.0 - Michel Thiebaut de Schotten & Chris Foulon
 [ $# -lt 2 ] && { echo "Usage : $0 LesionFolder ResultDir"; exit 1; }
-#Those lines are the handling of the script's trace (42 is the file descriptor number)
-exec 42> $2/logDisconnectome.txt
-export BASH_XTRACEFD=42
+
+#Those lines are the handling of the script's trace and errors
+#Traces and errors will be stored in $2/logDisconnectome.txt
+echo -n "" > $2/logDisconnectome.txt
+exec 2>> $2/logDisconnectome.txt
 set -x
 
 path=${PWD}/Tools
@@ -74,22 +76,3 @@ do
     
     echo "#"
 done
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    

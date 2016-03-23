@@ -2,9 +2,13 @@
 #Normalize Patients - Michel Thiebaut de Schotten & Chris Foulon
 #$1 = T1Folder $2 LesionFolder $3 ResultFolder $4 templateFile $5 betValue $6 synValue $7keepTmp $8 otherFilesFolder $9 otherResultFolder
 [ $# -lt 7 ] && { echo "Usage : $0 T1Folder LesionFolder ResultFolder templateFile betValue synValue keepTmp [-OPTIONAL otherFilesFolder] [-OPTIONAL otherResultFolder]"; exit 1; }
-exec 42> $3/logNormalisation.txt
-export BASH_XTRACEFD=42
+
+#Those lines are the handling of the script's trace and errors
+#Traces and errors will be stored in $3/logNormalisation.txt
+echo -n "" > $3/logNormalisation.txt
+exec 2>> $3/logNormalisation.txt
 set -x
+
 path=${PWD}/Tools
     
 lib=$path/libraries/lib

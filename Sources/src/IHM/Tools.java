@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.util.Scanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -155,56 +154,70 @@ public final class Tools {
 	}
 	
 	/**
-	 * Catch the error stream, filter the log trace and write it in 
-	 * path/logName file, check if there is an real error and if yes, 
-	 * write it in a popup and return true. 
-	 * @param proc : the Process where the script was executed
-	 * @param path : the path to the result directory, where le logFile
-	 * will be written.
-	 * @param logName : the logfile name
-	 * @param frame : the JFrame where the error popup will appear
-	 * @return true if there is an error (excluding log trace)
-	 * 		   false if not
+	 * Search all error lines in the log file located and the given
+	 * path
+	 * @param path : the path of the log file you want to parse
+	 * @return a String containing the error lines
 	 */
-	public static Boolean scriptError(Process proc, String path, String logName, JFrame frame) {
-		String erreur = new String("");
-		Scanner err = new Scanner(proc.getErrorStream());
-		String log = new String("");
-		while (err.hasNextLine()) {
-			String tmperr = err.nextLine();
-			if (tmperr.startsWith("+")) {
-				log += tmperr + "\n";
-			} else {
-				erreur += tmperr + "\n";
-			}
+	public static String parseLog(String path) {
+		String erreur = "";
+		File source = new File(path);
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(source));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 		
+
 		try {
-			FileWriter writer = new FileWriter(path + "/" + logName, false); 
-			writer.write(log);
-			writer.close();
+			for(String line; (line = br.readLine()) != null; ) {
+				line = line.trim();
+				if (!line.startsWith("+")) {
+					erreur += line + "\n";
+				}
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 
-		
-		err.close();
-		if (!erreur.equals("")) {
-			String message = "**** SCRIPT ERROR ****\n"
-							 + erreur
-							 + "**** SCRIPT ERROR END ****\n";
-			Tools.showErrorMessage(frame, message);
-			return true;
+		try {
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		return false;
+		return erreur;
+	}
+
+	public static void classicErrorHandling(JFrame frame, String error, String success) {
+		if (!error.trim().equals("")) {
+			String message = "**** SCRIPT ERROR ****\n"
+					+ error
+					+ "**** SCRIPT ERROR END ****\n";
+			Tools.showErrorMessage(frame, message);
+		} else {
+			Tools.showMessage(frame, "End !", success);
+		}
+		return;
 	}
 	
 	/**
 	 * Given an absolute file path, create a copy of this file
 	 * in copypath encoded in UTF-8 (to avoiding weird characters)
-	 * @param filename
+	 * @param filename : The path of the source
+	 *        copypath : The path of the destination
+	 *        detZero  : True if we want to detect zeros in the source file
+	 * @return boolean : -If you selected the zero's detection it will return
+	 * 		true if the function found a zero, false if not
+	 * 					 -If you don't want to detect zeros it will always 
+	 * 		return false
+	 * 
+	 * WARNING : You can only make the zero's detection on files with the comma
+	 * as cell's separator (like csv files) 
 	 */
-	public static void cleanCopy(String filename, String copypath) {
+	public static boolean cleanCopy(String filename, String copypath, boolean detZero) {
+		boolean bool = false;
 		File source = new File(filename);
 		//Create the copy or erase the file with the same name
 		try {
@@ -235,13 +248,35 @@ public final class Tools {
 			e1.printStackTrace();
 		}
 		
-		try {
-		    for(String line; (line = br.readLine()) != null; ) {
-		    	out.write(line + "\n");
-		    }
-		} catch (IOException e) {
-			e.printStackTrace();
-		} 
+		if (!detZero) {
+			try {
+				for(String line; (line = br.readLine()) != null; ) {
+					out.write(line + "\n");
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
+		
+		} else {
+			try {
+				for(String line; (line = br.readLine()) != null; ) {
+					//Here we will search for zeros
+					//First we split cells in each line
+					if (!bool) { //Just avoiding useless tests if we have already a zero
+						String[] cells = line.split(",");
+						for (String c : cells)  {
+							//If one cell contains a zero, bool take the value true
+							if (c.matches("0|0\\.0*")) {
+								bool = true;
+							}
+						}
+					}
+					out.write(line + "\n");
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
+		}
 		
 		try {
 			out.close();
@@ -250,6 +285,7 @@ public final class Tools {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return bool;
 	}
 	
 	public static void gatherRound(final AbstractApp app) {

@@ -54,6 +54,8 @@ public class SettingsFrame implements Settings {
 	private JCheckBox saveLoc;
 	//Normalisation
 	private JTextField betOpt;
+	private JTextField synOpt;
+	private String synVal;
 
 	private HashMap<BCBEnum.Param, JButton> butMap;
 	
@@ -70,6 +72,7 @@ public class SettingsFrame implements Settings {
 		this.bcb = bcb;
 		this.conf = c;
 		this.pathsMap = new HashMap<BCBEnum.Param, String>(bcb.getPathsMap());
+		synVal = "0.25";
 		createView();
 		placeComponents();
 		createController();
@@ -107,6 +110,12 @@ public class SettingsFrame implements Settings {
 		saveLoc.setIconTextGap(20);
 		betOpt = new JTextField();
 		betOpt.setPreferredSize(new Dimension(50, 20));
+		synOpt = new JTextField("0.25");
+		synOpt.setPreferredSize(new Dimension(50, 20));
+		synOpt.setToolTipText("<html> The step-size (0.25) impacts accuracy."
+				+ "<br /> Smaller is generally more accurate but takes more time"
+				+ "<br /> to compute and may not capture as much deformation if the"
+				+ "<br /> optimization is caught in a local minimum. </html>");
 		//LoadSettings
 		loadSettings();
 	}
@@ -163,9 +172,9 @@ public class SettingsFrame implements Settings {
 		JPanel normaTab  = new JPanel(); {
 			BoxLayout boxLay4 = new BoxLayout(normaTab, BoxLayout.Y_AXIS);
 			normaTab.setLayout(boxLay4);
+			normaTab.add(butMap.get(BCBEnum.Param.NTEMPDIR));
+			normaTab.add(Box.createRigidArea(new Dimension(0, 10)));
 			JPanel p = new JPanel(new BorderLayout()); {
-				normaTab.add(butMap.get(BCBEnum.Param.NTEMPDIR));
-				normaTab.add(Box.createRigidArea(new Dimension(0, 10)));
 				JLabel lab = new JLabel("Brain extraction Threshold (0.0 to 1.0) :");
 				lab.setHorizontalAlignment(SwingConstants.CENTER);
 				p.add(lab, BorderLayout.CENTER);
@@ -175,7 +184,19 @@ public class SettingsFrame implements Settings {
 				p.add(p1, BorderLayout.SOUTH);
 				p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
 			}
+			
+			JPanel t = new JPanel(new BorderLayout()); {
+				JLabel lab = new JLabel("Step-size impacts accuracy (SyN) :");
+				lab.setHorizontalAlignment(SwingConstants.CENTER);
+				t.add(lab, BorderLayout.CENTER);
+				JPanel t1 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+					t1.add(synOpt);
+				}
+				t.add(t1, BorderLayout.SOUTH);
+				t.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
+			}
 			normaTab.add(p);
+			normaTab.add(t);
 			/*It's useless ... I made a mistake.
 			normaTab.add(new Renamer("T1", "Add / Remove T1 prefix :", 
 					getBCB().getFrame(), getBCB()));
@@ -286,6 +307,41 @@ public class SettingsFrame implements Settings {
 		    }
 		});
 		
+		synOpt.addFocusListener(new FocusListener() {
+
+		    @Override
+		    public void focusLost(FocusEvent e) {
+		    	String text = synOpt.getText();
+		    	//Deleting of invisible characters
+		    	text = text.trim();
+		    	//Replace , by .
+		    	text = text.replace(",", ".");
+		    	if (!text.equals("0.25")) {
+		    		float opt = 0;
+		    		try {
+			    		opt = Float.valueOf(text);
+		    		} catch (NumberFormatException nbE) {
+		    			Tools.showErrorMessage(getBCB().getFrame(), 
+		    					"The step-size impacts accuracy must be a number >= 0");
+		    			synOpt.setText("0.25");
+		    			return;
+		    		}
+		    		if (!(opt < 0)) {
+		    			synVal = text;
+		    		} else {
+		    			Tools.showErrorMessage(getBCB().getFrame(), 
+		    					"The step-size impacts accuracy must be a number >= 0");
+		    			synOpt.setText("0.25");
+		    			return;
+		    		}
+		    	}
+		    }
+
+		    @Override
+		    public void focusGained(FocusEvent e) {
+		    }
+		});
+		
 		updateResetControllers();
 		
 		okBut.addActionListener(new ActionListener() {
@@ -317,7 +373,7 @@ public class SettingsFrame implements Settings {
 		for (BCBEnum.Param p : map.keySet()) {
 			final Browser b = map.get(p);
 			butMap.get(p).addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) { 
+				public void actionPerformed(ActionEvent e) {
 					if (b != null) {
 						b.resetPath();
 					}
@@ -375,6 +431,10 @@ public class SettingsFrame implements Settings {
 	
 	public void closeSettings() {
 		dialog.setVisible(false);
+	}
+	
+	public String getNormSynValue() {
+		return synVal;
 	}
 	
 	// Model 

@@ -1,7 +1,9 @@
 package Models;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,6 +36,8 @@ public class NormalisationModel {
 	private String exeDir;
 	//The bet option value
 	private String betOpt;
+	//The SyN option value
+	private String synOpt;
 	//Should we save tempory files ? 
 	private String saveTmp;
 	private LoadingBar loading;
@@ -88,6 +92,10 @@ public class NormalisationModel {
 		betOpt = str;
 	}
 	
+	public void setSynOpt(String str) {
+		synOpt = str;
+	}
+	
 	public void setSaveTmp(String str) {
 		if (str == null || str.equals("") || (!str.equals("false") && !str.equals("true"))) {
 			throw new IllegalArgumentException("The value of saveTmp must be true or false");
@@ -139,10 +147,10 @@ public class NormalisationModel {
 			
 			if (other) {
 				 array = new String[]{exeDir + "/normalize.sh", t1Dir,
-						 lesDir, resDir, tempFile, betOptFinal, saveTmp, othDir, othRes};
+						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp, othDir, othRes};
 			} else {
 				array = new String[]{exeDir + "/normalize.sh", t1Dir,
-						 lesDir, resDir, tempFile, betOptFinal, saveTmp};
+						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp};
 			}
 
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
@@ -159,32 +167,40 @@ public class NormalisationModel {
 				System.out.println(inLoop);
 			}
 			out.close();
-			
-			String log = new String("");
-			Scanner err = new Scanner(proc.getErrorStream());
-			while (err.hasNextLine()) {
-				String tmp = err.nextLine();
-				String warn = "WARNING";
-				String sigmas = "size of sigmas";
-				if (tmp.toLowerCase().contains(warn.toLowerCase()) || 
-						tmp.toLowerCase().contains(sigmas.toLowerCase()) ||
-						tmp.equals("")) {
-					//nothing !
-				} else if (tmp.startsWith("+")) {
-					log += tmp + "\n";
-				}else {
-					erreur += tmp + "\n";
-				}
-			}
-			err.close();
+			//Error handling
+			File source = new File(resDir + "/logNormalisation.txt");
+			BufferedReader br = null;
 			try {
-				FileWriter writer = new FileWriter(resDir + "/" + logFile, false); 
-				writer.write(log);
-				writer.close();
+				br = new BufferedReader(new FileReader(source));
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+
+			try {
+				for(String line; (line = br.readLine()) != null; ) {
+					String tmp = line.trim();
+					String warn = "WARNING";
+					String sigmas = "size of sigmas";
+					if (tmp.toLowerCase().contains(warn.toLowerCase()) || 
+							tmp.toLowerCase().contains(sigmas.toLowerCase()) ||
+							tmp.equals("")) {
+						//nothing !
+					} else if (!line.startsWith("+")) {
+						erreur += tmp + "\n";
+					}
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
+			} 
+			try {
+				br.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		
+
 		} catch (IOException e) {
 			Writer writer = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(writer);

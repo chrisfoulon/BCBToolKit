@@ -1,7 +1,6 @@
 package Models;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,7 +23,7 @@ public class TractoModel {
 	public static final String logFile = "logTractotron.txt"; 
 	private String lesionDir;
 	private String tractsDir;
-	private File result;
+	private String resultDir;
 	//The execution path of the software
 	private String path;
 	//The folder of the script
@@ -60,8 +59,8 @@ public class TractoModel {
 		tractsDir = str;
 	}
 
-	public void setResult(File f) {
-		result = f;
+	public void setResultDir(String str) {
+		resultDir = str;
 	}
 	
 	public void setLoadingBar(LoadingBar load) {
@@ -85,20 +84,13 @@ public class TractoModel {
 			throw new IllegalStateException(
 					"You have to select the tracts directory");
 		}
-		if (result == null) {
+		if (resultDir == null) {
 			throw new IllegalStateException(
-					"You have to select the result file");
+					"You have to select the result directory");
 		}
 				
-		Boolean error = false;
-		// On vide le fichier result. 
-		try {
-			FileWriter writer = new FileWriter(result, false); 
-			writer.write("");
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		//Boolean error = false;
+		String erreur = "";
 		
 		try {
 			
@@ -118,7 +110,7 @@ public class TractoModel {
 		    Files.setPosixFilePermissions(Paths.get(exeDir + "/TractotronParam.sh"), perms);
 			
 			String[] array = {exeDir + "/TractotronParam.sh",
-					lesionDir, tractsDir, result.getAbsolutePath()};
+					lesionDir, tractsDir, resultDir};
 
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			
@@ -130,8 +122,9 @@ public class TractoModel {
 				if (tmp.startsWith("#")) {
 					StringTokenizer token = new StringTokenizer(tmp, "#\n");
 					if (token.hasMoreTokens()) {
-						setNbTicks(new File(lesionDir).listFiles(fileNameFilter).length
-									* new File(tractsDir).listFiles(fileNameFilter).length);
+						int tmpNumber = new File(tractsDir).listFiles(fileNameFilter).length;
+						setNbTicks(tmpNumber + new File(lesionDir).listFiles(fileNameFilter).length
+									* tmpNumber * 3);
 					} else {
 						progress++;
 						loading.setWidth(progress);
@@ -140,8 +133,10 @@ public class TractoModel {
 					System.out.println(tmp);
 				}
 			}
+			
+			
 			out.close();
-			error = Tools.scriptError(proc, result.getParent(), logFile, frame);
+			erreur = Tools.parseLog(resultDir + "/logTractotron.txt");
 			
         } catch (IOException e) {
 			Writer writer = new StringWriter();
@@ -151,9 +146,7 @@ public class TractoModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		if (!error) {
-			Tools.showMessage(frame, "End !", "Data properly written in the result file");
-		}
+		Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resultDir);
 		return;
 	}	
 }

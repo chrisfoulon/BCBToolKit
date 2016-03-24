@@ -3,6 +3,7 @@
 [ $# -lt 2 ] && { echo "Usage : $0 T1Folder ResultDir"; exit 1; }
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $2/logThickness.txt
+export PS4='+(${LINENO})'
 echo -n "" > $2/logThickness.txt
 exec 2>> $2/logThickness.txt
 set -x

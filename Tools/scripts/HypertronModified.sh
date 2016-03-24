@@ -4,6 +4,7 @@
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $2/logDisconnectome.txt
+export PS4='+(${LINENO})'
 echo -n "" > $2/logDisconnectome.txt
 exec 2>> $2/logDisconnectome.txt
 set -x
@@ -29,7 +30,7 @@ do
     tmp=$path/tmp/tmpHyp
     mkdir -p $tmp
     cd $hyp
-    #on va change un peu l'ordre, au lieu de faire d'abord applywarp puis trackvis
+    #on va changer un peu l'ordre, au lieu de faire d'abord applywarp puis trackvis
     #puis fslmaths puis re-applywarp on va boucler sur les numéros de fichiers 
     #et leur appliquer les 4 opérations et on reboucle
     start=000

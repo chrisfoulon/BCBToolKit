@@ -1,9 +1,10 @@
 #! /bin/bash
 #AnaCOM2 - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten & Chris Foulon 
-[ $# -lt 8 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp detZero"; exit 1; }
+[ $# -lt 9 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold controlScores test keepTmp detZero nbvox"; exit 1; }
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logAnacom.txt
+export PS4='+(${LINENO})'
 echo -n "" > $3/logAnacom.txt
 exec 2>> $3/logAnacom.txt
 set -x
@@ -54,7 +55,7 @@ i=0
 
 declare -a pat
 declare -a sco
-while IFS=$'\n\r,' read pat[$i] sco[$i]
+while IFS=, read pat[$i] sco[$i]
 do
     i=$((i+1))
 done < $1
@@ -99,7 +100,7 @@ then
 else
     i=0
     declare -a contr
-    while IFS=$'\n\r,' read contr[$i]
+    while IFS=, read contr[$i]
     do
       i=$((i+1))
     done < $5
@@ -278,11 +279,20 @@ do
     max=`fslstats $tmp/stdlayer -R | awk '{print $2}'`;
     fslmaths $tmp/stdlayer -thr $max $cluD/cluster${numclu};
     fslmaths $tmp/stdlayer -sub $cluD/cluster${numclu} $tmp/stdlayer;
-    #Be careful, here, in clusters, we have the added scores of patients 
-    #ADDED to the standard deviation. For now we don't use this value but it could
-    #make errors if we use it. (Solution is to substract each cluster by maskedStd
-    numclu=$((numclu + 1));
+    #Here we calculate the number of voxels contained by the cluster
+    volume=`fslstats $cluD/cluster${numclu} -V | awk '{ print $1 }'`
+    #If it is lower than the threshold $9 we remove the cluster and we will
+    #create another with that number at the next loop
+    if [[ $volume -lt $9 ]];
+    then
+      rm -f $cluD/cluster${numclu}.*;
+    else
+      numclu=$((numclu + 1));
+    fi;
   done;
+  #Be careful, here, in clusters, we have the added scores of patients 
+  #ADDED to the standard deviation. For now we don't use this value but it could
+  #make errors if we use it. (Solution is to substract each cluster by maskedStd)
 done;
 
 echo "#"
@@ -437,7 +447,9 @@ done;
 declare -a sorted;
 declare -a indexes;
 # Sort with -g (for floats)
-var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g`
+IFS=$'\n' var=($(sort -g <<<"${bonf[@]}"))
+unset IFS
+# var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g`
 # Sort give a string so we convert it as an array in $sorted
 IFS=$'\n ' read -r -a sorted <<< $var
 #we make a copy of sorted to use it later

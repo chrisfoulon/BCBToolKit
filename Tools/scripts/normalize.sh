@@ -5,6 +5,7 @@
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logNormalisation.txt
+export PS4='+(${LINENO})'
 echo -n "" > $3/logNormalisation.txt
 exec 2>> $3/logNormalisation.txt
 set -x

@@ -56,9 +56,11 @@ public class SettingsFrame implements Settings {
 	private JTextField betOpt;
 	private JTextField synOpt;
 	private String synVal;
+	//Anacom
+	private JTextField nbVox;
 
 	private HashMap<BCBEnum.Param, JButton> butMap;
-	
+
 	private HashMap<BCBEnum.Param, String> pathsMap;
 
 	public SettingsFrame(Config c, BCBToolKitIHM bcb) {
@@ -77,7 +79,7 @@ public class SettingsFrame implements Settings {
 		placeComponents();
 		createController();
 	}
-	
+
 
 	// PARTIE IHM
 	private void createView() {
@@ -88,13 +90,13 @@ public class SettingsFrame implements Settings {
 				BCBToolKitIHM.FRAME_HEIGHT - BCBToolKitIHM.INFRAME_PADDING));
 		dialog.pack();
 		dialog.setLocationRelativeTo(this.getBCB().getFrame());
-		
+
 		okBut = new JButton("Ok");
 		//applyBut = new JButton("Apply");
 		//cancelBut = new JButton("Cancel");
-		
+
 		createButtons();
-		
+
 		//General
 		startCheck = new JCheckBox();
 		startCheck.setToolTipText("Define the starting directory of browsers");
@@ -116,13 +118,15 @@ public class SettingsFrame implements Settings {
 				+ "<br /> Smaller is generally more accurate but takes more time"
 				+ "<br /> to compute and may not capture as much deformation if the"
 				+ "<br /> optimization is caught in a local minimum. </html>");
+		nbVox = new JTextField("0");
+		nbVox.setPreferredSize(new Dimension(50, 20));
 		//LoadSettings
 		loadSettings();
 	}
-	
+
 	private void placeComponents() {
 		this.tabs = new JTabbedPane(SwingConstants.TOP);
-		
+
 		JPanel generalTab = new JPanel(); {
 			BoxLayout boxLay = new BoxLayout(generalTab, BoxLayout.Y_AXIS);
 			generalTab.setLayout(boxLay);
@@ -150,7 +154,7 @@ public class SettingsFrame implements Settings {
 			s.setMaximumSize(new Dimension(BCBToolKitIHM.FRAME_WIDTH, 25));
 			generalTab.add(s);
 		}
-		 
+
 		JPanel tractoTab = new JPanel(); {
 			BoxLayout boxLay1 = new BoxLayout(tractoTab, BoxLayout.Y_AXIS);
 			tractoTab.setLayout(boxLay1);
@@ -163,12 +167,12 @@ public class SettingsFrame implements Settings {
 			BoxLayout boxLay2 = new BoxLayout(discoTab, BoxLayout.Y_AXIS);
 			discoTab.setLayout(boxLay2);
 		}
-		
+
 		JPanel cortiTab = new JPanel(); {
 			BoxLayout boxLay3 = new BoxLayout(cortiTab, BoxLayout.Y_AXIS);
 			cortiTab.setLayout(boxLay3);
 		}
-		
+
 		JPanel normaTab  = new JPanel(); {
 			BoxLayout boxLay4 = new BoxLayout(normaTab, BoxLayout.Y_AXIS);
 			normaTab.setLayout(boxLay4);
@@ -184,7 +188,7 @@ public class SettingsFrame implements Settings {
 				p.add(p1, BorderLayout.SOUTH);
 				p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
 			}
-			
+
 			JPanel t = new JPanel(new BorderLayout()); {
 				JLabel lab = new JLabel("Step-size impacts accuracy (SyN) :");
 				lab.setHorizontalAlignment(SwingConstants.CENTER);
@@ -205,15 +209,26 @@ public class SettingsFrame implements Settings {
 			normaTab.add(new Renamer("OTH", "Add / Remove OTH prefix :", 
 					getBCB().getFrame(), getBCB()));*/
 		}
-		
+
 		JPanel anacomTab = new JPanel(); {
 			BoxLayout boxLay5 = new BoxLayout(anacomTab, BoxLayout.Y_AXIS);
 			anacomTab.setLayout(boxLay5);
+			JPanel p = new JPanel(new BorderLayout()); {
+				JLabel lab = new JLabel("Minimum number of voxels for clusters :");
+				lab.setHorizontalAlignment(SwingConstants.CENTER);
+				p.add(lab, BorderLayout.CENTER);
+				JPanel p1 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+					p1.add(nbVox);
+				}
+				p.add(p1, BorderLayout.SOUTH);
+				p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
+			}
+			anacomTab.add(p);
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP1DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP2DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SRESDIR));
 		}
-		
+
 		JPanel statTab = new JPanel(); {
 			BoxLayout boxLay3 = new BoxLayout(statTab, BoxLayout.Y_AXIS);
 			statTab.setLayout(boxLay3);
@@ -221,13 +236,13 @@ public class SettingsFrame implements Settings {
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP2DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SRESDIR));
 		}
-		
+
 		JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT)); {
 			bottom.add(okBut);
 			//bottom.add(applyBut);
 			//bottom.add(cancelBut);
 		}
-		
+
 		tabs.addTab("General", generalTab);
 		tabs.addTab("Tractotron", tractoTab);
 		tabs.addTab("Disconnectome maps", discoTab);
@@ -236,11 +251,11 @@ public class SettingsFrame implements Settings {
 		tabs.addTab("anaCOM2", anacomTab);
 		tabs.addTab("Statistical analysis", statTab);
 		tabs.setOpaque(true);
-		
+
 		dialog.add(tabs, BorderLayout.CENTER);
 		dialog.add(bottom, BorderLayout.SOUTH);
 	}
-	
+
 	private void createController() {
 		dialog.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent we) {
@@ -255,9 +270,9 @@ public class SettingsFrame implements Settings {
 				} else {
 					startBro.deactivate();
 				}
-            }
+			}
 		});
-		
+
 		saveDir.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (saveDir.isSelected()) {
@@ -265,93 +280,115 @@ public class SettingsFrame implements Settings {
 				} else {
 					getBCB().savePaths(false);
 				}
-            }
+			}
 		});
-		
+
 		betOpt.addFocusListener(new FocusListener() {
 
-		    @Override
-		    public void focusLost(FocusEvent e) {
-		    	String text = betOpt.getText();
-		    	//Deleting of invisible characters
-		    	text = text.trim();
-		    	//Replace , by .
-		    	text = text.replace(",", ".");
-		    	if (!text.equals("")) {
-		    		float opt = 0;
-		    		try {
-			    		opt = Float.valueOf(text);
-		    		} catch (NumberFormatException nbE) {
-		    			Tools.showErrorMessage(getBCB().getFrame(), 
-		    					"The value of Brain extraction threshold" +
-		    					" be between 0.0 and 1.0");
-		    			betOpt.setText("");
-		    			conf.setVal(BCBEnum.Param.NBETOPT, "");
-		    			return;
-		    		}
-		    		if (!(opt < 0) && !(opt > 1)) {
-		    			conf.setVal(BCBEnum.Param.NBETOPT, text);
-		    		} else {
-		    			Tools.showErrorMessage(getBCB().getFrame(), 
-		    					"The value of Brain extraction threshold" +
-		    					" be between 0.0 and 1.0");
-		    			betOpt.setText("");
-		    			conf.setVal(BCBEnum.Param.NBETOPT, "");
-		    			return;
-		    		}
-		    	}
-		    }
+			@Override
+			public void focusLost(FocusEvent e) {
+				String text = betOpt.getText();
+				//Deleting of invisible characters
+				text = text.trim();
+				//Replace , by .
+				text = text.replace(",", ".");
+				if (!text.equals("")) {
+					float opt = 0;
+					try {
+						opt = Float.valueOf(text);
+					} catch (NumberFormatException nbE) {
+						Tools.showErrorMessage(getBCB().getFrame(), 
+								"The value of Brain extraction threshold" +
+								" be between 0.0 and 1.0");
+						betOpt.setText("");
+						conf.setVal(BCBEnum.Param.NBETOPT, "");
+						return;
+					}
+					if (!(opt < 0) && !(opt > 1)) {
+						conf.setVal(BCBEnum.Param.NBETOPT, text);
+					} else {
+						Tools.showErrorMessage(getBCB().getFrame(), 
+								"The value of Brain extraction threshold" +
+								" be between 0.0 and 1.0");
+						betOpt.setText("");
+						conf.setVal(BCBEnum.Param.NBETOPT, "");
+						return;
+					}
+				}
+			}
 
-		    @Override
-		    public void focusGained(FocusEvent e) {
-		    }
+			@Override
+			public void focusGained(FocusEvent e) {
+			}
 		});
-		
+
 		synOpt.addFocusListener(new FocusListener() {
 
-		    @Override
-		    public void focusLost(FocusEvent e) {
-		    	String text = synOpt.getText();
-		    	//Deleting of invisible characters
-		    	text = text.trim();
-		    	//Replace , by .
-		    	text = text.replace(",", ".");
-		    	if (!text.equals("0.25")) {
-		    		float opt = 0;
-		    		try {
-			    		opt = Float.valueOf(text);
-		    		} catch (NumberFormatException nbE) {
-		    			Tools.showErrorMessage(getBCB().getFrame(), 
-		    					"The step-size impacts accuracy must be a number >= 0");
-		    			synOpt.setText("0.25");
-		    			return;
-		    		}
-		    		if (!(opt < 0)) {
-		    			synVal = text;
-		    		} else {
-		    			Tools.showErrorMessage(getBCB().getFrame(), 
-		    					"The step-size impacts accuracy must be a number >= 0");
-		    			synOpt.setText("0.25");
-		    			return;
-		    		}
-		    	}
-		    }
+			@Override
+			public void focusLost(FocusEvent e) {
+				String text = synOpt.getText();
+				//Deleting of invisible characters
+				text = text.trim();
+				//Replace , by .
+				text = text.replace(",", ".");
+				if (!text.equals("0.25")) {
+					float opt = 0;
+					try {
+						opt = Float.valueOf(text);
+					} catch (NumberFormatException nbE) {
+						Tools.showErrorMessage(getBCB().getFrame(), 
+								"The step-size impacts accuracy must be a number >= 0");
+						synOpt.setText("0.25");
+						return;
+					}
+					if (!(opt < 0)) {
+						synVal = text;
+					} else {
+						Tools.showErrorMessage(getBCB().getFrame(), 
+								"The step-size impacts accuracy must be a number >= 0");
+						synOpt.setText("0.25");
+						return;
+					}
+				}
+			}
 
-		    @Override
-		    public void focusGained(FocusEvent e) {
-		    }
+			@Override
+			public void focusGained(FocusEvent e) {
+			}
 		});
-		
+
+		nbVox.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				String text = nbVox.getText();
+				//Deleting of invisible characters
+				text = text.trim();
+				try {
+					Integer.parseInt(text);
+				} catch (NumberFormatException n) {
+					Tools.showErrorMessage(getBCB().getFrame(), 
+							"The number of voxels must be an integer >= 0");
+					nbVox.setText("0");
+					return;
+				}
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+			}
+		});
+
 		updateResetControllers();
-		
+
 		okBut.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				applyChanges();
 				closeSettings();
-            }
+			}
 		});
 	}
-	
+
 	/**
 	 * Create reset buttons
 	 */
@@ -377,15 +414,15 @@ public class SettingsFrame implements Settings {
 					if (b != null) {
 						b.resetPath();
 					}
-	            }
+				}
 			});
 		}
 	}
-	
+
 	public boolean saveLocations() {
 		return saveLoc.isSelected();
 	}
-	
+
 	private void loadSettings() {
 		// We set the good state of the checkBox startCheck
 		if (!conf.getVal(BCBEnum.Param.STARTDIR).equals("")) {
@@ -407,7 +444,7 @@ public class SettingsFrame implements Settings {
 			}
 		}
 	}
-	
+
 	/**
 	 * Make the Dialog frame visible into the main frame (of the BCBToolBox)
 	 */
@@ -415,7 +452,7 @@ public class SettingsFrame implements Settings {
 		dialog.setLocationRelativeTo(getBCB().getFrame());
 		dialog.setVisible(true);
 	}
-	
+
 	/**
 	 * Overload of openSettings adding the choice of the tab that will be open.
 	 * @pre 
@@ -428,15 +465,19 @@ public class SettingsFrame implements Settings {
 		tabs.setSelectedIndex(index.index());
 		openSettings();
 	}
-	
+
 	public void closeSettings() {
 		dialog.setVisible(false);
 	}
-	
+
 	public String getNormSynValue() {
 		return synVal;
 	}
 	
+	public String getNbVox() {
+		return nbVox.getText();
+	}
+
 	// Model 
 	@Override
 	public Config getConf() {

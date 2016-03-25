@@ -312,7 +312,9 @@ public class Anacom extends AbstractApp {
 							 */
 							model.setDetZero("true");
 						} else {
+							model.setDetZero("false");
 						}
+						model.setNbVox(getBCB().getSettings().getNbVox());
 						model.run();
 						return null;
 					}
@@ -358,7 +360,7 @@ public class Anacom extends AbstractApp {
 		
 		settings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				getBCB().openSettings();
+				getBCB().openSettings(BCBEnum.Index.ANACOM);
 			}
 		});
 	}

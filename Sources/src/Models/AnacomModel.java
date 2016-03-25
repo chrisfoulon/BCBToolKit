@@ -37,6 +37,8 @@ public class AnacomModel {
 	private String saveTmp;
 	//Have we found zero inside data ? 
 	private String detZero;
+	//The minimum of voxels number per cluster
+	private String nbVox = "0";
 	private LoadingBar loading;
 	private JFrame frame;
 
@@ -84,6 +86,10 @@ public class AnacomModel {
 		}
 		detZero = str;
 	}
+	
+	public void setNbVox(String str) {
+		nbVox = str;
+	}
 
 	public void setLoadingBar(LoadingBar load) {
 		loading = load;
@@ -117,7 +123,7 @@ public class AnacomModel {
 			Files.setPosixFilePermissions(Paths.get(exeDir + BCBEnum.Script.ANACOM.endPath()), perms);
 
 			String[] array = {exeDir + BCBEnum.Script.ANACOM.endPath(),
-					csvFile, lesDir, resDir, thresh, controls, test, saveTmp, detZero};
+					csvFile, lesDir, resDir, thresh, controls, test, saveTmp, detZero, nbVox};
 
 			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 

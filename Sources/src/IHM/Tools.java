@@ -174,7 +174,8 @@ public final class Tools {
 		try {
 			for(String line; (line = br.readLine()) != null; ) {
 				line = line.trim();
-				if (!line.startsWith("+")) {
+				//Pattern pattern = Pattern.compile("^[\\s]$|^[\\s][\\W]$");
+				if (!line.startsWith("+") && !line.matches("^\\W*$")) {
 					erreur += line + "\n";
 				}
 			}

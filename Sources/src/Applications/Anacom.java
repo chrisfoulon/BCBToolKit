@@ -59,6 +59,7 @@ public class Anacom extends AbstractApp {
 	private ButtonGroup bg;
 
 	private AnacomModel model;
+	
 
 	public Anacom(String path, BCBToolKitIHM b) {
 		super(path, b, BCBEnum.Index.ANACOM);
@@ -408,7 +409,13 @@ public class Anacom extends AbstractApp {
 	@Override
 	public void cancel() {
 		if (worker != null) {
-			getBCB().cancelActions("", worker);
+			Tools.cancelActions("", worker);
 		}
+		model.stopProcess();
+	}
+
+	@Override
+	public void stopProcess() {
+		model.stopProcess();
 	}
 }

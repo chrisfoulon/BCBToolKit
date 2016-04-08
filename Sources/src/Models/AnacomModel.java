@@ -5,12 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashSet;
 import java.util.Scanner;
-import java.util.Set;
 
 import javax.swing.JFrame;
 
@@ -18,15 +13,11 @@ import Config.BCBEnum;
 import IHM.LoadingBar;
 import IHM.Tools;
 
-public class AnacomModel {
-	public static final String logFile = "logAnacom.txt"; 
+public class AnacomModel extends AbstractModel {
+	public static final String logFile = "logAnacom.txt";
 	private String csvFile;
 	private String lesDir;
 	private String resDir;
-	//The execution path of the software
-	private String path;
-	//The folder of the script
-	private String exeDir;
 	//Threshold value
 	private String thresh;
 	//Control scores, it can be the mean score as a String or a path
@@ -40,13 +31,9 @@ public class AnacomModel {
 	//The minimum of voxels number per cluster
 	private String nbVox = "0";
 	private LoadingBar loading;
-	private JFrame frame;
 
 	public AnacomModel(String path, JFrame f) {
-		this.path = path;
-
-		this.exeDir = path + "/Tools/scripts";
-		this.frame = f;
+		super(path, f, BCBEnum.Script.ANACOM.endPath());
 	}
 	
 	public void setCSV(String str) {
@@ -103,29 +90,14 @@ public class AnacomModel {
 	 * Execute the script anacom.sh after checking it is executable by 
 	 * the user.
 	 */
-	public void run() {		
-		//On donne les droits d'exécution sur le script
-		Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
-		// add owners permissions
-		perms.add(PosixFilePermission.OWNER_READ);
-		perms.add(PosixFilePermission.OWNER_WRITE);
-		perms.add(PosixFilePermission.OWNER_EXECUTE);
-		// add group permissions
-		perms.add(PosixFilePermission.GROUP_READ);
-		perms.add(PosixFilePermission.GROUP_EXECUTE);
-		// add others permissions
-		perms.add(PosixFilePermission.OTHERS_READ);
-		perms.add(PosixFilePermission.OTHERS_EXECUTE);
-
+	public void run() {
 		String erreur = "";
 		try {
 
-			Files.setPosixFilePermissions(Paths.get(exeDir + BCBEnum.Script.ANACOM.endPath()), perms);
-
-			String[] array = {exeDir + BCBEnum.Script.ANACOM.endPath(),
+			String[] array = {this.script,
 					csvFile, lesDir, resDir, thresh, controls, test, saveTmp, detZero, nbVox};
 
-			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
+			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
@@ -152,7 +124,9 @@ public class AnacomModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resDir);
-		return;
+		if (proc != null) {
+			Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resDir);
+			return;
+		}
 	}
 }

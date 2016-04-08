@@ -26,6 +26,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingWorker;
 
 import Applications.AbstractApp;
 
@@ -302,5 +303,22 @@ public final class Tools {
 				return;
 			}
 		});
+	}
+	
+	/**
+	 * Removing temprary folder if there is a cancellation
+	 * @param tmpPath the path of the temporary folder 
+	 */
+	public static void cancelActions(String tmpPath, SwingWorker<Void, Void> w) {
+		w.cancel(true);
+		w=null;
+		if (tmpPath != null && !tmpPath.equals("")) {
+			String[] array2 = {"rm", "-rf", tmpPath};
+			try {
+				Runtime.getRuntime().exec(array2);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

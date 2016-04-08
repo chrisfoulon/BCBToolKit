@@ -9,19 +9,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashSet;
 import java.util.Scanner;
-import java.util.Set;
 
 import javax.swing.JFrame;
 
+import Config.BCBEnum;
 import IHM.LoadingBar;
 import IHM.Tools;
 
-public class NormalisationModel {
+public class NormalisationModel extends AbstractModel {
 	public static final String logFile = "logNormalisation.txt"; 
 	private String tempFile;
 	private String t1Dir;
@@ -30,10 +26,6 @@ public class NormalisationModel {
 	//Other dir
 	private String othDir;
 	private String othRes;
-	//The execution path of the software
-	private String path;
-	//The folder of the script
-	private String exeDir;
 	//The bet option value
 	private String betOpt;
 	//The SyN option value
@@ -41,13 +33,10 @@ public class NormalisationModel {
 	//Should we save tempory files ? 
 	private String saveTmp;
 	private LoadingBar loading;
-	private JFrame frame;
 	private FilenameFilter fileNameFilter;
 	
 	public NormalisationModel(String path, JFrame f) {
-		this.path = path;
-		this.exeDir = path + "/Tools/scripts";
-		this.frame = f;
+		super(path, f, BCBEnum.Script.NORMALISATION.endPath());
 		this.othDir = "";
 		this.othRes = "";
 		
@@ -118,26 +107,11 @@ public class NormalisationModel {
 	 * On ne passait pas les chemins en paramètres donc on va rester cohérent avec le reste
 	 * et utiliser les attributs. 
 	 */
-	public void run(boolean other) {		
-		//On donne les droits d'exécution sur le script
-		Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
-		// add owners permissions
-		perms.add(PosixFilePermission.OWNER_READ);
-		perms.add(PosixFilePermission.OWNER_WRITE);
-		perms.add(PosixFilePermission.OWNER_EXECUTE);
-		// add group permissions
-		perms.add(PosixFilePermission.GROUP_READ);
-		perms.add(PosixFilePermission.GROUP_EXECUTE);
-		// add others permissions
-		perms.add(PosixFilePermission.OTHERS_READ);
-		perms.add(PosixFilePermission.OTHERS_EXECUTE);
+	public void run(boolean other) {
 		
 		String erreur = "";
 		
 		try {
-			
-			Files.setPosixFilePermissions(Paths.get(exeDir + "/normalize.sh"), perms);
-			
 			String[] array;
 			
 			String betOptFinal = "0.5";
@@ -146,14 +120,14 @@ public class NormalisationModel {
 			}
 			
 			if (other) {
-				 array = new String[]{exeDir + "/normalize.sh", t1Dir,
+				 array = new String[]{script, t1Dir,
 						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp, othDir, othRes};
 			} else {
-				array = new String[]{exeDir + "/normalize.sh", t1Dir,
+				array = new String[]{script, t1Dir,
 						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp};
 			}
 
-			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
+			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
@@ -209,22 +183,24 @@ public class NormalisationModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		if (!erreur.equals("")) {
-			String message = "**** SCRIPT ERROR ****\n"
-							 + erreur
-							 + "**** SCRIPT ERROR END ****\n";
-			Tools.showErrorMessage(frame, message);
-			return;
-		} else {
-			String finish = "Finished!!! Normalisation saved in " + resDir;
-			String str2 = ""; 
-			if (other) {
-				str2 = "Other transformation saved in " + othRes;
+		if (proc != null) {
+			if (!erreur.equals("")) {
+				String message = "**** SCRIPT ERROR ****\n"
+						+ erreur
+						+ "**** SCRIPT ERROR END ****\n";
+				Tools.showErrorMessage(frame, message);
+				return;
+			} else {
+				String finish = "Finished!!! Normalisation saved in " + resDir;
+				String str2 = ""; 
+				if (other) {
+					str2 = "Other transformation saved in " + othRes;
+				}
+
+				Tools.showMessage(frame, "End !", 
+						"<html>" + finish + "<br />" + str2 + "</html>");
+				return;
 			}
-			
-			Tools.showMessage(frame, "End !", 
-					"<html>" + finish + "<br />" + str2 + "</html>");
-			return;
 		}
 	}
 }

@@ -172,7 +172,6 @@ public class Cortical extends AbstractApp {
 				};
 				changeRunButton(panel, 0);
 				worker.execute();
-
 			}
 		});
 
@@ -209,5 +208,10 @@ public class Cortical extends AbstractApp {
 		} else {
 			return;
 		}
+	}
+	
+	@Override
+	public void stopProcess() {
+		model.stopProcess();
 	}
 }

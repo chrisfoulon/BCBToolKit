@@ -207,7 +207,12 @@ public class Disco extends AbstractApp {
 	@Override
 	public void cancel() {
 		if (worker != null) {
-			getBCB().cancelActions(path + "/Tools/tmp/tmpHyp", worker);
+			Tools.cancelActions(path + "/Tools/tmp/tmpHyp", worker);
 		}
+	}
+	
+	@Override
+	public void stopProcess() {
+		model.stopProcess();
 	}
 }

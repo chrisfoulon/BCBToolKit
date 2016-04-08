@@ -36,7 +36,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -627,22 +626,6 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		String x = conf.getVal(index.name()).split(" ")[0];
 		String y = conf.getVal(index.name()).split(" ")[1];
 		f.setLocation(new Point(Integer.parseInt(x), Integer.parseInt(y)));
-	}
-	
-	/**
-	 * Removing temprary folder if there is a cancellation
-	 * @param tmpPath the path of the temporary folder 
-	 */
-	public void cancelActions(String tmpPath, SwingWorker<Void, Void> w) {
-		w.cancel(true);
-		if (tmpPath != null && !tmpPath.equals("")) {
-			String[] array2 = {"rm", "-rf", tmpPath};
-			try {
-				Runtime.getRuntime().exec(array2);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 	
 	/**

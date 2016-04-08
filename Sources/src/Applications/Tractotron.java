@@ -262,7 +262,12 @@ public class Tractotron extends AbstractApp {
 	@Override
 	public void cancel() {
 		if (worker != null) {
-			getBCB().cancelActions(path + "/Tools/tmp/multresh", worker);
+			Tools.cancelActions(path + "/Tools/tmp/multresh", worker);
 		}
+	}
+	
+	@Override
+	public void stopProcess() {
+		model.stopProcess();
 	}
 }

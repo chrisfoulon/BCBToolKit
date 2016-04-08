@@ -25,7 +25,6 @@ export FSLOUTPUTTYPE="NIFTI_GZ"
 export FSLREMOTECALL=""
 
 tmp=$path/tmp/tmpAnacom
-#Maybe remove this part for release
 if [[ -e $tmp ]];
 then
   rm -rf $tmp;
@@ -222,7 +221,15 @@ fslmaths $overMask -thr $max $tmp/layer${nblayer}
 
 fslmaths $overMask -sub $tmp/layer${nblayer} $tmp/eroded
 
-nblayer=$((nblayer + 1))
+volume=`fslstats $tmp/layer${nblayer} -V | awk '{ print $1 }'`
+#If it is lower than the threshold $9 we remove the cluster and we will
+#create another with that number at the next loop
+if [[ $volume -lt $9 ]];
+then
+  rm -rf $tmp/layer${nblayer}.*;
+else
+  nblayer=$((nblayer + 1))
+fi;
 while [ `fslstats $tmp/eroded -V | awk '{ print $1 }'` != 0 ];
 do
   max=`fslstats $tmp/eroded -R | awk '{print $2}'`;
@@ -231,7 +238,15 @@ do
   
   fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
   
-  nblayer=$((nblayer + 1))
+  volume=`fslstats $tmp/layer${nblayer} -V | awk '{ print $1 }'`
+  #If it is lower than the threshold $9 we remove the cluster and we will
+  #create another with that number at the next loop
+  if [[ $volume -lt $9 ]];
+  then
+    rm -rf $tmp/layer${nblayer}.*;
+  else
+    nblayer=$((nblayer + 1))
+  fi;
 done;
 #erorded is now full of 0
 rm -rf $tmp/eroded
@@ -310,7 +325,7 @@ do
     #the score else we remove the file
     if [ `fslstats $tmp/tmpMask${i}_${p} -V | awk '{ print $1 }'` == 0 ];
     then 
-      rm $tmp/tmpMask${i}_${p}*; 
+      rm -rf $tmp/tmpMask${i}_${p}.*; 
     else
       patient="$patient$p,"
       score="$score${originalSco[$index]},"
@@ -447,9 +462,11 @@ done;
 declare -a sorted;
 declare -a indexes;
 # Sort with -g (for floats)
-IFS=$'\n' var=($(sort -g <<<"${bonf[@]}"))
-unset IFS
-# var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g`
+# IFS=$'\n' var=($(sort -g <<<"${bonf[@]}"))
+# unset IFS
+set +x
+var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g`
+set -x
 # Sort give a string so we convert it as an array in $sorted
 IFS=$'\n ' read -r -a sorted <<< $var
 #we make a copy of sorted to use it later

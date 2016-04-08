@@ -83,11 +83,14 @@ public abstract class AbstractApp {
 	private void setPath(String path) {
 		this.path = path;
 	}
+	
+	public abstract void stopProcess();
 
 	public void cancel() {
 		if (worker != null) {
 			worker.cancel(true);
 		}
+		stopProcess();
 	}
 
 	public void closing() {

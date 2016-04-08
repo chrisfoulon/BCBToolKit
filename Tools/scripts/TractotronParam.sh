@@ -60,10 +60,10 @@ do
   cd $2
   for b in *.nii*
   do
-    $bin/fslmaths $2/$b -mul $1/$a $tmpMult/multresh_$b || (rm -r $tmpMult; exit 1)
+    $bin/fslmaths $2/$b -mul $1/$a $tmpMult/multresh_$b || (rm -rf $tmpMult; exit 1)
     
     echo "#"
-    max=`$bin/fslstats $tmpMult/multresh_$b -R` || (rm -r $tmpMult; exit 1)
+    max=`$bin/fslstats $tmpMult/multresh_$b -R` || (rm -rf $tmpMult; exit 1)
     printf "%s\t" ${max#* }>>$proba
     #Severity calculation
     #First we compute the volume of the tract
@@ -84,4 +84,4 @@ do
   echo "" >> $prop
 done
 
-rm -r $tmpMult
+rm -rf $tmpMult

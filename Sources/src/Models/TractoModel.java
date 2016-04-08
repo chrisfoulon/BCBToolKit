@@ -6,37 +6,25 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashSet;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.swing.JFrame;
 
+import Config.BCBEnum;
 import IHM.LoadingBar;
 import IHM.Tools;
 
-public class TractoModel {
+public class TractoModel extends AbstractModel {
 	public static final String logFile = "logTractotron.txt"; 
 	private String lesionDir;
 	private String tractsDir;
 	private String resultDir;
-	//The execution path of the software
-	private String path;
-	//The folder of the script
-	private String exeDir;
 	private LoadingBar loading;
 	private FilenameFilter fileNameFilter;
-	// The frame which will displays error and end messages 
-	private JFrame frame;
 
-	public TractoModel(String path, JFrame frame) {
-		this.path = path;
-		this.exeDir = path + "/Tools/scripts";
-		this.frame = frame;
+	public TractoModel(String path, JFrame f) {
+		super(path, f, BCBEnum.Script.TRACTOTRON.endPath());
 		
 		// create new filename filter to recognize .nii and .nii.gz files
         this.fileNameFilter = new FilenameFilter() {
@@ -92,27 +80,11 @@ public class TractoModel {
 		//Boolean error = false;
 		String erreur = "";
 		
-		try {
-			
-			//On donne les droits d'exécution sur le script
-			Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
-			// add owners permissions
-			perms.add(PosixFilePermission.OWNER_READ);
-			perms.add(PosixFilePermission.OWNER_WRITE);
-			perms.add(PosixFilePermission.OWNER_EXECUTE);
-			// add group permissions
-			perms.add(PosixFilePermission.GROUP_READ);
-			perms.add(PosixFilePermission.GROUP_EXECUTE);
-			// add others permissions
-			perms.add(PosixFilePermission.OTHERS_READ);
-			perms.add(PosixFilePermission.OTHERS_EXECUTE);
-
-		    Files.setPosixFilePermissions(Paths.get(exeDir + "/TractotronParam.sh"), perms);
-			
-			String[] array = {exeDir + "/TractotronParam.sh",
+		try {			
+			String[] array = {script,
 					lesionDir, tractsDir, resultDir};
 
-			Process proc = Runtime.getRuntime().exec(array, null, new File(this.path));
+			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			
 			Scanner out = new Scanner(proc.getInputStream());
 			String tmp = "";
@@ -146,7 +118,9 @@ public class TractoModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resultDir);
-		return;
+		if (proc != null) {
+			Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resultDir);
+			return;
+		}
 	}	
 }

@@ -283,10 +283,8 @@ numclu=0
 
 for la in $tmp/layer*;
 do
-  # In first we mask std with the layer
-  fslmaths $tmp/maskedStd -mas $la $tmp/tmpStdMask
-  # We add std to the layer
-  fslmaths $la -add $tmp/tmpStdMask $tmp/stdlayer
+  # In first we mask std with the layer and we add the layer to std
+  fslmaths $tmp/maskedStd -mas $la -add $la $tmp/stdlayer
   # And now we make other layers, with each different values, which will be 
   # our clusters
   while [ `fslstats $tmp/stdlayer -V | awk '{ print $1 }'` != 0 ];
@@ -450,12 +448,16 @@ do
     fi;
 #pval=$(awk "BEGIN { if ($pval == 0) {print \"0.000001\";} else {print $pval }")
   fi;
+  #We make 1 - pval for a better visualizing
+  oneminuspval=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", 1 - $pval}");
+  fslmaths $cluD/cluster${i} -bin -mul $oneminuspval $cluD/pvalcluster${i}
 
-  fslmaths $cluD/cluster${i} -bin $cluD/pvalcluster${i}
+#   fslmaths $cluD/cluster${i} -bin $cluD/pvalcluster${i}
 
-  fslmaths $cluD/pvalcluster${i} -mul $pval $cluD/pvalcluster${i}
+#   fslmaths $cluD/pvalcluster${i} -mul $pval $cluD/pvalcluster${i}
   # Creation of a file containing all clusters with pvalues. ($3/mergedPvalClusters)
   fslmaths $cluD/pvalcluster${i} -add $3/mergedPvalClusters $3/mergedPvalClusters
+  
 done;
 #Here we have all pvalues (without NaN) stored in bonf indexed by cluster number
 #To correct pvalues with Bonferroni-Holm method we have to sort them in ascending order
@@ -523,14 +525,14 @@ done;
 fslmaths $overMask -mul 0 $cluD/mergedBHcorrClusters
 for index in ${!bonf[@]};
 do
-  fslmaths $cluD/pvalcluster${index} -bin $cluD/BHcorrCluster${index}
   if [ `awk "BEGIN { print (${bonf[$index]} > 1)}"` == 1 ];
-  then 
-    #If the corrected value is greater than 1 we threshold it to 1 in the map
-    fslmaths $cluD/BHcorrCluster${index} -mul 1 $cluD/BHcorrCluster${index}
+  then
+    tmpmul=1
   else
-    fslmaths $cluD/BHcorrCluster${index} -mul ${bonf[$index]} $cluD/BHcorrCluster${index}
+    tmpmul=${bonf[$index]}
   fi;
+  oneminusBH=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", 1 - $tmpmul}");
+  fslmaths $cluD/pvalcluster${index} -bin -mul $oneminusBH $cluD/BHcorrCluster${index}
   # We fill the map with all corrected pvalues
   fslmaths $cluD/BHcorrCluster${index} -add $cluD/mergedBHcorrClusters $cluD/mergedBHcorrClusters
 done;

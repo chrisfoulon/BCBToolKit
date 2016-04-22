@@ -74,6 +74,6 @@ do
     $bin/fslmaths$maths -div 10 -mas $hyp/mask.nii.gz $2/disconnectome_$d
     
     rm -rf $tmp
-    
-    echo "#"
 done
+    
+echo "#"

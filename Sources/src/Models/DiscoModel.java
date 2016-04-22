@@ -82,7 +82,7 @@ public class DiscoModel extends AbstractModel {
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
 			int nbTracks = new File(extraFiles).listFiles(trkFilter).length;
-			setNbTicks(new File(lesionDir).listFiles(fileNameFilter).length * nbTracks);
+			setNbTicks(new File(lesionDir).listFiles(fileNameFilter).length * nbTracks + 1);
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
 				if (inLoop.startsWith("#")) {

@@ -239,6 +239,7 @@ do
   fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
   
   volume=`fslstats $tmp/layer${nblayer} -V | awk '{ print $1 }'`
+  
   #If it is lower than the threshold $9 we remove the cluster and we will
   #create another with that number at the next loop
   if [[ $volume -lt $9 ]];

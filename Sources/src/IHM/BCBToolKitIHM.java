@@ -2,6 +2,7 @@ package IHM;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
@@ -184,7 +185,11 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		disclaimer = new JMenuItem("Dislaimer");
 		about = new JMenuItem("About BCBToolKit");
 		// Buttons
-		tracto = new JButton(buttonIcon("tracto.png", 150, 81));
+		int style = Font.BOLD;
+
+		Font font = new Font ("Sans-Serif", style , 18);
+		tracto = new JButton("Tractotron");
+		tracto.setFont(font);
 		//formatButton(tracto);
 		disco = new JButton(buttonIcon("disco.png", 140, 120));
 		formatButton(disco);

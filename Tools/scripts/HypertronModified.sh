@@ -1,6 +1,6 @@
 #! /bin/bash
 #hypertron v1.0 - Michel Thiebaut de Schotten & Chris Foulon
-[ $# -lt 2 ] && { echo "Usage : $0 LesionFolder ResultDir"; exit 1; }
+[ $# -lt 3 ] && { echo "Usage : $0 LesionFolder ResultDir Threshold"; exit 1; }
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $2/logDisconnectome.txt
@@ -72,6 +72,9 @@ do
     cd $1
     #on fait fslmaths sur la chaine que l'on a remplis précédemment
     $bin/fslmaths$maths -div 10 -mas $hyp/mask.nii.gz $2/disconnectome_$d
+    
+    #With the threshold option you can ... threshold all your resulting disconnectome maps by 0.0 to 1.0
+    $bin/fslmaths $2/disconnectome_$d -thr $3 $2/disconnectome_$d
     
     rm -rf $tmp
 done

@@ -2,7 +2,6 @@ package IHM;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
@@ -185,12 +184,13 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		disclaimer = new JMenuItem("Dislaimer");
 		about = new JMenuItem("About BCBToolKit");
 		// Buttons
-		int style = Font.BOLD;
+		//int style = Font.BOLD;
 
-		Font font = new Font ("Sans-Serif", style , 18);
-		tracto = new JButton("Tractotron");
-		tracto.setFont(font);
-		//formatButton(tracto);
+		//Font font = new Font ("Sans-Serif", style , 18);
+		//tracto = new JButton("Tractotron");
+		//tracto.setFont(font);
+		tracto = new JButton(buttonIcon("tracto.png", 150, 81));
+		formatButton(tracto);
 		disco = new JButton(buttonIcon("disco.png", 140, 120));
 		formatButton(disco);
 		corti = new JButton(buttonIcon("corti.png", 141, 93));
@@ -682,6 +682,8 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		}
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
+				//To increase the display time of tooltips
+				javax.swing.ToolTipManager.sharedInstance().setDismissDelay(15000);
 				if (args.length != 1) {
 					String script = "";
 					if (Tools.isOSX()) {

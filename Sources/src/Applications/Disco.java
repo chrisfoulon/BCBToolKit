@@ -3,6 +3,7 @@ package Applications;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -13,10 +14,14 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 
 import Config.BCBEnum;
+import IHM.BCBToolKit;
 import IHM.BCBToolKitIHM;
 import IHM.Browser;
 import IHM.ImagePanel;
@@ -27,7 +32,7 @@ import Models.DiscoModel;
 public class Disco extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 350;
+	public static final int FRAME_HEIGHT = 370;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
@@ -40,6 +45,8 @@ public class Disco extends AbstractApp {
 	private JButton run;
 	private LoadingBar loading;
 	private DiscoModel model;
+	//Threshold option
+	private JTextField thrOpt;
 
 	//Browsers
 	private Browser lesBro;
@@ -102,12 +109,30 @@ public class Disco extends AbstractApp {
 		resBro = new Browser(frame, "Results directory :", 
 				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.DRESDIR, getBCB());
 		getBCB().addBro(resBro.getParam(), resBro);
+
+		thrOpt = new JTextField("1.0");
+		thrOpt.setPreferredSize(new Dimension(50, 20));
+		thrOpt.setToolTipText("<html> Increasing your % threshold of your disconnectome"
+				+ "<br /> maps increase intersubjects reliability"
+				+ "<br /> we recommend using 0.5 for AnaCOM2");
 	}
 
 	protected void placeComponents() {
-		JPanel center = new JPanel(new BorderLayout()); {
-			center.add(lesBro, BorderLayout.NORTH);
-			center.add(resBro, BorderLayout.SOUTH);
+		JPanel t = new JPanel(new BorderLayout()); {
+			JLabel lab = new JLabel("Threshold (0.0 to 1.0) :");
+			lab.setHorizontalAlignment(SwingConstants.CENTER);
+			t.add(lab, BorderLayout.CENTER);
+			JPanel t1 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+				t1.add(thrOpt);
+			}
+			t.add(t1, BorderLayout.SOUTH);
+			t.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
+		}		
+		
+		JPanel center = new JPanel(new GridLayout(3, 0)); {
+			center.add(lesBro);
+			center.add(resBro);
+			center.add(t);
 		}
 		frame.add(background, BorderLayout.NORTH);
 		frame.add(center, BorderLayout.CENTER);
@@ -142,7 +167,7 @@ public class Disco extends AbstractApp {
 
 		settings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				getBCB().openSettings();
+				getBCB().openSettings(BCBEnum.Index.DISCONNECTOME);
 			}
 		});
 
@@ -162,6 +187,29 @@ public class Disco extends AbstractApp {
 							return null;
 						}
 						
+						String text = thrOpt.getText();
+						//Deleting of invisible characters
+						text = text.trim();
+						//Replace , by .
+						text = text.replace(",", ".");
+						if (!text.equals("0.0")) {
+							float opt = 1.0f;
+							try {
+								opt = Float.valueOf(text);
+							} catch (NumberFormatException nbE) {
+								Tools.showErrorMessage(getBCB().getFrame(), 
+										"Threshold have to be between 0.0 and 1.0");
+								thrOpt.setText("0.0");
+								return null;
+							}
+							if (opt < 0.0f || opt > 1.0f) {
+								Tools.showErrorMessage(getBCB().getFrame(), 
+										"Threshold have to be between 0.0 and 1.0");
+								thrOpt.setText("0.0");
+								return null;
+							}
+						}
+						model.setThrOpt(text);
 						model.run();
 						return null;
 					}

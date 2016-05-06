@@ -19,6 +19,7 @@ public class DiscoModel extends AbstractModel {
 	private String lesionDir;
 	private String resultDir;
 	private String extraFiles;
+	private String thrOpt;
 	private LoadingBar loading;
 	private FilenameFilter fileNameFilter;
 	private FilenameFilter trkFilter;
@@ -58,6 +59,10 @@ public class DiscoModel extends AbstractModel {
 	public void setResultDir(String str) {
 		resultDir = str;
 	}
+	
+	public void setThrOpt(String str) {
+		thrOpt = str;
+	}
 
 	public void setLoadingBar(LoadingBar load) {
 		loading = load;
@@ -75,7 +80,7 @@ public class DiscoModel extends AbstractModel {
 		String erreur = "";
 		
 		try {			
-			String[] array = {script, lesionDir, resultDir};
+			String[] array = {script, lesionDir, resultDir, thrOpt};
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			

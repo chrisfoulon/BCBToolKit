@@ -110,6 +110,7 @@ public class SettingsFrame implements Settings {
 		saveLoc = new JCheckBox("Save the location of frames");
 		saveLoc.setSelected(false);
 		saveLoc.setIconTextGap(20);
+				
 		betOpt = new JTextField();
 		betOpt.setPreferredSize(new Dimension(50, 20));
 		synOpt = new JTextField("0.25");

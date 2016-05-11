@@ -256,7 +256,6 @@ public class Normalisation extends AbstractApp {
 								return null;
 							}
 						}
-
 						model.run(otherCheck.isSelected());
 						return null;
 					}

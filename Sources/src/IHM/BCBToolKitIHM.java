@@ -2,10 +2,13 @@ package IHM;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -51,7 +54,7 @@ import Config.Config;
 import Settings.SettingsFrame;
 
 public class BCBToolKitIHM  implements BCBToolKit {	
-	public static final int FRAME_HEIGHT = 520;
+	public static final int FRAME_HEIGHT = 350;
 	private String wd;
 	private JFrame frame;
 	// MenuBar
@@ -66,7 +69,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	private JButton corti;
 	private JButton norma;
 	private JButton anacom;
-	private JButton stat;
+	//private JButton stat;
 	//Set of buttons
 	private HashSet<JButton> butSet;
 	// Conf
@@ -184,12 +187,14 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		disclaimer = new JMenuItem("Dislaimer");
 		about = new JMenuItem("About BCBToolKit");
 		// Buttons
-		//int style = Font.BOLD;
-
-		//Font font = new Font ("Sans-Serif", style , 18);
-		//tracto = new JButton("Tractotron");
-		//tracto.setFont(font);
-		tracto = new JButton(buttonIcon("tracto.png", 150, 81));
+		
+		tracto = textButton("Tractotron");
+		disco = textButton("<html><center>Disconnectome<br />Maps<center/><html/>");
+		corti = textButton("<html><center>Cortical<br />Thickness<center/><html/>");
+		norma = textButton("Normalisation");
+		anacom = textButton("AnaCOM2");
+		
+		/*tracto = new JButton(buttonIcon("tracto.png", 150, 81));
 		formatButton(tracto);
 		disco = new JButton(buttonIcon("disco.png", 140, 120));
 		formatButton(disco);
@@ -202,7 +207,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		anacom = new JButton(buttonIcon("anacomtxt.png", 120, 110));
 		formatButton(anacom);
 		stat = new JButton(Tools.twoLinesString("Statistical",  "Analysis"), logo);
-		formatButton(stat);
+		formatButton(stat);*/
 		setFrame = new SettingsFrame(conf, this);
 		// Once buttons created, we add them in the set
 		butSet.add(tracto);
@@ -210,8 +215,8 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		butSet.add(corti);
 		butSet.add(norma);
 		butSet.add(anacom);
-		butSet.add(stat);
-		stat.setEnabled(false);
+		//butSet.add(stat);
+		//stat.setEnabled(false);
 	}
 	
 	public void placeComponents() {
@@ -235,14 +240,18 @@ public class BCBToolKitIHM  implements BCBToolKit {
 			p.add(corti);
 			p.add(norma);
 			p.add(anacom);
-			p.add(stat);
+			//p.add(stat);
 		}
+		p.setPreferredSize(new Dimension(FRAME_WIDTH - 10, 200));
 		frame.setJMenuBar(menu);
 		// On ajoute un logo en dessous de la barre de menu
 		ImagePanel logo = new ImagePanel("BCBLogo.png", 152, 97);
 		logo.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 6));
 		frame.add(logo , BorderLayout.NORTH);
-		frame.add(p, BorderLayout.CENTER);
+		//frame.add(p, BorderLayout.CENTER);
+		JPanel t = new JPanel(new FlowLayout(FlowLayout.LEADING));
+		t.add(p);
+		frame.add(t, BorderLayout.CENTER);
 	}
 	
 	public void createControllers() {
@@ -299,11 +308,11 @@ public class BCBToolKitIHM  implements BCBToolKit {
             }
 		});
 		
-		stat.addActionListener(new ActionListener() {
+		/*stat.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				callApp(BCBEnum.Index.STATISTICAL);
             }
-		});
+		});*/
 		
 		disclaimer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -421,6 +430,17 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		return new HashMap<BCBEnum.Param, Browser>(this.broMap);
 	}
 	
+	private JButton textButton(String text) {
+		JButton b = new JButton(text);
+		b.setMaximumSize(new Dimension(150, 40));
+		int style = Font.BOLD;
+		b.setMargin(new Insets(1,1,1,1));
+		b.setHorizontalAlignment(SwingConstants.CENTER);
+		Font font = new Font("Sans-Serif", style , 16);
+		b.setFont(font);
+		return b;
+	}
+	
 	//For now it's totally useless and I failed ....
 	public void allOnFront() {
 		//this.getFrame().setExtendedState(JFrame.NORMAL);
@@ -493,12 +513,25 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		return appMap.get(index);
 	}
 	
+	/**
+	 * Old function to format buttons of the main panel
+	 * @param but
+	 */
+	@SuppressWarnings("unused")
 	private void formatButton(JButton but) {
 		but.setIconTextGap(10);
 		but.setVerticalTextPosition(SwingConstants.BOTTOM);
 		but.setHorizontalTextPosition(SwingConstants.CENTER);
 	}
 	
+	/**
+	 * old function to format icons of buttons 
+	 * @param path
+	 * @param w
+	 * @param h
+	 * @return
+	 */
+	@SuppressWarnings("unused")
 	private Icon buttonIcon(String path, int w, int h) {
 		URL url = getClass().getClassLoader().getResource(path);
 		ImageIcon icon = new ImageIcon(url);

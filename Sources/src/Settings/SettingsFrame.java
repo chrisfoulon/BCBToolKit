@@ -350,6 +350,8 @@ public class SettingsFrame implements Settings {
 						synOpt.setText("0.25");
 						return;
 					}
+				} else {
+					synVal = text;
 				}
 			}
 

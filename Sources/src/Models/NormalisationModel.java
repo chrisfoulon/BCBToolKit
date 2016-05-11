@@ -53,6 +53,10 @@ public class NormalisationModel extends AbstractModel {
         };
 	}
 	
+	public String getSynOpt() {
+		return synOpt;
+	}
+	
 	public void setT1Dir(String str) {
 		t1Dir = str;
 	}
@@ -118,7 +122,7 @@ public class NormalisationModel extends AbstractModel {
 			if (!betOpt.equals("")) {
 				betOptFinal = betOpt;
 			}
-			
+
 			if (other) {
 				 array = new String[]{script, t1Dir,
 						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp, othDir, othRes};

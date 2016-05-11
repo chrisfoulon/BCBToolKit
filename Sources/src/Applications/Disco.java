@@ -32,7 +32,7 @@ import Models.DiscoModel;
 public class Disco extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 370;
+	public static final int FRAME_HEIGHT = 390;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
@@ -110,7 +110,7 @@ public class Disco extends AbstractApp {
 				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.DRESDIR, getBCB());
 		getBCB().addBro(resBro.getParam(), resBro);
 
-		thrOpt = new JTextField("1.0");
+		thrOpt = new JTextField("0.0");
 		thrOpt.setPreferredSize(new Dimension(50, 20));
 		thrOpt.setToolTipText("<html> Increasing your % threshold of your disconnectome"
 				+ "<br /> maps increase intersubjects reliability"

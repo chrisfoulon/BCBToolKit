@@ -12,7 +12,8 @@ public final class BCBEnum {
 		CORTICAL(3),
 		NORMALISATION(4),
 		ANACOM(5),
-		STATISTICAL(6);
+		RESTING(6),
+		STATISTICAL(7);
 		
 		private int index;
 		
@@ -32,6 +33,7 @@ public final class BCBEnum {
 		NORMALISATION("normalize.sh"),
 		ANACOM("anacom.sh"),
 		INITR("preR.sh"),
+		RESTING("resting.sh"),
 		STATISTICAL("test.r");
 		
 		private String filename;

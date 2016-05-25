@@ -225,14 +225,11 @@ public class SettingsFrame implements Settings {
 				p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
 			}
 			anacomTab.add(p);
-			//statTab.add(butMap.get(BCBEnum.Param.SMAP1DIR));
-			//statTab.add(butMap.get(BCBEnum.Param.SMAP2DIR));
-			//statTab.add(butMap.get(BCBEnum.Param.SRESDIR));
 		}
 
-		JPanel statTab = new JPanel(); {
-			BoxLayout boxLay3 = new BoxLayout(statTab, BoxLayout.Y_AXIS);
-			statTab.setLayout(boxLay3);
+		JPanel restingTab = new JPanel(); {
+			BoxLayout boxLay3 = new BoxLayout(restingTab, BoxLayout.Y_AXIS);
+			restingTab.setLayout(boxLay3);
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP1DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP2DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SRESDIR));
@@ -250,7 +247,7 @@ public class SettingsFrame implements Settings {
 		tabs.addTab("Cortical thickness", cortiTab);
 		tabs.addTab("Normalisation", normaTab);
 		tabs.addTab("anaCOM2", anacomTab);
-		tabs.addTab("Statistical analysis", statTab);
+		tabs.addTab("Resting state", restingTab);
 		tabs.setOpaque(true);
 
 		dialog.add(tabs, BorderLayout.CENTER);

@@ -67,7 +67,7 @@ do
     printf "%s\t" ${max#* }>>$proba
     #Severity calculation
     #First we compute the volume of the tract
-    tractVol=`$bin/fslstats $2/$b -V | awk '{print $1}'`;
+    tractVol=`$bin/fslstats $tmpMult/tmp$b -V | awk '{print $1}'`;
     echo "#"
     #Then the volume of the lesion masked with the 50% thresholded tract
     lesTracVol=`$bin/fslstats $1/$a -k $tmpMult/tmp$b -V | awk '{print $1}'`;

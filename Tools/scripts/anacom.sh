@@ -43,6 +43,7 @@ then
   
   mkdir -p $saveTmp
 fi;
+
   
 #For controls, we can have scores for each control or just the mean value
 #(just in ttest case). 
@@ -93,7 +94,7 @@ originalSco=( "${sco[@]}" )
 
 #We need control scores, we can have a mean if we have wilcoxon or ttest
 #Or a vector of scores which will be a column in a csv file
-if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
+if [[ $5 =~ ^[0-9]+\.[0-9]+|[0-9]+$ ]]; 
 then
     control="mu=$5"
 else
@@ -142,7 +143,7 @@ then
 	stillZero="true" #So we generated a new zero value and we need to make another loop
       fi;
     done;
-    if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
+    if [[ $5 =~ ^[0-9]+\.[0-9]+|[0-9]+$ ]]; 
     then
       valMu=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $valMu + 1}"`
       if [[ $valMu == "0.000000" ]]; #if the new value is equal to 0
@@ -164,7 +165,7 @@ then
 fi;
 #So here we have removed ALL zeros of every scores we have !
 
-if [[ $5 =~ [0-9]+\.[0-9]+|[0-9]+ ]]; 
+if [[ $5 =~ ^[0-9]+\.[0-9]+|[0-9]+$ ]]; 
 then
   control="mu=$valMu"
 else
@@ -427,7 +428,7 @@ do
   
   if [[ $pval != "NaN" ]];
   then
-    if [[ $pval =~ [0-9]+\.[0-9]+e-[0-9]+ ]]; 
+    if [[ $pval =~ ^[0-9]+\.[0-9]+e-[0-9]+$ ]]; 
     then
       bonf[$i]=`realVal $pval`
     else

@@ -127,7 +127,7 @@ set fsfroot ${FD}/design
 #setup web pages
 
 if { ! [ file exists .files ] } {
-    fsl:exec "mkdir .files;cp ${FSLDIR}/doc/fsl.css .files;cp -r ${FSLDIR}/doc/images .files/images"
+#     fsl:exec "mkdir .files;cp ${FSLDIR}/doc/fsl.css .files;cp -r ${FSLDIR}/doc/images .files/images"
 }
 
 fsl:echo report.html "<link REL=\"stylesheet\" TYPE=\"text/css\" href=\".files/fsl.css\">
@@ -424,7 +424,7 @@ set fsfroot ${FD}/design
 # setup toplevel .gfeat web pages
 
 if { ! [ file exists .files ] } {
-    fsl:exec "mkdir .files;cp ${FSLDIR}/doc/fsl.css .files;cp -r ${FSLDIR}/doc/images .files/images"
+#     fsl:exec "mkdir .files;cp ${FSLDIR}/doc/fsl.css .files;cp -r ${FSLDIR}/doc/images .files/images"
 }
 
 fsl:echo report.html "<link REL=\"stylesheet\" TYPE=\"text/css\" href=\".files/fsl.css\">
@@ -677,7 +677,7 @@ fsl:exec "/bin/cp ${fsfroot}.fsf design.fsf"
 
 
 if { ! [ file exists .files ] } {
-    fsl:exec "mkdir .files;cp ${FSLDIR}/doc/fsl.css .files;cp -r ${FSLDIR}/doc/images .files/images"
+#     fsl:exec "mkdir .files;cp ${FSLDIR}/doc/fsl.css .files;cp -r ${FSLDIR}/doc/images .files/images"
 }
 
 fsl:echo report.html "<link REL=\"stylesheet\" TYPE=\"text/css\" href=\".files/fsl.css\">
@@ -782,7 +782,7 @@ if { $fmri(icaopt) > 1 } {
     # setup web pages
 
 if { ! [ file exists .files ] } {
-    fsl:exec "mkdir .files;cp ${FSLDIR}/doc/fsl.css .files;cp -r ${FSLDIR}/doc/images .files/images"
+#     fsl:exec "mkdir .files;cp ${FSLDIR}/doc/fsl.css .files;cp -r ${FSLDIR}/doc/images .files/images"
 }
 
 fsl:echo report.html "<link REL=\"stylesheet\" TYPE=\"text/css\" href=\".files/fsl.css\">

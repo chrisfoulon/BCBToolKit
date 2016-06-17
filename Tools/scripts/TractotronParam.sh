@@ -72,7 +72,7 @@ do
     #Then the volume of the lesion masked with the 50% thresholded tract
     lesTracVol=`$bin/fslstats $1/$a -k $tmpMult/tmp$b -V | awk '{print $1}'`;
     #And we compute the volume ratio between the lesion and the tract
-    if [[ $tractVol == "" || $tractVol =~ 0\.0+ ]];
+    if [[ $tractVol == "" || $tractVol =~ ^0\.0+$|^0$ ]];
     then 
       printf  "%s\t" "0.000000" >> $prop
     else

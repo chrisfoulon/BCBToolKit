@@ -53,7 +53,7 @@ do
         fi
         
         $bin/applywarp -i $1/$d -o $tmp/$start-$d -r  $hyp/l$start.nii.gz -w $hyp/${start}Hypotron_nonlinear.nii.gz
-        
+        #Essayer de threshold le nombre de streamlines qui passent dans chaque voxels pour avoir un meilleur threshold que le 50% que l'on fait après. 
         $bin/track_vis $hyp/$start.trk -l 25 250 -roi $tmp/$start-$d -ov $tmp/tmp$start -nr -disable_log
         
         $bin/fslmaths $tmp/tmp$start -bin $tmp/tmpb$start

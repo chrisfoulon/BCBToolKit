@@ -10,21 +10,30 @@ exec 2>> $3/logAnacom.txt
 set -x
 
 path=${PWD}/Tools
-    
-lib=$path/libraries/lib
-bin=$path/binaries/bin
-export FSLDIR=$path/binaries
-#This line prevent missing of the bc binary for ANTs
-export PATH=$PATH:$path/binaries/bin
 
-export LD_LIBRARY_PATH=$lib
-export FSLLOCKDIR=""
-export FSLMACHINELIST=""
-export FSLMULTIFILEQUIT="TRUE"
-export FSLOUTPUTTYPE="NIFTI_GZ"
-export FSLREMOTECALL="" 
-#IMPORTANT
-export FSLTCLSH=$bin/fsltclsh
+extra=$path/extraFiles/restingState
+ica=$path/binaries/ICA-AROMA-master
+
+tmp=$path/tmp/tmpResting
+
+mkdir $tmp
+
+# lib=$path/libraries/lib
+# bin=$path/binaries/bin
+# export FSLDIR=$path/binaries
+# #This line prevent missing of the bc binary for ANTs
+# export PATH=$PATH:$path/binaries/bin
+# 
+# export LD_LIBRARY_PATH=$lib
+# export FSLLOCKDIR=""
+# export FSLMACHINELIST=""
+# export FSLMULTIFILEQUIT="TRUE"
+# export FSLOUTPUTTYPE="NIFTI_GZ"
+# export FSLREMOTECALL="" 
+# #IMPORTANT
+# export FSLTCLSH=$bin/fsltclsh
+
+
 
 
 
@@ -55,22 +64,75 @@ export FSLTCLSH=$bin/fsltclsh
 # In order to run ICA AROMA, Python 2.7 must be installed, and the directory
 # containing the scripts must be downloaded from https://github.com/rhr-pruim/ICA-AROMA
 #
+# NB: the script determines the TR and the number of time points using the fslinfo, 
+#     therefore it is assumed that these information are correctly reported in the 
+#     header of the original 4D RS.nii.gz file
 
-subj=0051159
+##We will use two folders : one for patients' T1 and one for patients' resting state
+
+#Param : $1 = patient's name
+# 	 $2 = T1's folder
+#	 $3 = RS's folder
+init() {
+subj=$1
+T1=$2
+RS=$3
 
 TR=2  # necessary for estimating the sigma of the bandpass temporal filters
 
-bd=/Volumes/Cibele/preprocess_rsfmri/${subj}
+bd=$T1
 
-f1_kernel=/Volumes/Cibele/preprocess_rsfmri/f1_kernel.nii.gz
+f1_kernel=$extra/f1_kernel.nii.gz
 
-AROMAdir=/Applications/fsl/ICA-AROMA-master
+design_TEMPLATE=$extra/design_preproc_TEMPLATE.fsf
+#OK it's useless
+AROMAdir=$ica
 
+MNI2mm=$extras/MNI152_T1_2mm_brain
+
+# in mm
+smoothing_kernel=5
+
+slice_time_correction=1
+# Slice timing correction
+# 0 : None
+# 1 : Regular up (0, 1, 2, 3, ...)
+# 2 : Regular down
+# 3 : Use slice order file
+# 4 : Use slice timings file
+# 5 : Interleaved (0, 2, 4 ... 1, 3, 5 ... )
 
 ###############################################################################
-# END OF PARAMETERS TO BE MODIFIED
+# END OF PARAMETERS TO BE MODIFIED BY THE USER
 
 
+
+# for the fsf template - automatically imported
+FEATBASEDIR=${bd}
+FEATTR=${TR}
+FEAT4DRSDATA=${bd}/RS/${subj}_RS
+FEATNUMBERTIMEPOINTS=`fslinfo ${FEAT4DRSDATA} | grep ^dim4 | awk '{print $2}'` 
+FEATSLICETIME=${slice_time_correction}
+FEATMNI=${MNI2mm}
+FEATT1RESTORE=${bd}/T1/${subj}_T1_restore_brain
+FEATSMOOTHING=${smoothing_kernel}
+
+
+# do the sed on the design_preproc_TEMPLATE.fsf
+# in order to create the design to perform the 
+# preprocessing on the 4D RS data
+sed -e "s@FEATBASEDIR@${bd}@g" \
+    -e "s@FEATTR@${FEATTR}@g" \
+    -e "s@FEATNUMBERTIMEPOINTS@${FEATNUMBERTIMEPOINTS}@g" \
+    -e "s@FEATSLICETIME@${FEATSLICETIME}@g" \
+    -e "s@FEATSMOOTHING@${FEATSMOOTHING}@g" \
+    -e "s@FEATMNI@${FEATMNI}@g" \
+    -e "s@FEATT1RESTORE@${FEATT1RESTORE}@g" \
+    -e "s@FEAT4DRSDATA@${FEAT4DRSDATA}@g" \
+       ${design_TEMPLATE} > ${bd}/design_preproc_${subj}.fsf
+
+
+}
 
 
 
@@ -110,9 +172,10 @@ fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 -o ${bd}/T1/fast/${subj}_T1_restore_brain \
 #
 # P.S. this will be replaced later by a function that takes in subj-specific arguments
 # and modifies a design.fsf template
-feat ${bd}/design_preproc.fsf
+feat ${bd}/design_preproc_${subj}.fsf
 
 ffdata=${bd}/preproc.feat/filtered_func_data.nii.gz
+
 
 
 
@@ -283,7 +346,7 @@ bet2 ${bd}/preproc.feat/reg/example_func \
 immv ${bd}/preproc.feat/reg/example_func_betted_4_AROMA_mask ${bd}/preproc.feat/AROMask
 
 #We need to detect if python is installed, if not we can skip this part
-tt=`which truc 2>&1`
+tt=`which python2.7 2>&1`
 
 if [[ $tt =~ which.* ]]; then
   echo "############### WARNING ############# \n Python can't be found on your system \

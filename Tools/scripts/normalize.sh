@@ -54,7 +54,7 @@ do
     $ants/WarpImageMultiTransform 3 $f $3/$pat.nii.gz -R $4 -i $tmp/tmpwarp${pat}Affine.txt $tmp/tmpwarp${pat}InverseWarp.nii.gz
     
     #OPTIONAL apply this deformation also to
-    if [ $# -eq 8 ]
+    if [ $# -eq 9 ]
     then
         cd $tmp
         #If it is a 4D image, this will split it in vol0000.nii.gz vol0001.nii.gz etc ...

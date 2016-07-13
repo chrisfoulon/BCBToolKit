@@ -1,6 +1,6 @@
 #! /bin/bash
 #AnaCOM2 - Leonardo Cerliani & Michel Thiebaut de Schotten & Chris Foulon 
-[ $# -lt 1 ] && { echo "Usage : $0 "; exit 1; }
+[ $# -lt 1 ] && { echo "Usage : $0 T1Folder RSFolder SmoothingValue  "; exit 1; }
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logAnacom.txt
@@ -78,7 +78,9 @@ subj=$1
 T1=$2
 RS=$3
 
-TR=2  # necessary for estimating the sigma of the bandpass temporal filters
+#I am not sure but I think the TR is the value of pixdim[4]
+TR=`fslinfo ${FEAT4DRSDATA} | grep ^pixdim4 | awk '{print $2}'`  
+# necessary for estimating the sigma of the bandpass temporal filters
 
 bd=$T1
 
@@ -130,7 +132,6 @@ sed -e "s@FEATBASEDIR@${bd}@g" \
     -e "s@FEATT1RESTORE@${FEATT1RESTORE}@g" \
     -e "s@FEAT4DRSDATA@${FEAT4DRSDATA}@g" \
        ${design_TEMPLATE} > ${bd}/design_preproc_${subj}.fsf
-
 
 }
 

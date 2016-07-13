@@ -48,7 +48,7 @@ do
     echo BETVALUE : $5
     # Delete the skull (it's useless ! we don't need skull)
     #Brain extraction Threshold
-    $bin/bet $f $tmp/tmp_T1${pat}.nii.gz -f $5
+    $bin/bet2 $f $tmp/tmp_T1${pat}.nii.gz -f $5
     #ANTMAN will be proud
     $ants/ANTS 3 -m PR[$tmp/tmp_T1$pat.nii.gz,$4,1,4] -i 50x90x50 -o $tmp/tmpwarp${pat}.nii.gz -t Syn["$6"] -r Gauss[3,0]$lesCommand
     $ants/WarpImageMultiTransform 3 $f $3/$pat.nii.gz -R $4 -i $tmp/tmpwarp${pat}Affine.txt $tmp/tmpwarp${pat}InverseWarp.nii.gz

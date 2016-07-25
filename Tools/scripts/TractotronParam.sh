@@ -47,7 +47,7 @@ for d in *.nii*
 do
 printf "%s\t" `fileName $d`>>$proba
 printf "%s\t" `fileName $d` >> $prop
-$bin/fslmaths $d -thr 0.5 $tmpMult/tmp$d
+$bin/fslmaths $d -thr 0.5 -bin $tmpMult/tmp$d
 echo "#"
 done
 echo "">>$proba

@@ -1,6 +1,6 @@
 #! /bin/bash
 #AnaCOM2 - Leonardo Cerliani & Michel Thiebaut de Schotten & Chris Foulon 
-[ $# -lt 1 ] && { echo "Usage : $0 T1Folder RSFolder SmoothingValue  "; exit 1; }
+[ $# -lt 1 ] && { echo "Usage : $0 T1Folder RSFolder resultsFolder SmoothingValue  "; exit 1; }
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logAnacom.txt
@@ -16,7 +16,7 @@ ica=$path/binaries/ICA-AROMA-master
 
 tmp=$path/tmp/tmpResting
 
-mkdir $tmp
+mkdir -p $tmp
 
 # lib=$path/libraries/lib
 # bin=$path/binaries/bin
@@ -68,33 +68,113 @@ mkdir $tmp
 #     therefore it is assumed that these information are correctly reported in the 
 #     header of the original 4D RS.nii.gz file
 
-##We will use two folders : one for patients' T1 and one for patients' resting state
+##We will use two folders in parameters : one for patients' T1 and one for patients' resting state
 
-#Param : $1 = patient's name
-# 	 $2 = T1's folder
-#	 $3 = RS's folder
-init() {
-subj=$1
-T1=$2
-RS=$3
+#Static variables
+T1Folder=$1 #folder of T1 images
+RSFolder=$2 #folder of Resting States
 
-#I am not sure but I think the TR is the value of pixdim[4]
-TR=`fslinfo ${FEAT4DRSDATA} | grep ^pixdim4 | awk '{print $2}'`  
-# necessary for estimating the sigma of the bandpass temporal filters
+res=$3
 
-bd=$T1
+#The base of fsf file we'll use to make custom templates
+design_TEMPLATE=$extra/design_preproc_TEMPLATE.fsf
 
 f1_kernel=$extra/f1_kernel.nii.gz
 
-design_TEMPLATE=$extra/design_preproc_TEMPLATE.fsf
-#OK it's useless
-AROMAdir=$ica
-
 MNI2mm=$extras/MNI152_T1_2mm_brain
 
-# in mm
-smoothing_kernel=5
 
+max3() {
+  max=$1
+  if [ `awk "BEGIN { print ($max > $2) }"` ];
+  then
+    if [ `awk "BEGIN { print ($max > $3) }"` ];
+    then
+      #$1 > all
+      return $max;
+    else
+      #$3 > all
+      max=$3
+      return $max;
+    fi;
+  else
+    max=$2
+    if [ `awk "BEGIN { print ($max > $3) }"` ];
+    then
+      #$2 > all
+      return $max;
+    else
+      #$3 > all
+      max=$3
+      return $max;
+    fi;
+  fi;
+}
+
+
+#Param : the T1 image 
+findSmoothing() {
+  pxd1=`fslinfo $1 | grep ^pixdim1 | awk '{print $2}'`  
+  pxd2=`fslinfo $1 | grep ^pixdim2 | awk '{print $2}'`  
+  pxd3=`fslinfo $1 | grep ^pixdim3 | awk '{print $2}'` 
+  
+  max=`max3 $pxd1 $pxd2 $pxd3`
+  return `awk "BEGIN { print $max*1.5 }"`
+}
+
+
+#Alternative to compute the following code
+#If t0 is the first number, t1 the second etc ... so :
+# ti = ti+1 - ti-1
+derivative() {
+  i=0
+
+  declare -a col
+  while read col[$i]
+  do
+    i=$((i+1))
+  done < $1
+
+  for ((n=0; n<=$i; n++));
+  do
+    if [[ $n -eq 0 ]];
+    then
+      col[$n]=${col[1]}
+    elif [[ $n -eq $i ]];
+    then
+      col[$n]=${col[$n-1]}
+    else
+      col[$n]=`LC_ALL=en_GB awk "BEGIN {printf \"%.12f\", ${col[$n+1]} - ${col[$n-1]}}"`
+    fi;
+  done;
+  for c in $col[@]};
+  do
+    echo $c >> $1_fi
+  done;
+}
+
+
+
+
+#Param : $1 = patient's name
+preproc() {
+
+#We will create a separate folder for each patient
+subj=$1
+resPat=${res}/${subj}
+T1=$T1Folder/$subj
+RS=$RSFolder/$subj
+mkdir $resPat
+#I am not sure but I think the TR is the value of pixdim[4]
+TR=`fslinfo $RS | grep ^pixdim4 | awk '{print $2}'`  
+# necessary for estimating the sigma of the bandpass temporal filters
+
+
+customFSF=${resPat}/design_preproc_${subj}.fsf
+
+# in mm
+#OLD smoothing_kernel=5
+smoothing_kernel=`findSmoothing ${T1}`
 slice_time_correction=1
 # Slice timing correction
 # 0 : None
@@ -110,28 +190,23 @@ slice_time_correction=1
 
 
 # for the fsf template - automatically imported
-FEATBASEDIR=${bd}
-FEATTR=${TR}
-FEAT4DRSDATA=${bd}/RS/${subj}_RS
-FEATNUMBERTIMEPOINTS=`fslinfo ${FEAT4DRSDATA} | grep ^dim4 | awk '{print $2}'` 
-FEATSLICETIME=${slice_time_correction}
-FEATMNI=${MNI2mm}
-FEATT1RESTORE=${bd}/T1/${subj}_T1_restore_brain
-FEATSMOOTHING=${smoothing_kernel}
+FEATNUMBERTIMEPOINTS=`fslinfo ${RS} | grep ^dim4 | awk '{print $2}'`
+
+FEATT1RESTORE=${resPat}/${subj}_T1_restore_brain
 
 
 # do the sed on the design_preproc_TEMPLATE.fsf
 # in order to create the design to perform the 
 # preprocessing on the 4D RS data
-sed -e "s@FEATBASEDIR@${bd}@g" \
-    -e "s@FEATTR@${FEATTR}@g" \
+sed -e "s@FEATBASEDIR@${resPat}@g" \
+    -e "s@FEATTR@${TR}@g" \
     -e "s@FEATNUMBERTIMEPOINTS@${FEATNUMBERTIMEPOINTS}@g" \
-    -e "s@FEATSLICETIME@${FEATSLICETIME}@g" \
-    -e "s@FEATSMOOTHING@${FEATSMOOTHING}@g" \
-    -e "s@FEATMNI@${FEATMNI}@g" \
+    -e "s@FEATSLICETIME@${slice_time_correction}@g" \
+    -e "s@FEATSMOOTHING@${smoothing_kernel}@g" \
+    -e "s@FEATMNI@${MNI2mm}@g" \
     -e "s@FEATT1RESTORE@${FEATT1RESTORE}@g" \
-    -e "s@FEAT4DRSDATA@${FEAT4DRSDATA}@g" \
-       ${design_TEMPLATE} > ${bd}/design_preproc_${subj}.fsf
+    -e "s@FEAT4DRSDATA@${RS}@g" \
+       ${design_TEMPLATE} > ${customFSF}
 
 }
 
@@ -140,23 +215,21 @@ sed -e "s@FEATBASEDIR@${bd}@g" \
 # FAST for field bias estimation ONLY. This is functional to obtaining a better
 # skull stripping, carried out in the subsequent BET2
 fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 --nopve -B \
-     -o ${bd}/T1/${subj}_T1_restore ${bd}/T1/${subj}_T1
+     -o ${tmp}/${subj}_T1_restore ${T1}
 
-rm ${bd}/T1/${subj}_T1_restore_seg
+rm ${tmp}/${subj}_T1_restore_seg
 
 
 
 # BET2
-bet2 ${bd}/T1/${subj}_T1_restore ${bd}/T1/${subj}_T1_restore_brain -m
+bet2 ${tmp}/${subj}_T1_restore $FEATT1RESTORE -m
 
 
 # FAST for estimating the location of WM and CSF, whose time course will be used
 # later for nuisance regression
-mkdir ${bd}/T1/fast
-fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 -o ${bd}/T1/fast/${subj}_T1_restore_brain \
-                                      ${bd}/T1/${subj}_T1_restore_brain
-
-
+mkdir -p $resPat/fast
+fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 -o $resPat/fast/${subj}_T1_restore_brain \
+                                      $FEATT1RESTORE
 
 # Basic FEAT preprocessing, including:
 #
@@ -173,27 +246,28 @@ fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 -o ${bd}/T1/fast/${subj}_T1_restore_brain \
 #
 # P.S. this will be replaced later by a function that takes in subj-specific arguments
 # and modifies a design.fsf template
-feat ${bd}/design_preproc_${subj}.fsf
+feat ${customFSF}
 
-ffdata=${bd}/preproc.feat/filtered_func_data.nii.gz
 
 
 
 
 # Estimation of WM and CSF time courses
 # (1) Register the T1_restore_brain to the EPI using the previously estimated transformation in 
-#     preproc.feat/reg/highres2example_func.mat. 
+#     ${featdir}/reg/highres2example_func.mat. 
 # (2) Segment the T1_restore_brain_epispace and take the p=0.9 of WM (pve_2) and CSF (pve_0)
 # (3) Use them to extract the mean time course in the filtered_func_data
 # (4) Compute their first derivative
-WM_CSF_conf_dir=${bd}/preproc.feat/WM_CSF_conf
+WM_CSF_conf_dir=${resPat}/WM_CSF_conf
 mkdir ${WM_CSF_conf_dir}
+#If I understand well, this will be created by feat
+featdir=${resPat}.feat
 
-flirt -in ${bd}/T1/${subj}_T1_restore_brain.nii.gz \
-      -applyxfm -init ${bd}/preproc.feat/reg/highres2example_func.mat \
+flirt -in $FEATT1RESTORE \
+      -applyxfm -init $featdir/reg/highres2example_func.mat \
       -out ${WM_CSF_conf_dir}/T1_restore_brain_epispace \
       -paddingsize 0.0 -interp trilinear \
-      -ref ${bd}/preproc.feat/example_func.nii.gz
+      -ref $featdir/example_func.nii.gz
 
 T1_epi_seg=${WM_CSF_conf_dir}/fast_T1epispace
 mkdir ${T1_epi_seg}
@@ -201,80 +275,27 @@ fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 \
      -o ${T1_epi_seg}/T1_restore_brain_epispace \
         ${WM_CSF_conf_dir}/T1_restore_brain_epispace
 
+ffdata=$featdir/filtered_func_data.nii.gz
 
 # threshold WM (pve_2) and CSF (pve_0) pve to 0.9, and extract the eigTC from the
 # filtered_func_data
 fslmaths ${T1_epi_seg}/T1_restore_brain_epispace_pve_0.nii.gz \
          -thr 0.9 -bin ${T1_epi_seg}/CSF_thr09
 
-fslmeants -i ${ffdata} -m ${T1_epi_seg}/CSF_thr09 --eig -v -o ${bd}/preproc.feat/WM_CSF_conf/CSF_1EigTC
+fslmeants -i ${ffdata} -m ${T1_epi_seg}/CSF_thr09 --eig -v -o ${featdir}/WM_CSF_conf/CSF_1EigTC
 
 fslmaths ${T1_epi_seg}/T1_restore_brain_epispace_pve_2.nii.gz \
          -thr 0.9 ${T1_epi_seg}/WM_thr09
 
-fslmeants -i ${ffdata} -m ${T1_epi_seg}/WM_thr09 --eig -v -o ${bd}/preproc.feat/WM_CSF_conf/WM_1EigTC
+fslmeants -i ${ffdata} -m ${T1_epi_seg}/WM_thr09 --eig -v -o ${featdir}/WM_CSF_conf/WM_1EigTC
 
-#Alternative to compute the following code
-#If t0 is the first number, t1 the second etc ... so :
-# ti = ti+1 - ti-1
-derivative() {
-i=0
-
-declare -a col
-while read col[$i]
-do
-  i=$((i+1))
-done < $1
-
-for n in ${0..$i}:
-do
-  if [[ $n -eq 0 ]];
-  then
-    col[$n]=${col[1]}
-  elif [[ $n -eq $i ]];
-  then
-    col[$n]=${col[$n-1]}
-  else
-    col[$n]=`LC_ALL=en_GB awk "BEGIN {printf \"%.12f\", ${col[$n+1]} - ${col[$n-1]}"`
-  fi;
-done;
-}
-
-
-# compute the first derivative of the WM and CSF EigTC
-for tissue in WM CSF; do
-
-    ntp=`cat ${WM_CSF_conf_dir}/${tissue}_1EigTC | wc -l`
-    fslascii2img ${WM_CSF_conf_dir}/${tissue}_1EigTC \
-                 ${ntp} 1 1 1   1 1 1   1 \
-                 ${WM_CSF_conf_dir}/${tissue}_1EigTC.nii.gz
-
-    fslmaths ${WM_CSF_conf_dir}/${tissue}_1EigTC.nii.gz \
-             -kernel file ${f1_kernel} \
-             -fmeanu ${WM_CSF_conf_dir}/${tissue}_1EigTC_f1.nii.gz
-
-    fsl2ascii ${WM_CSF_conf_dir}/${tissue}_1EigTC_f1.nii.gz \
-              ${WM_CSF_conf_dir}/${tissue}_1EigTC_f1_linevector
-
-    # this line is just to prevent concatenation with a previously created file
-    rm ${WM_CSF_conf_dir}/${tissue}_1EigTC_f1
-    # the following is just to transpose the row vector to a column vector
-    for j in `cat ${WM_CSF_conf_dir}/${tissue}_1EigTC_f1_linevector*`; do
-        echo ${j} >> ${WM_CSF_conf_dir}/${tissue}_1EigTC_f1
-    done
-
-done
-
-rm ${WM_CSF_conf_dir}/*0000*
-rm ${WM_CSF_conf_dir}/*.nii.gz
-
-
-
+derivative ${featdir}/WM_CSF_conf/CSF_1EigTC
+derivative ${featdir}/WM_CSF_conf/WM_1EigTC
 
 # Motion parameters and their first derivative
-mot=${bd}/preproc.feat/mc/prefiltered_func_data_mcf.par
+mot=$featdir/mc/prefiltered_func_data_mcf.par
 
-targetdir=${bd}/preproc.feat/mc_conf
+targetdir=$featdir/mc_conf
 
 rm -rf ${targetdir}
 mkdir ${targetdir}
@@ -283,92 +304,70 @@ mkdir ${targetdir}
 # and writes them to a text file
 for ((i=1;i<=6;i++)); do
     cat ${mot} | awk -v row=${i} '{print $row}' > ${targetdir}/Tmot_${i}
+    derivative ${targetdir}/Tmot_${i}
 done  
 
 
-# Compute the first derivative of the motion parameters
-for ((i=1;i<=6;i++)); do
 
-    ntp=`cat ${targetdir}/Tmot_${i} | wc -l`
-    fslascii2img ${targetdir}/Tmot_${i} \
-                 ${ntp} 1 1 1   1 1 1   1 \
-                 ${targetdir}/Tmot_${i}.nii.gz
-
-    fslmaths ${targetdir}/Tmot_${i}.nii.gz \
-             -kernel file ${f1_kernel} \
-             -fmeanu ${targetdir}/Tmot_${i}_f1.nii.gz
-
-    fsl2ascii ${targetdir}/Tmot_${i}_f1.nii.gz \
-              ${targetdir}/Tmot_${i}_f1_linevector
-
-    # to prevent concatenation
-    rm ${targetdir}/Tmot_${i}_f1
-    # transpose
-    for j in `cat ${targetdir}/Tmot_${i}_f1_linevector*`; do 
-        echo ${j} >> ${targetdir}/Tmot_${i}_f1
-    done
-
-done
-
-rm ${targetdir}/*0000*
-rm ${targetdir}/*.nii.gz
 
 
 # Write the nuisance matrix to a text file, and perform the regression
-rm -rf ${bd}/RS_denoise
-mkdir ${bd}/RS_denoise
+rm -rf ${resPat}/RS_denoise
+mkdir ${resPat}/RS_denoise
 
+nuisMat=${resPat}/RS_denoise/nuisance_mat_18
 paste -d "\t" \
-      ${bd}/preproc.feat/mc_conf/Tmot_1 \
-      ${bd}/preproc.feat/mc_conf/Tmot_1_f1 \
-      ${bd}/preproc.feat/mc_conf/Tmot_2 \
-      ${bd}/preproc.feat/mc_conf/Tmot_2_f1 \
-      ${bd}/preproc.feat/mc_conf/Tmot_3 \
-      ${bd}/preproc.feat/mc_conf/Tmot_3_f1 \
-      ${bd}/preproc.feat/mc_conf/Tmot_4 \
-      ${bd}/preproc.feat/mc_conf/Tmot_4_f1 \
-      ${bd}/preproc.feat/mc_conf/Tmot_5 \
-      ${bd}/preproc.feat/mc_conf/Tmot_5_f1 \
-      ${bd}/preproc.feat/mc_conf/Tmot_6 \
-      ${bd}/preproc.feat/mc_conf/Tmot_6_f1 \
-      ${bd}/preproc.feat/WM_CSF_conf/CSF_1EigTC \
-      ${bd}/preproc.feat/WM_CSF_conf/CSF_1EigTC_f1 \
-      ${bd}/preproc.feat/WM_CSF_conf/WM_1EigTC \
-      ${bd}/preproc.feat/WM_CSF_conf/WM_1EigTC_f1 \
-      > ${bd}/RS_denoise/nuisance_mat_18 
+      $featdir/mc_conf/Tmot_1 \
+      ${featdir}/mc_conf/Tmot_1_f1 \
+      ${featdir}/mc_conf/Tmot_2 \
+      ${featdir}/mc_conf/Tmot_2_f1 \
+      ${featdir}/mc_conf/Tmot_3 \
+      ${featdir}/mc_conf/Tmot_3_f1 \
+      ${featdir}/mc_conf/Tmot_4 \
+      ${featdir}/mc_conf/Tmot_4_f1 \
+      ${featdir}/mc_conf/Tmot_5 \
+      ${featdir}/mc_conf/Tmot_5_f1 \
+      ${featdir}/mc_conf/Tmot_6 \
+      ${featdir}/mc_conf/Tmot_6_f1 \
+      ${featdir}/WM_CSF_conf/CSF_1EigTC \
+      ${featdir}/WM_CSF_conf/CSF_1EigTC_f1 \
+      ${featdir}/WM_CSF_conf/WM_1EigTC \
+      ${featdir}/WM_CSF_conf/WM_1EigTC_f1 \
+      > ${nuisMat}
 
 
 
 # Run ICA AROMA (~15 min)
 # We first need to create a betted version of the example_func
-bet2 ${bd}/preproc.feat/reg/example_func \
-     ${bd}/preproc.feat/reg/example_func_betted_4_AROMA -m
+bet2 ${featdir}/reg/example_func \
+     ${featdir}/reg/example_func_betted_4_AROMA -m
 
-immv ${bd}/preproc.feat/reg/example_func_betted_4_AROMA_mask ${bd}/preproc.feat/AROMask
+immv ${featdir}/reg/example_func_betted_4_AROMA_mask ${featdir}/AROMask
 
 #We need to detect if python is installed, if not we can skip this part
 tt=`which python2.7 2>&1`
 
 if [[ $tt =~ which.* ]]; then
-  echo "############### WARNING ############# \n Python can't be found on your system \
+  echo "############### WARNING ############# \n Python 2.7 can't be found on your system \
   so ICA_AROMA cannot be used"; 
 else 
-  python2.7 ${AROMAdir}/ICA_AROMA.py \
+  python2.7 ${ica}/ICA_AROMA.py \
           -in ${ffdata} \
-          -out ${bd}/preproc.feat/AROMATISED \
-          -mc ${bd}/preproc.feat/mc/prefiltered_func_data_mcf.par \
-          -affmat ${bd}/preproc.feat/reg/example_func2standard.mat \
-          -m ${bd}/preproc.feat/AROMask.nii.gz
+          -out ${featdir}/AROMATISED \
+          -mc ${featdir}/mc/prefiltered_func_data_mcf.par \
+          -affmat ${featdir}/reg/example_func2standard.mat \
+          -m ${featdir}/AROMask.nii.gz
 
 fi;
-RS_aromatised=`ls ${bd}/preproc.feat/AROMATISED/denoised_*.nii.gz`
 
+RS_aromatised=`ls ${featdir}/AROMATISED/denoised_*.nii.gz`
 
+rsClean=${resPat}/RS_denoise/RS_clean.nii.gz
 # Regress out the estimated nuisance parameters
 fsl_glm -i ${RS_aromatised} \
-        -d ${bd}/RS_denoise/nuisance_mat_18 \
-        --out_res=${bd}/RS_denoise/RS_clean.nii.gz \
-        --out_t=${bd}/RS_denoise/motion_fit.nii.gz
+        -d $nuisMat \
+        --out_res=${RSClean} \
+        --out_t=${resPat}/RS_denoise/motion_fit.nii.gz
 
 
 # The following is just for control: we can appreciate that the model fit of 
@@ -397,46 +396,23 @@ HP=`echo "scale=5; 1/(2*0.009*${TR})" | bc`  # HP for 0.009 Hz
 LP=`echo "scale=5; 1/(2*0.08*${TR})" | bc`   # LP for 0.08 Hz
 
 
-fslmaths ${bd}/RS_denoise/RS_clean.nii.gz \
+fslmaths $rsClean \
          -bptf ${HP} ${LP} \
-         ${bd}/RS_denoise/RS_clean_bptf.nii.gz
+         ${resPat}/RS_denoise/RS_clean_bptf.nii.gz
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-fslmaths ${bd}/RS/${subj}_RS ${bd}/RS/prefiltered_func_data -odt float
+prefiltData=${resPat}/prefiltered_func_data
+fslmaths ${RS} $prefiltData -odt float
 
 # perform MCFLIRT (~40 sec for 180 vols)
-time mcflirt -in ${bd}/RS/prefiltered_func_data \
+time mcflirt -in $prefiltData \
         -out ${bd}/RS/prefiltered_func_data_mcf \
         -plots
 
 
-/bin/mkdir -p mc 
-/bin/mv -f prefiltered_func_data_mcf.mat prefiltered_func_data_mcf.par prefiltered_func_data_mcf_abs.rms prefiltered_func_data_mcf_abs_mean.rms prefiltered_func_data_mcf_rel.rms prefiltered_func_data_mcf_rel_mean.rms mc
+mkdir -p mc 
+mv -f prefiltered_func_data_mcf.mat prefiltered_func_data_mcf.par prefiltered_func_data_mcf_abs.rms prefiltered_func_data_mcf_abs_mean.rms prefiltered_func_data_mcf_rel.rms prefiltered_func_data_mcf_rel_mean.rms mc
 
 
 

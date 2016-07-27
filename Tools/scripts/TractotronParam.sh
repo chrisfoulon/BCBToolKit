@@ -47,6 +47,8 @@ for d in *.nii*
 do
 printf "%s\t" `fileName $d`>>$proba
 printf "%s\t" `fileName $d` >> $prop
+#We have to binarise to avoid a bug issue with fslstats which can give 
+#erroneous values if you use a non-binary mask
 $bin/fslmaths $d -thr 0.5 -bin $tmpMult/tmp$d
 echo "#"
 done

@@ -1,6 +1,6 @@
 #! /bin/bash
 #AnaCOM2 - Leonardo Cerliani & Michel Thiebaut de Schotten & Chris Foulon 
-[ $# -lt 1 ] && { echo "Usage : $0 T1Folder RSFolder resultsFolder SmoothingValue  "; exit 1; }
+[ $# -lt 3 ] && { echo "Usage : $0 T1Folder RSFolder resultsFolder "; exit 1; }
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logAnacom.txt
@@ -208,7 +208,6 @@ sed -e "s@FEATBASEDIR@${resPat}@g" \
     -e "s@FEAT4DRSDATA@${RS}@g" \
        ${design_TEMPLATE} > ${customFSF}
 
-}
 
 
 
@@ -407,145 +406,11 @@ fslmaths ${RS} $prefiltData -odt float
 
 # perform MCFLIRT (~40 sec for 180 vols)
 time mcflirt -in $prefiltData \
-        -out ${bd}/RS/prefiltered_func_data_mcf \
+        -out ${resPat}/prefiltered_func_data_mcf \
         -plots
 
 
-mkdir -p mc 
-mv -f prefiltered_func_data_mcf.mat prefiltered_func_data_mcf.par prefiltered_func_data_mcf_abs.rms prefiltered_func_data_mcf_abs_mean.rms prefiltered_func_data_mcf_rel.rms prefiltered_func_data_mcf_rel_mean.rms mc
+mkdir -p ${resPat}/mc 
+mv -f ${resPat}/prefiltered_func_data_mcf.mat ${resPat}/prefiltered_func_data_mcf.par ${resPat}/prefiltered_func_data_mcf_abs.rms ${resPat}/prefiltered_func_data_mcf_abs_mean.rms ${resPat}/prefiltered_func_data_mcf_rel.rms ${resPat}/prefiltered_func_data_mcf_rel_mean.rms ${resPat}/mc
 
-
-
-
-bd=/home/leonardo/000_lavori/ABIDE_DATA_CLEANING
-
-T1dir=/home/leonardo/000_lavori/ABIDE_DATA_CLEANING/T1
-
-RSdir=/home/leonardo/000_lavori/ABIDE_DUALREG/raw_MNI
-
-motdir=/home/leonardo/000_lavori/ABIDE_DATA_CLEANING/motion_parameter
-
-
-subj=$1
-
-#subj=0051199
-
-
-# First remove motion parameters: we remove them now, since it's not meaningful to bptf them
-# and at the same time, if we remove them after bptf of the data, they will introduce
-# high-frequency fluctuations
-
-# first add a column of 175 ones to the motion parameters
-paste ${bd}/motion_parameters/${subj}_prefiltered_func_data_mcf.par \
-      ${bd}/ones175 \
-    > ${bd}/T1/${subj}_motpar_ones
-
-
-fsl_glm -i ${RSdir}/${subj}_filtered_func_data_MNI.nii.gz \
-        -d ${bd}/T1/${subj}_motpar_ones \
-        --out_res=${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot
-
-# clean up
-rm ${bd}/T1/${subj}_motpar_ones
-
-# do the bandpass filtering
-#
-# to calculate the required sigma values in volumes, to give to fslmaths, use:
-# 1. get the period in seconds for the frequency of interest, e.g. for 0.08
-#    1 / 0.08 = 12.5
-# 2. divide the results by the TR to get it in terms of TRs, e.g. for TR=2	
-#    12.5 / 2.2 = 5.68
-# 3. divide again by two to get the sigma
-#    5.68 / 2 = 2.84
-# 
-# So the general formula is 1/(2*f*TR)
-#
-# We calculate these values in matlab, since different subjects have different TR
-# and produce a file bptf_sigma_359 which has 3 columns: SUB_ID, HP_sigma, LP_sigma
-#
-# Then we grep and awk bptf_sigma_359 and replace the values here to do the bptf for
-# the single subject
-
-# HP sigma for 0.009 Hz
-HP=`cat bptf_sigma_359 | grep ${subj} | awk -F, '{print $2}'`
-
-# LP sigma for 0.08 Hz
-LP=`cat bptf_sigma_359 | grep ${subj} | awk -F, '{print $3}'`
-
-
-fslmaths ${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot \
-         -bptf ${HP} ${LP} \
-         ${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot_bptf.nii.gz
-
-
-
-# bet
-bet2 ${bd}/T1/${subj}_T1.nii.gz ${bd}/T1/${subj}_brain
-
-# register T1 to MNI 4mm
-flirt -in ${bd}/T1/${subj}_brain.nii.gz \
-      -ref  ${bd}/MNI152_T1_4mm_brain \
-      -out  ${bd}/T1/${subj}_brain_MNI4mm.nii.gz \
-      -omat ${bd}/T1/${subj}_brain_MNI4mm.mat \
-      -bins 256 -cost corratio \
-      -searchrx -90 90 -searchry \
-      -90 90 -searchrz -90 90 -dof 12  -interp trilinear
-
-
-# FAST
-fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 \
-     -o ${bd}/T1/${subj}_brain_MNI4mm.nii.gz \
-     ${bd}/T1/${subj}_brain_MNI4mm.nii.gz
-
-
-# clean up
-rm ${bd}/T1/${subj}_brain_MNI4mm_mixeltype.nii.gz 
-rm ${bd}/T1/${subj}_brain_MNI4mm_pveseg.nii.gz
-rm ${bd}/T1/${subj}_brain_MNI4mm_seg.nii.gz
-rm ${bd}/T1/${subj}_brain_MNI4mm.mat
-
-
-# threshold the pve (0.8 is taken from Biswal2010)
-fslmaths ${bd}/T1/${subj}_brain_MNI4mm_pve_0.nii.gz -thr 0.8 -bin ${bd}/T1/${subj}_CSF_thr08_bin.nii.gz 
-fslmaths ${bd}/T1/${subj}_brain_MNI4mm_pve_2.nii.gz -thr 0.8 -bin ${bd}/T1/${subj}_WM_thr08_bin.nii.gz 
-
-
-# extract EigTC
-# CSF
-fslmeants -i ${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot_bptf.nii.gz \
-          -m ${bd}/T1/${subj}_CSF_thr08_bin.nii.gz --eig -o ${bd}/T1/${subj}_EigTC_CSF
-
-# WM
-fslmeants -i ${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot_bptf.nii.gz \
-          -m ${bd}/T1/${subj}_WM_thr08_bin.nii.gz --eig -o ${bd}/T1/${subj}_EigTC_WM
-
-# GLOBAL
-fslmaths ${bd}/T1/${subj}_brain_MNI4mm.nii.gz \
-         -div ${bd}/T1/${subj}_brain_MNI4mm.nii.gz \
-         ${bd}/T1/${subj}_brain_MNI4mm_mask.nii.gz 
-
-fslmeants -i ${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot_bptf.nii.gz \
-          -m ${bd}/T1/${subj}_brain_MNI4mm_mask.nii.gz --eig -o ${bd}/T1/${subj}_EigTC_GLOBAL
-
-
-# paste into a matrix and add 175 ones
-paste ${bd}/T1/${subj}_EigTC_CSF \
-      ${bd}/T1/${subj}_EigTC_WM \
-      ${bd}/T1/${subj}_EigTC_GLOBAL \
-      ${bd}/ones175 \
-    > ${bd}/T1/${subj}_EigTC_CONFOUNDS
-
-
-# fslglm to get the residuals
-fsl_glm -i ${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot_bptf.nii.gz \
-        -d ${bd}/T1/${subj}_EigTC_CONFOUNDS \
-        --out_res=${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot_bptf_clean.nii.gz
-
-
-# clean up
-rm ${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot.nii.gz
-rm ${bd}/RS_MNI_clean/${subj}_filtered_func_data_MNI_rmmot_bptf.nii.gz
-rm ${bd}/T1/${subj}_EigTC_CSF
-rm ${bd}/T1/${subj}_EigTC_WM
-rm ${bd}/T1/${subj}_EigTC_GLOBAL
-rm ${bd}/T1/${subj}_EigTC_CONFOUNDS
+}

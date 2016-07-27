@@ -15,7 +15,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
 import Config.BCBEnum;
@@ -41,11 +40,10 @@ public class Resting extends AbstractApp {
 	private JButton run;
 	private LoadingBar loading;
 	private DiscoModel model;
-	//Threshold option
-	private JTextField thrOpt;
 
 	//Browsers
-	private Browser lesBro;
+	private Browser T1Bro;
+	private Browser RSBro;
 	private Browser resBro;
 
 	public Resting(String path, BCBToolKitIHM b) {
@@ -95,26 +93,24 @@ public class Resting extends AbstractApp {
 		run.setPreferredSize(new Dimension(FRAME_WIDTH - 10, 45));
 
 		//Tests browsers
-		lesBro = new Browser(frame, "Lesions directory :", BCBEnum.fType.DIR.a(), 
+		T1Bro = new Browser(frame, "Lesions directory :", BCBEnum.fType.DIR.a(), 
 				conf, BCBEnum.Param.DLESDIR, getBCB());
-		lesBro.firstReset();
+		T1Bro.firstReset();
+		
+		RSBro = new Browser(frame, "Lesions directory :", BCBEnum.fType.DIR.a(), 
+				conf, BCBEnum.Param.DLESDIR, getBCB());
+		RSBro.firstReset();
 
-		getBCB().addBro(lesBro.getParam(), lesBro);
+		getBCB().addBro(T1Bro.getParam(), T1Bro);
 		
 		resBro = new Browser(frame, "Results directory :", 
 				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.DRESDIR, getBCB());
 		getBCB().addBro(resBro.getParam(), resBro);
-
-		thrOpt = new JTextField("0.0");
-		thrOpt.setPreferredSize(new Dimension(50, 20));
-		thrOpt.setToolTipText("<html> Increasing your % threshold of your disconnectome"
-				+ "<br /> maps increase intersubjects reliability"
-				+ "<br /> we recommend using 0.5 for AnaCOM2");
 	}
 
 	protected void placeComponents() {		
 		JPanel center = new JPanel(new GridLayout(3, 0)); {
-			center.add(lesBro);
+			center.add(T1Bro);
 			center.add(resBro);
 		}
 		frame.add(background, BorderLayout.NORTH);
@@ -159,8 +155,8 @@ public class Resting extends AbstractApp {
 				worker = new SwingWorker<Void, Void>() {
 					@Override
 					public Void doInBackground() {
-						if (Tools.isReady(frame, lesBro)) {
-							model.setLesionDir(lesBro.getPath());
+						if (Tools.isReady(frame, T1Bro)) {
+							model.setLesionDir(T1Bro.getPath());
 						} else {
 							return null;
 						}
@@ -169,30 +165,6 @@ public class Resting extends AbstractApp {
 						} else {
 							return null;
 						}
-						
-						String text = thrOpt.getText();
-						//Deleting of invisible characters
-						text = text.trim();
-						//Replace , by .
-						text = text.replace(",", ".");
-						if (!text.equals("0.0")) {
-							float opt = 1.0f;
-							try {
-								opt = Float.valueOf(text);
-							} catch (NumberFormatException nbE) {
-								Tools.showErrorMessage(getBCB().getFrame(), 
-										"Threshold have to be between 0.0 and 1.0");
-								thrOpt.setText("0.0");
-								return null;
-							}
-							if (opt < 0.0f || opt > 1.0f) {
-								Tools.showErrorMessage(getBCB().getFrame(), 
-										"Threshold have to be between 0.0 and 1.0");
-								thrOpt.setText("0.0");
-								return null;
-							}
-						}
-						model.setThrOpt(text);
 						model.run();
 						return null;
 					}

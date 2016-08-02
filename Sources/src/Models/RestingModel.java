@@ -16,13 +16,11 @@ import IHM.Tools;
 
 public class RestingModel extends AbstractModel {
 	public static final String logFile = "logResting.txt"; 
-	private String lesionDir;
+	private String T1Dir;
+	private String RSDir;
 	private String resultDir;
-	private String extraFiles;
-	private String thrOpt;
 	private LoadingBar loading;
 	private FilenameFilter fileNameFilter;
-	private FilenameFilter trkFilter;
 	
 	public RestingModel(String path, JFrame f) {
 		super(path, f, BCBEnum.Script.RESTING.endPath());
@@ -38,29 +36,18 @@ public class RestingModel extends AbstractModel {
         	  }
            }
         };
-        // create new filename filter to recognize .trk files
-        this.trkFilter = new FilenameFilter() {
-           @Override
-           public boolean accept(File dir, String name) {
-        	  if (name.endsWith(".trk")) {
-        		  return true;
-        	  } else {
-        		  return false;
-        	  }
-           }
-        };
 	}
 	
-	public void setLesionDir(String str) {
-		lesionDir = str;
+	public void setT1Dir(String str) {
+		T1Dir = str;
+	}
+	
+	public void setRSDir(String str) {
+		RSDir = str;
 	}
 	
 	public void setResultDir(String str) {
 		resultDir = str;
-	}
-	
-	public void setThrOpt(String str) {
-		thrOpt = str;
 	}
 
 	public void setLoadingBar(LoadingBar load) {
@@ -72,26 +59,33 @@ public class RestingModel extends AbstractModel {
 	}
 	
 	public void run() {
-		if (lesionDir == null) {
+		if (T1Dir == null) {
 			throw new IllegalStateException(
-					"You have to select the lesions directory");
-		}		
+					"You have to select the T1 directory");
+		}	
+		if (RSDir == null) {
+			throw new IllegalStateException(
+					"You have to select the resting state directory");
+		}
+		if (resultDir == null) {
+			throw new IllegalStateException(
+					"You have to select the result directory");
+		}
 		String erreur = "";
 		
 		try {			
-			String[] array = {script, lesionDir, resultDir, thrOpt};
+			String[] array = {script, T1Dir, RSDir, resultDir};
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
-			int nbTracks = new File(extraFiles).listFiles(trkFilter).length;
-			setNbTicks(new File(lesionDir).listFiles(fileNameFilter).length * nbTracks + 1);
+			setNbTicks(new File(T1Dir).listFiles(fileNameFilter).length);
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
 				if (inLoop.startsWith("#")) {
 					progress++;
-					loading.setWidth(progress);					
+					loading.setWidth(progress);			
 				}
 			}
 			

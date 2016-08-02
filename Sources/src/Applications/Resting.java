@@ -23,12 +23,12 @@ import IHM.Browser;
 import IHM.ImagePanel;
 import IHM.LoadingBar;
 import IHM.Tools;
-import Models.DiscoModel;
+import Models.RestingModel;
 
 public class Resting extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 390;
+	public static final int FRAME_HEIGHT = 410;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
@@ -39,7 +39,7 @@ public class Resting extends AbstractApp {
 	private JButton settings;
 	private JButton run;
 	private LoadingBar loading;
-	private DiscoModel model;
+	private RestingModel model;
 
 	//Browsers
 	private Browser T1Bro;
@@ -47,14 +47,14 @@ public class Resting extends AbstractApp {
 	private Browser resBro;
 
 	public Resting(String path, BCBToolKitIHM b) {
-		super(path, b, BCBEnum.Index.DISCONNECTOME);
+		super(path, b, BCBEnum.Index.RESTING);
 	}
 
 	//COMMANDES
 	public void display() {
 		frame.pack();
 		if (!conf.getVal(BCBEnum.Index.DISCONNECTOME.name()).equals("")) {
-			getBCB().setCustomLocation(frame, BCBEnum.Index.DISCONNECTOME);
+			getBCB().setCustomLocation(frame, BCBEnum.Index.RESTING);
 		} else {
 			frame.setLocationRelativeTo(null);
 		}
@@ -62,7 +62,7 @@ public class Resting extends AbstractApp {
 	}
 
 	protected void createModel() {
-		model = new DiscoModel(path, this.getFrame());
+		model = new RestingModel(path, this.getFrame());
 	}
 
 	protected void createView() {
@@ -73,7 +73,7 @@ public class Resting extends AbstractApp {
 			display();
 			frame.setFocusable(true);
 		}
-		background = new ImagePanel("disco.png", 140, 112);
+		background = new ImagePanel("Brain.jpg", 140, 112);
 		background.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 6));
 		//Cr��ation des icones
 		URL url = getClass().getClassLoader().getResource("settings.png");
@@ -93,24 +93,27 @@ public class Resting extends AbstractApp {
 		run.setPreferredSize(new Dimension(FRAME_WIDTH - 10, 45));
 
 		//Tests browsers
-		T1Bro = new Browser(frame, "Lesions directory :", BCBEnum.fType.DIR.a(), 
-				conf, BCBEnum.Param.DLESDIR, getBCB());
-		T1Bro.firstReset();
-		
-		RSBro = new Browser(frame, "Lesions directory :", BCBEnum.fType.DIR.a(), 
-				conf, BCBEnum.Param.DLESDIR, getBCB());
-		RSBro.firstReset();
+		T1Bro = new Browser(frame, "T1 images directory :", BCBEnum.fType.DIR.a(), 
+				conf, BCBEnum.Param.RT1DIR, getBCB());
+		T1Bro.setToolTipText("T1 images must have the same name as Resting state images");
 
 		getBCB().addBro(T1Bro.getParam(), T1Bro);
 		
+		RSBro = new Browser(frame, "Resting State directory :", BCBEnum.fType.DIR.a(), 
+				conf, BCBEnum.Param.RRSDIR, getBCB());
+		RSBro.setToolTipText("Resting stats images must have the same name as T1 images");
+
+		getBCB().addBro(RSBro.getParam(), RSBro);
+		
 		resBro = new Browser(frame, "Results directory :", 
-				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.DRESDIR, getBCB());
+				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.RRESDIR, getBCB());
 		getBCB().addBro(resBro.getParam(), resBro);
 	}
 
 	protected void placeComponents() {		
 		JPanel center = new JPanel(new GridLayout(3, 0)); {
 			center.add(T1Bro);
+			center.add(RSBro);
 			center.add(resBro);
 		}
 		frame.add(background, BorderLayout.NORTH);
@@ -146,7 +149,7 @@ public class Resting extends AbstractApp {
 
 		settings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				getBCB().openSettings(BCBEnum.Index.DISCONNECTOME);
+				getBCB().openSettings(BCBEnum.Index.RESTING);
 			}
 		});
 
@@ -156,7 +159,12 @@ public class Resting extends AbstractApp {
 					@Override
 					public Void doInBackground() {
 						if (Tools.isReady(frame, T1Bro)) {
-							model.setLesionDir(T1Bro.getPath());
+							model.setT1Dir(T1Bro.getPath());
+						} else {
+							return null;
+						}
+						if (Tools.isReady(frame, RSBro)) {
+							model.setRSDir(RSBro.getPath());
 						} else {
 							return null;
 						}
@@ -205,7 +213,7 @@ public class Resting extends AbstractApp {
 	@Override
 	public void cancel() {
 		if (worker != null) {
-			Tools.cancelActions(path + "/Tools/tmp/tmpHyp", worker);
+			Tools.cancelActions(path + "/Tools/tmp/tmpResting", worker);
 		}
 	}
 	

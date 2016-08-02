@@ -5,16 +5,18 @@
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logAnacom.txt
 export PS4='+(${LINENO})'
-echo -n "" > $3/logAnacom.txt
-exec 2>> $3/logAnacom.txt
+echo -n "" > $3/logResting.txt
+exec 2>> $3/logResting.txt
 set -x
-
+set -e
 path=${PWD}/Tools
 
 extra=$path/extraFiles/restingState
 ica=$path/binaries/ICA-AROMA-master
 
 tmp=$path/tmp/tmpResting
+
+rm -rf $tmp
 
 mkdir -p $tmp
 
@@ -81,34 +83,39 @@ design_TEMPLATE=$extra/design_preproc_TEMPLATE.fsf
 
 f1_kernel=$extra/f1_kernel.nii.gz
 
-MNI2mm=$extras/MNI152_T1_2mm_brain
+MNI2mm=$extra/MNI152_T1_2mm_brain
 
 
+#To use this : redirect the output stream !
 max3() {
   max=$1
-  if [ `awk "BEGIN { print ($max > $2) }"` ];
+  if [ `awk "BEGIN { print ($max > $2) }"` == 1 ];
   then
-    if [ `awk "BEGIN { print ($max > $3) }"` ];
+    if [ `awk "BEGIN { print ($max > $3) }"` == 1 ];
     then
       #$1 > all
-      return $max;
+      echo $max;
     else
       #$3 > all
       max=$3
-      return $max;
+      echo $max;
     fi;
   else
     max=$2
-    if [ `awk "BEGIN { print ($max > $3) }"` ];
+    if [ `awk "BEGIN { print ($max > $3) }"` == 1 ];
     then
       #$2 > all
-      return $max;
+      echo $max;
     else
       #$3 > all
       max=$3
-      return $max;
+      echo $max;
     fi;
   fi;
+}
+
+fileName() {
+echo -n "$(basename $1 .${1#*.})"
 }
 
 
@@ -119,7 +126,7 @@ findSmoothing() {
   pxd3=`fslinfo $1 | grep ^pixdim3 | awk '{print $2}'` 
   
   max=`max3 $pxd1 $pxd2 $pxd3`
-  return `awk "BEGIN { print $max*1.5 }"`
+  echo `awk "BEGIN { print $max*1.5 }"`
 }
 
 
@@ -127,29 +134,26 @@ findSmoothing() {
 #If t0 is the first number, t1 the second etc ... so :
 # ti = ti+1 - ti-1
 derivative() {
-  i=0
-
+  t=0
+  #Yeah ... because if not, you fill the file infinitely ... 
+  echo -n "" > $1_f1
   declare -a col
-  while read col[$i]
+  while read col[$t]
   do
-    i=$((i+1))
+    t=$((t+1))
   done < $1
-
-  for ((n=0; n<=$i; n++));
+  for ((n=0; n<=$((t-1)); n++));
   do
     if [[ $n -eq 0 ]];
     then
-      col[$n]=${col[1]}
-    elif [[ $n -eq $i ]];
+      echo ${col[1]}  >> $1_f1
+    elif [[ $n -eq $t ]];
     then
-      col[$n]=${col[$n-1]}
+      echo ${col[$n-1]}  >> $1_f1
     else
-      col[$n]=`LC_ALL=en_GB awk "BEGIN {printf \"%.12f\", ${col[$n+1]} - ${col[$n-1]}}"`
+      nn=$((n-1))
+      echo `LC_ALL=en_GB awk "BEGIN {printf \"%.12f\", ${col[$n+1]} - ${col[$nn]}}"` >> $1_f1
     fi;
-  done;
-  for c in $col[@]};
-  do
-    echo $c >> $1_fi
   done;
 }
 
@@ -164,7 +168,7 @@ subj=$1
 resPat=${res}/${subj}
 T1=$T1Folder/$subj
 RS=$RSFolder/$subj
-mkdir $resPat
+mkdir -p $resPat
 #I am not sure but I think the TR is the value of pixdim[4]
 TR=`fslinfo $RS | grep ^pixdim4 | awk '{print $2}'`  
 # necessary for estimating the sigma of the bandpass temporal filters
@@ -214,9 +218,9 @@ sed -e "s@FEATBASEDIR@${resPat}@g" \
 # FAST for field bias estimation ONLY. This is functional to obtaining a better
 # skull stripping, carried out in the subsequent BET2
 fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 --nopve -B \
-     -o ${tmp}/${subj}_T1_restore ${T1}
+     -o ${tmp}/${subj}_T1 ${T1}
 
-rm ${tmp}/${subj}_T1_restore_seg
+# rm -f ${tmp}/${subj}_T1_restore_seg*
 
 
 
@@ -245,6 +249,13 @@ fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 -o $resPat/fast/${subj}_T1_restore_brain \
 #
 # P.S. this will be replaced later by a function that takes in subj-specific arguments
 # and modifies a design.fsf template
+
+
+#If I understand well, this will be created by feat
+featdir=${resPat}.feat
+#Just in case
+rm -rf $featdir
+
 feat ${customFSF}
 
 
@@ -258,9 +269,7 @@ feat ${customFSF}
 # (3) Use them to extract the mean time course in the filtered_func_data
 # (4) Compute their first derivative
 WM_CSF_conf_dir=${resPat}/WM_CSF_conf
-mkdir ${WM_CSF_conf_dir}
-#If I understand well, this will be created by feat
-featdir=${resPat}.feat
+mkdir -p ${WM_CSF_conf_dir}
 
 flirt -in $FEATT1RESTORE \
       -applyxfm -init $featdir/reg/highres2example_func.mat \
@@ -269,7 +278,7 @@ flirt -in $FEATT1RESTORE \
       -ref $featdir/example_func.nii.gz
 
 T1_epi_seg=${WM_CSF_conf_dir}/fast_T1epispace
-mkdir ${T1_epi_seg}
+mkdir -p ${T1_epi_seg}
 fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 \
      -o ${T1_epi_seg}/T1_restore_brain_epispace \
         ${WM_CSF_conf_dir}/T1_restore_brain_epispace
@@ -281,15 +290,15 @@ ffdata=$featdir/filtered_func_data.nii.gz
 fslmaths ${T1_epi_seg}/T1_restore_brain_epispace_pve_0.nii.gz \
          -thr 0.9 -bin ${T1_epi_seg}/CSF_thr09
 
-fslmeants -i ${ffdata} -m ${T1_epi_seg}/CSF_thr09 --eig -v -o ${featdir}/WM_CSF_conf/CSF_1EigTC
+fslmeants -i ${ffdata} -m ${T1_epi_seg}/CSF_thr09 --eig -v -o ${WM_CSF_conf_dir}/CSF_1EigTC
 
 fslmaths ${T1_epi_seg}/T1_restore_brain_epispace_pve_2.nii.gz \
          -thr 0.9 ${T1_epi_seg}/WM_thr09
 
-fslmeants -i ${ffdata} -m ${T1_epi_seg}/WM_thr09 --eig -v -o ${featdir}/WM_CSF_conf/WM_1EigTC
+fslmeants -i ${ffdata} -m ${T1_epi_seg}/WM_thr09 --eig -v -o ${WM_CSF_conf_dir}/WM_1EigTC
 
-derivative ${featdir}/WM_CSF_conf/CSF_1EigTC
-derivative ${featdir}/WM_CSF_conf/WM_1EigTC
+derivative ${WM_CSF_conf_dir}/CSF_1EigTC
+derivative ${WM_CSF_conf_dir}/WM_1EigTC
 
 # Motion parameters and their first derivative
 mot=$featdir/mc/prefiltered_func_data_mcf.par
@@ -297,7 +306,7 @@ mot=$featdir/mc/prefiltered_func_data_mcf.par
 targetdir=$featdir/mc_conf
 
 rm -rf ${targetdir}
-mkdir ${targetdir}
+mkdir -p ${targetdir}
 
 # This separates the 6 columns of the motion parameters, 
 # and writes them to a text file
@@ -312,7 +321,7 @@ done
 
 # Write the nuisance matrix to a text file, and perform the regression
 rm -rf ${resPat}/RS_denoise
-mkdir ${resPat}/RS_denoise
+mkdir -p ${resPat}/RS_denoise
 
 nuisMat=${resPat}/RS_denoise/nuisance_mat_18
 paste -d "\t" \
@@ -328,10 +337,10 @@ paste -d "\t" \
       ${featdir}/mc_conf/Tmot_5_f1 \
       ${featdir}/mc_conf/Tmot_6 \
       ${featdir}/mc_conf/Tmot_6_f1 \
-      ${featdir}/WM_CSF_conf/CSF_1EigTC \
-      ${featdir}/WM_CSF_conf/CSF_1EigTC_f1 \
-      ${featdir}/WM_CSF_conf/WM_1EigTC \
-      ${featdir}/WM_CSF_conf/WM_1EigTC_f1 \
+      ${WM_CSF_conf_dir}/CSF_1EigTC \
+      ${WM_CSF_conf_dir}/CSF_1EigTC_f1 \
+      ${WM_CSF_conf_dir}/WM_1EigTC \
+      ${WM_CSF_conf_dir}/WM_1EigTC_f1 \
       > ${nuisMat}
 
 
@@ -350,6 +359,7 @@ if [[ $tt =~ which.* ]]; then
   echo "############### WARNING ############# \n Python 2.7 can't be found on your system \
   so ICA_AROMA cannot be used"; 
 else 
+  mkdir -p ${featdir}/AROMATISED
   python2.7 ${ica}/ICA_AROMA.py \
           -in ${ffdata} \
           -out ${featdir}/AROMATISED \
@@ -365,7 +375,7 @@ rsClean=${resPat}/RS_denoise/RS_clean.nii.gz
 # Regress out the estimated nuisance parameters
 fsl_glm -i ${RS_aromatised} \
         -d $nuisMat \
-        --out_res=${RSClean} \
+        --out_res=${rsClean} \
         --out_t=${resPat}/RS_denoise/motion_fit.nii.gz
 
 
@@ -391,26 +401,26 @@ fsl_glm -i ${RS_aromatised} \
 # 
 # So the general formula is 1/(2*f*TR)
 
-HP=`echo "scale=5; 1/(2*0.009*${TR})" | bc`  # HP for 0.009 Hz
-LP=`echo "scale=5; 1/(2*0.08*${TR})" | bc`   # LP for 0.08 Hz
+
+HP=`LC_ALL=en_GB awk "BEGIN {printf \"%.5f\", 1/(2*0.009*${TR})}"`
+LP=`LC_ALL=en_GB awk "BEGIN {printf \"%.5f\", 1/(2*0.08*${TR})}"`
+# HP=`echo "scale=5; 1/(2*0.009*${TR})" | bc`  # HP for 0.009 Hz
+# LP=`echo "scale=5; 1/(2*0.08*${TR})" | bc`   # LP for 0.08 Hz
 
 
 fslmaths $rsClean \
          -bptf ${HP} ${LP} \
          ${resPat}/RS_denoise/RS_clean_bptf.nii.gz
 
-
-
-prefiltData=${resPat}/prefiltered_func_data
-fslmaths ${RS} $prefiltData -odt float
-
-# perform MCFLIRT (~40 sec for 180 vols)
-time mcflirt -in $prefiltData \
-        -out ${resPat}/prefiltered_func_data_mcf \
-        -plots
-
-
-mkdir -p ${resPat}/mc 
-mv -f ${resPat}/prefiltered_func_data_mcf.mat ${resPat}/prefiltered_func_data_mcf.par ${resPat}/prefiltered_func_data_mcf_abs.rms ${resPat}/prefiltered_func_data_mcf_abs_mean.rms ${resPat}/prefiltered_func_data_mcf_rel.rms ${resPat}/prefiltered_func_data_mcf_rel_mean.rms ${resPat}/mc
-
 }
+
+
+
+for i in $1/*nii*;
+do
+  subj=`fileName $i`
+  preproc $subj
+  echo "#"
+done;
+
+exit 0

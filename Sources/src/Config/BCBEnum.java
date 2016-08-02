@@ -92,6 +92,10 @@ public final class BCBEnum {
 		ASAVETMP("save ANACOM tmpFiles"),
 		ACTRLFILE("save ANACOM ctrlFile"),
 		ACTRLMEAN("save ANACOM ctrlMean"),
+		//Resting State preprocessing
+		RT1DIR("default RESTING T1"),
+		RRSDIR("default RESTING RS"),
+		RRESDIR("default RESTING result"),
 		//Statistical analysis
 		SMAP1DIR("default STATISTICAL map1"),
 		SMAP2DIR("default STATISTICAL map2"),

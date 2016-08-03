@@ -372,64 +372,6 @@ rsDenoise=${resPat}/RS_denoise
 
 rsClean=${rsDenoise}/RS_clean.nii.gz
 
-******
-# Regress out the estimated nuisance parameters
-# IMPORTANT: --demean IS ALSO FOR DEMEANING THE DESIGN MATRIX
-#            but it will also demean the data, so we add it 
-#            again later
-fsl_glm -i ${RS_aromatised} \
-        -d ${bd}/RS_denoise/nuisance_mat_18 \
-        --out_res=${bd}/RS_denoise/RS_clean.nii.gz \
-        --out_t=${bd}/RS_denoise/motion_fit.nii.gz \
-        --demean
-
-# Since we demeaned the data and the design, we re-add the mean data
-fslmaths ${RS_aromatised} -Tmean ${bd}/RS_denoise/aromatised_mean.nii.gz
-fslmaths ${bd}/RS_denoise/RS_clean.nii.gz \
-         -add ${bd}/RS_denoise/aromatised_mean.nii.gz \
-         ${bd}/RS_denoise/RS_clean.nii.gz
-
-
-# The following is just for control: we can appreciate that the model fit of 
-# the motion parameters higly decreases if we use the non-aromatised data
-# fsl_glm -i ${ffdata} \
-#         -d ${bd}/RS_denoise/nuisance_mat_18 \
-#         --out_t=${bd}/RS_denoise/motion_fit_NO_AROMA.nii.gz
-
-
-
-
-
-# do the bandpass filtering
-#
-# to calculate the required sigma values in volumes, to give to fslmaths, use:
-# 1. get the period in seconds for the frequency of interest, e.g. for 0.08
-#    1 / 0.08 = 12.5
-# 2. divide the results by the TR to get it in terms of TRs, e.g. for TR=2.2	
-#    12.5 / 2.2 = 5.68
-# 3. divide again by two to get the sigma
-#    5.68 / 2 = 2.84
-# 
-# So the general formula is 1/(2*f*TR)
-
-HP=`echo "scale=5; 1/(2*0.009*${TR})" | bc`  # HP for 0.009 Hz
-LP=`echo "scale=5; 1/(2*0.08*${TR})" | bc`   # LP for 0.08 Hz
-
-
-fslmaths ${bd}/RS_denoise/RS_clean.nii.gz \
-         -bptf ${HP} ${LP} \
-         ${bd}/RS_denoise/RS_clean_bptf.nii.gz
-
-
-
-# Transform into MNI space
-flirt -in ${bd}/RS_denoise/RS_clean_bptf \
-      -applyxfm \
-      -init ${bd}/preproc.feat/reg/example_func2standard.mat \
-      -out ${bd}/RS_denoise/RS_clean_bptf_MNI_2mm.nii.gz \
-      -paddingsize 0.0 -interp trilinear -ref ${bd}/RS_denoise/MNI152_T1_2mm_brain.nii.gz
-      
-      **********
 # Regress out the estimated nuisance parameters
 # IMPORTANT: --demean IS ALSO FOR DEMEANING THE DESIGN MATRIX
 #            but it will also demean the data, so we add it 

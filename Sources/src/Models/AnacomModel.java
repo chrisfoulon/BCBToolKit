@@ -114,7 +114,7 @@ public class AnacomModel extends AbstractModel {
 			}
 			out.close();
 			
-			erreur = Tools.parseLog(resDir + "/logAnacom.txt");
+			erreur = Tools.parseLog(resDir + "/" + logFile);
 			
         } catch (IOException e) {
 			Writer writer = new StringWriter();

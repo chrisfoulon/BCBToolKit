@@ -20,6 +20,7 @@ public class RestingModel extends AbstractModel {
 	private String RSDir;
 	private String resultDir;
 	private LoadingBar loading;
+	private String sliceVal;
 	private FilenameFilter fileNameFilter;
 	
 	public RestingModel(String path, JFrame f) {
@@ -46,6 +47,10 @@ public class RestingModel extends AbstractModel {
 		RSDir = str;
 	}
 	
+	public void setSliceTiming(String str) {
+		sliceVal = str;
+	}
+	
 	public void setResultDir(String str) {
 		resultDir = str;
 	}
@@ -56,6 +61,24 @@ public class RestingModel extends AbstractModel {
 	
 	public void setNbTicks(int nb) {
 		loading.setNbTicks(nb);
+	}
+	
+	public String createSliceParameter() {
+		if (sliceVal.equals("")) {
+			throw new IllegalStateException(
+					"Slice time correction have to be defined");
+		}
+		String str = "";
+		if (sliceVal.equals("None")) {
+			str = "0";
+		} else if (sliceVal.equals("Regular up")) {
+			str = "1";
+		} else if (sliceVal.equals("Regular down")) {
+			str = "2";
+		} else if (sliceVal.equals("Interleaved")) {
+			str = "5";
+		}
+		return str;
 	}
 	
 	public void run() {
@@ -74,7 +97,8 @@ public class RestingModel extends AbstractModel {
 		String erreur = "";
 		
 		try {			
-			String[] array = {script, T1Dir, RSDir, resultDir};
+			String slice = createSliceParameter();
+			String[] array = {script, T1Dir, RSDir, resultDir, slice};
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			
@@ -88,9 +112,8 @@ public class RestingModel extends AbstractModel {
 					loading.setWidth(progress);			
 				}
 			}
-			
 			out.close();
-			erreur = Tools.parseLog(resultDir + logFile);
+			erreur = Tools.parseLog(resultDir + "/" + logFile);
 			
         } catch (IOException e) {
 			Writer writer = new StringWriter();

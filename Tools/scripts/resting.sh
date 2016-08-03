@@ -1,6 +1,6 @@
 #! /bin/bash
 #AnaCOM2 - Leonardo Cerliani & Michel Thiebaut de Schotten & Chris Foulon 
-[ $# -lt 3 ] && { echo "Usage : $0 T1Folder RSFolder resultsFolder "; exit 1; }
+[ $# -lt 4 ] && { echo "Usage : $0 T1Folder RSFolder resultsFolder sliceCorrection"; exit 1; }
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logAnacom.txt
@@ -119,7 +119,7 @@ echo -n "$(basename $1 .${1#*.})"
 }
 
 
-#Param : the T1 image 
+#Param : the RS image 
 findSmoothing() {
   pxd1=`fslinfo $1 | grep ^pixdim1 | awk '{print $2}'`  
   pxd2=`fslinfo $1 | grep ^pixdim2 | awk '{print $2}'`  
@@ -178,8 +178,8 @@ customFSF=${resPat}/design_preproc_${subj}.fsf
 
 # in mm
 #OLD smoothing_kernel=5
-smoothing_kernel=`findSmoothing ${T1}`
-slice_time_correction=1
+smoothing_kernel=`findSmoothing ${RS}`
+slice_time_correction=$4
 # Slice timing correction
 # 0 : None
 # 1 : Regular up (0, 1, 2, 3, ...)
@@ -187,9 +187,6 @@ slice_time_correction=1
 # 3 : Use slice order file
 # 4 : Use slice timings file
 # 5 : Interleaved (0, 2, 4 ... 1, 3, 5 ... )
-
-###############################################################################
-# END OF PARAMETERS TO BE MODIFIED BY THE USER
 
 
 
@@ -268,7 +265,7 @@ feat ${customFSF}
 # (2) Segment the T1_restore_brain_epispace and take the p=0.9 of WM (pve_2) and CSF (pve_0)
 # (3) Use them to extract the mean time course in the filtered_func_data
 # (4) Compute their first derivative
-WM_CSF_conf_dir=${resPat}/WM_CSF_conf
+WM_CSF_conf_dir=${featdir}/WM_CSF_conf
 mkdir -p ${WM_CSF_conf_dir}
 
 flirt -in $FEATT1RESTORE \
@@ -371,12 +368,26 @@ fi;
 
 RS_aromatised=`ls ${featdir}/AROMATISED/denoised_*.nii.gz`
 
-rsClean=${resPat}/RS_denoise/RS_clean.nii.gz
+rsDenoise=${resPat}/RS_denoise
+
+rsClean=${rsDenoise}/RS_clean.nii.gz
+
+******
 # Regress out the estimated nuisance parameters
+# IMPORTANT: --demean IS ALSO FOR DEMEANING THE DESIGN MATRIX
+#            but it will also demean the data, so we add it 
+#            again later
 fsl_glm -i ${RS_aromatised} \
-        -d $nuisMat \
-        --out_res=${rsClean} \
-        --out_t=${resPat}/RS_denoise/motion_fit.nii.gz
+        -d ${bd}/RS_denoise/nuisance_mat_18 \
+        --out_res=${bd}/RS_denoise/RS_clean.nii.gz \
+        --out_t=${bd}/RS_denoise/motion_fit.nii.gz \
+        --demean
+
+# Since we demeaned the data and the design, we re-add the mean data
+fslmaths ${RS_aromatised} -Tmean ${bd}/RS_denoise/aromatised_mean.nii.gz
+fslmaths ${bd}/RS_denoise/RS_clean.nii.gz \
+         -add ${bd}/RS_denoise/aromatised_mean.nii.gz \
+         ${bd}/RS_denoise/RS_clean.nii.gz
 
 
 # The following is just for control: we can appreciate that the model fit of 
@@ -401,6 +412,53 @@ fsl_glm -i ${RS_aromatised} \
 # 
 # So the general formula is 1/(2*f*TR)
 
+HP=`echo "scale=5; 1/(2*0.009*${TR})" | bc`  # HP for 0.009 Hz
+LP=`echo "scale=5; 1/(2*0.08*${TR})" | bc`   # LP for 0.08 Hz
+
+
+fslmaths ${bd}/RS_denoise/RS_clean.nii.gz \
+         -bptf ${HP} ${LP} \
+         ${bd}/RS_denoise/RS_clean_bptf.nii.gz
+
+
+
+# Transform into MNI space
+flirt -in ${bd}/RS_denoise/RS_clean_bptf \
+      -applyxfm \
+      -init ${bd}/preproc.feat/reg/example_func2standard.mat \
+      -out ${bd}/RS_denoise/RS_clean_bptf_MNI_2mm.nii.gz \
+      -paddingsize 0.0 -interp trilinear -ref ${bd}/RS_denoise/MNI152_T1_2mm_brain.nii.gz
+      
+      **********
+# Regress out the estimated nuisance parameters
+# IMPORTANT: --demean IS ALSO FOR DEMEANING THE DESIGN MATRIX
+#            but it will also demean the data, so we add it 
+#            again later
+fsl_glm -i ${RS_aromatised} \
+        -d $nuisMat \
+        --out_res=${rsClean} \
+        --out_t=${resPat}/RS_denoise/motion_fit.nii.gz \
+        --demean
+        
+# Since we demeaned the data and the design, we re-add the mean data
+fslmaths ${RS_aromatised} -Tmean ${rsDenoise}/aromatised_mean.nii.gz
+fslmaths ${rsClean} \
+         -add ${rsDenoise}/aromatised_mean.nii.gz \
+         ${rsClean}
+
+
+# do the bandpass filtering
+#
+# to calculate the required sigma values in volumes, to give to fslmaths, use:
+# 1. get the period in seconds for the frequency of interest, e.g. for 0.08
+#    1 / 0.08 = 12.5
+# 2. divide the results by the TR to get it in terms of TRs, e.g. for TR=2.2	
+#    12.5 / 2.2 = 5.68
+# 3. divide again by two to get the sigma
+#    5.68 / 2 = 2.84
+# 
+# So the general formula is 1/(2*f*TR)
+
 
 HP=`LC_ALL=en_GB awk "BEGIN {printf \"%.5f\", 1/(2*0.009*${TR})}"`
 LP=`LC_ALL=en_GB awk "BEGIN {printf \"%.5f\", 1/(2*0.08*${TR})}"`
@@ -411,6 +469,13 @@ LP=`LC_ALL=en_GB awk "BEGIN {printf \"%.5f\", 1/(2*0.08*${TR})}"`
 fslmaths $rsClean \
          -bptf ${HP} ${LP} \
          ${resPat}/RS_denoise/RS_clean_bptf.nii.gz
+
+# Transform into MNI space
+flirt -in ${rsDenoise}/RS_clean_bptf \
+      -applyxfm \
+      -init ${featdir}/reg/example_func2standard.mat \
+      -out ${rsDenoise}/RS_clean_bptf_MNI_2mm.nii.gz \
+      -paddingsize 0.0 -interp trilinear -ref ${extra}/MNI152_T1_2mm_brain.nii.gz
 
 }
 

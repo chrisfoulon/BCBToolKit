@@ -13,7 +13,9 @@ import java.net.URL;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingWorker;
 
@@ -28,7 +30,7 @@ import Models.RestingModel;
 public class Resting extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 410;
+	public static final int FRAME_HEIGHT = 430;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
@@ -40,6 +42,7 @@ public class Resting extends AbstractApp {
 	private JButton run;
 	private LoadingBar loading;
 	private RestingModel model;
+	private JComboBox<String> sliceCombo;
 
 	//Browsers
 	private Browser T1Bro;
@@ -108,13 +111,24 @@ public class Resting extends AbstractApp {
 		resBro = new Browser(frame, "Results directory :", 
 				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.RRESDIR, getBCB());
 		getBCB().addBro(resBro.getParam(), resBro);
+		
+		String[] tab = {"", "None", "Regular up", "Regular down", "Interleaved"};
+		sliceCombo = new JComboBox<String>(tab);
 	}
 
-	protected void placeComponents() {		
-		JPanel center = new JPanel(new GridLayout(3, 0)); {
+	protected void placeComponents() {	
+		JPanel sliceSelector = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+			JPanel comboPanel = new JPanel(new GridLayout(2, 0)); {
+				comboPanel.add(new JLabel("Select slice timing correction :"));
+				comboPanel.add(sliceCombo);
+			}
+			sliceSelector.add(comboPanel);
+		}
+		JPanel center = new JPanel(new GridLayout(4, 0)); {
 			center.add(T1Bro);
 			center.add(RSBro);
 			center.add(resBro);
+			center.add(sliceSelector);
 		}
 		frame.add(background, BorderLayout.NORTH);
 		frame.add(center, BorderLayout.CENTER);
@@ -172,6 +186,17 @@ public class Resting extends AbstractApp {
 							model.setResultDir(resBro.getPath());
 						} else {
 							return null;
+						}
+						String sliceValue = (String)sliceCombo.getSelectedItem();
+						if (sliceValue.equals("")) {
+							Tools.showErrorMessage(frame, "You have to chose the right slice"
+									+ " timing correction among : "
+									+ " : None"
+									+ " : Regular up (0, 1, 2, 3, ...)"
+									+ " : Regular down"
+									+ " : Interleaved (0, 2, 4 ... 1, 3, 5 ... )");
+						} else {
+							model.setSliceTiming(sliceValue);
 						}
 						model.run();
 						return null;

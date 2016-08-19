@@ -53,7 +53,7 @@ public class SettingsFrame implements Settings {
 	private JCheckBox saveDir;
 	private JCheckBox saveLoc;
 	//Normalisation
-	private JTextField betOpt;
+	//private JTextField betOpt;
 	private JTextField synOpt;
 	private String synVal;
 	//Anacom
@@ -111,8 +111,8 @@ public class SettingsFrame implements Settings {
 		saveLoc.setSelected(false);
 		saveLoc.setIconTextGap(20);
 				
-		betOpt = new JTextField();
-		betOpt.setPreferredSize(new Dimension(50, 20));
+		//betOpt = new JTextField();
+		//betOpt.setPreferredSize(new Dimension(50, 20));
 		synOpt = new JTextField("0.25");
 		synOpt.setPreferredSize(new Dimension(50, 20));
 		synOpt.setToolTipText("<html> The step-size (0.25) impacts accuracy."
@@ -179,7 +179,7 @@ public class SettingsFrame implements Settings {
 			normaTab.setLayout(boxLay4);
 			normaTab.add(butMap.get(BCBEnum.Param.NTEMPDIR));
 			normaTab.add(Box.createRigidArea(new Dimension(0, 10)));
-			JPanel p = new JPanel(new BorderLayout()); {
+			/*JPanel p = new JPanel(new BorderLayout()); {
 				JLabel lab = new JLabel("Brain extraction Threshold (0.0 to 1.0) :");
 				lab.setHorizontalAlignment(SwingConstants.CENTER);
 				p.add(lab, BorderLayout.CENTER);
@@ -188,7 +188,7 @@ public class SettingsFrame implements Settings {
 				}
 				p.add(p1, BorderLayout.SOUTH);
 				p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
-			}
+			}*/
 
 			JPanel t = new JPanel(new BorderLayout()); {
 				JLabel lab = new JLabel("Step-size impacts accuracy (SyN) :");
@@ -200,7 +200,7 @@ public class SettingsFrame implements Settings {
 				t.add(t1, BorderLayout.SOUTH);
 				t.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
 			}
-			normaTab.add(p);
+			//normaTab.add(p);
 			normaTab.add(t);
 			/*It's useless ... I made a mistake.
 			normaTab.add(new Renamer("T1", "Add / Remove T1 prefix :", 
@@ -281,7 +281,7 @@ public class SettingsFrame implements Settings {
 			}
 		});
 
-		betOpt.addFocusListener(new FocusListener() {
+		/*betOpt.addFocusListener(new FocusListener() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -318,7 +318,7 @@ public class SettingsFrame implements Settings {
 			@Override
 			public void focusGained(FocusEvent e) {
 			}
-		});
+		});*/
 
 		synOpt.addFocusListener(new FocusListener() {
 

@@ -18,13 +18,14 @@ public class CorticalModel extends AbstractModel {
 	public static final String logFile = "logCorticalThickness.txt"; 
 	private String t1Dir;
 	private String resultDir;
+	private String lesionDir;
 	private LoadingBar loading;
 	private FilenameFilter fileNameFilter;
 	
 	
 	public CorticalModel(String path, JFrame f) {
 		super(path, f, BCBEnum.Script.CORTICAL.endPath());
-
+		lesionDir = "";
 		// create new filename filter to recognize .nii and .nii.gz files
 		this.fileNameFilter = new FilenameFilter() {
 			@Override
@@ -45,6 +46,10 @@ public class CorticalModel extends AbstractModel {
 	public void setResultDir(String str) {
 		resultDir = str;
 	}
+	
+	public void setLesionDir(String str) {
+		lesionDir = str;
+	}
 
 	public void setLoadingBar(LoadingBar load) {
 		loading = load;
@@ -56,7 +61,7 @@ public class CorticalModel extends AbstractModel {
 
 	public void run(Boolean saveTmp) {
 		String[] array = {script, t1Dir,
-				resultDir, saveTmp.toString()};
+				resultDir, saveTmp.toString(), lesionDir};
 		
 		String erreur = "";
 		
@@ -80,7 +85,8 @@ public class CorticalModel extends AbstractModel {
 				System.out.println(inLoop);
 			}
 			out.close();
-			erreur = Tools.parseLog(resultDir + "/logThickness.txt");
+			erreur = Tools.parseLog(resultDir + "/logThickness.txt", 
+					new String[] {"WARNING:: Flipping Left/Right orientation (as det < 0)"}, false);
 		} catch (IOException e) {
 			Writer writer = new StringWriter();
 			PrintWriter printWriter = new PrintWriter(writer);

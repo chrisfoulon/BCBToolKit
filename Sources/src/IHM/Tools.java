@@ -155,8 +155,7 @@ public final class Tools {
 	}
 	
 	/**
-	 * Search all error lines in the log file located and the given
-	 * path
+	 * Search all error lines in the log file located in path
 	 * @param path : the path of the log file you want to parse
 	 * @return a String containing the error lines
 	 */
@@ -175,8 +174,62 @@ public final class Tools {
 		try {
 			for(String line; (line = br.readLine()) != null; ) {
 				line = line.trim();
-				//Pattern pattern = Pattern.compile("^[\\s]$|^[\\s][\\W]$");
 				if (!line.startsWith("+") && !line.matches("^\\W*$")) {
+					erreur += line + "\n";
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
+		try {
+			br.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return erreur;
+	}
+	
+	/**
+	 * Search all error lines in the log file located in path and strings in 
+	 * ignore (or starting by those strings) will be ignored as errors
+	 * A better way is to just store non-log lines and parse which are false error
+	 * but by doing this we will gain maybe hundreds of milliseconds so ... 
+	 * @param path
+	 * @param ignore Strings that will be ignored as errors
+	 * @param startWith a boolean that will say if the filtering use only the beginning of 
+	 * strings contained in ignore or if strings have to fit totally
+	 * @return
+	 */
+	public static String parseLog(String path, String[] ignore,  boolean startWith) {
+		String erreur = "";
+		File source = new File(path);
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(source));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+
+		try {
+			for(String line; (line = br.readLine()) != null; ) {
+				line = line.trim();
+				boolean notAnError = false;
+				for (String s : ignore) {
+					if (startWith) {
+						if (line.startsWith(s)) {
+							notAnError = true;
+						}
+					} else {
+						if (line.equals(s)) {
+							notAnError = true;
+						}
+					}
+				}
+				
+				if (notAnError & !line.startsWith("+") && !line.matches("^\\W*$")) {
 					erreur += line + "\n";
 				}
 			}

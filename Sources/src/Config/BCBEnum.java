@@ -72,6 +72,7 @@ public final class BCBEnum {
 		DRESDIR("default DISCONNECTOME result"),
 		//Cortical Thickness
 		T1DIR("default CORTICAL T1"),
+		CLESDIR("default CORTICAL lesions"),
 		CRESDIR("default CORTICAL result"),
 		CSAVETMP("save CORTICAL tmpFiles"),
 		//Normalization

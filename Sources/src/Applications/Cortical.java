@@ -28,7 +28,7 @@ import Models.CorticalModel;
 public class Cortical extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 330;
+	public static final int FRAME_HEIGHT = 400;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
@@ -41,9 +41,10 @@ public class Cortical extends AbstractApp {
 	private LoadingBar loading;
 	private CorticalModel model;
 	private JCheckBox saveTmp;
-
+	
 	//Browsers
 	private Browser t1Bro;
+	private Browser lesBro;
 	private Browser resBro;
 
 	public Cortical(String path, BCBToolKitIHM b) {
@@ -97,7 +98,12 @@ public class Cortical extends AbstractApp {
 		resBro = new Browser(frame, "Results directory :", BCBEnum.fType.DIR.a(),
 				conf, BCBEnum.Param.CRESDIR, getBCB());
 		getBCB().addBro(resBro.getParam(), resBro);
-
+		
+		lesBro = new Browser(frame, "[Optional]Lesions directory :", BCBEnum.fType.DIR.a(),
+				conf, BCBEnum.Param.CLESDIR, getBCB());
+		
+		getBCB().addBro(lesBro.getParam(), lesBro);
+		
 		saveTmp = new JCheckBox("Keep temporary files");
 		saveTmp.setPreferredSize(new Dimension(260, 20));
 		saveTmp.setIconTextGap(20);
@@ -107,10 +113,12 @@ public class Cortical extends AbstractApp {
 	protected void placeComponents() {
 		JPanel center = new JPanel(new BorderLayout()); {
 			center.add(t1Bro, BorderLayout.NORTH);
-			center.add(resBro, BorderLayout.SOUTH);
+			center.add(resBro, BorderLayout.CENTER);
+			center.add(lesBro, BorderLayout.SOUTH);
 		}
 		frame.add(background, BorderLayout.NORTH);
-		frame.add(center, BorderLayout.CENTER);
+		frame.add(center, BorderLayout.CENTER); 
+		
 		// Panel contenant la checkBox
 		JPanel r1 = new JPanel(new FlowLayout(FlowLayout.RIGHT)); {
 			r1.add(saveTmp);
@@ -162,6 +170,10 @@ public class Cortical extends AbstractApp {
 						} else {
 							return null;
 						}
+
+						//This path could be empty if you want to just normalize a T1
+						model.setLesionDir(lesBro.getPath());
+						
 						model.run(new Boolean(saveTmp.isSelected()));
 						return null;
 					}
@@ -207,6 +219,13 @@ public class Cortical extends AbstractApp {
 			p.revalidate();
 		} else {
 			return;
+		}
+	}
+	
+	@Override
+	public void cancel() {
+		if (worker != null) {
+			Tools.cancelActions(path + "/Tools/tmp/tmpCT", worker);
 		}
 	}
 	

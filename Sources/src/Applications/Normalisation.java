@@ -8,22 +8,30 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 
+import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 
 import Config.BCBEnum;
 import Config.BCBEnum.fType;
+import IHM.BCBToolKit;
 import IHM.BCBToolKitIHM;
 import IHM.Browser;
 import IHM.ImagePanel;
@@ -34,7 +42,7 @@ import Models.NormalisationModel;
 public class Normalisation extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 500;
+	public static final int FRAME_HEIGHT = 580;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int LINE_HEIGHT = 20;
@@ -48,6 +56,7 @@ public class Normalisation extends AbstractApp {
 	private JButton run;
 	private LoadingBar loading;
 	private NormalisationModel model;
+	private JTextField betOpt;
 
 	//Browsers
 	private Browser tempBro;
@@ -56,6 +65,7 @@ public class Normalisation extends AbstractApp {
 	private Browser resBro;
 	//A checkBox to choose to apply transformation to other files
 	private JCheckBox otherCheck;
+	private JComboBox<String> methodCombo;
 	
 	private JCheckBox saveTmp;
 	//Optionnal browsers 
@@ -155,20 +165,54 @@ public class Normalisation extends AbstractApp {
 		saveTmp.setIconTextGap(20);
 		saveTmp.setSelected(conf.getVal(BCBEnum.Param.CSAVETMP).equals("true"));
 		saveTmp.setMargin(new Insets(0, 0, 0, 0));
+		
+		String[] tab = {"Enantiomorphic", "Classic"};
+		methodCombo = new JComboBox<String>(tab);
+		
+		betOpt = new JTextField();
+		betOpt.setPreferredSize(new Dimension(50, 20));
 	}
 
 	protected void placeComponents() {
 		//NORTH
 		frame.add(background, BorderLayout.NORTH);
-
+		JPanel methodSelector = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+			JPanel comboPanel = new JPanel(new GridLayout(2, 0)); {
+				comboPanel.add(new JLabel("Select method for masking lesions :"));
+				comboPanel.add(methodCombo);
+			}
+			methodSelector.add(comboPanel);
+		}
+		JPanel p = new JPanel(new BorderLayout()); {
+			JLabel lab = new JLabel("Brain Extraction Threshold (0.0 to 1.0) :");
+			lab.setHorizontalAlignment(SwingConstants.CENTER);
+			p.add(lab, BorderLayout.CENTER);
+			JPanel p1 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+				p1.add(betOpt);
+			}
+			p.add(p1, BorderLayout.SOUTH);
+			p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
+		}
 		JPanel middle = new JPanel(new BorderLayout(5, 0)); {
-			JPanel center = new JPanel(new GridLayout(4, 0)); {
+			JPanel midBox = new JPanel(); {
+				BoxLayout boxLay1 = new BoxLayout(midBox, BoxLayout.Y_AXIS);
+				midBox.setLayout(boxLay1);
+				midBox.add(tempBro);
+				midBox.add(t1Bro);
+				midBox.add(lesBro);
+				midBox.add(resBro);
+				midBox.add(methodSelector);
+				midBox.add(p);
+			}
+			/*JPanel center = new JPanel(new GridLayout(6, 0)); {
 				center.add(tempBro);
 				center.add(t1Bro);
 				center.add(lesBro);
 				center.add(resBro);
-			}
-			middle.add(center, BorderLayout.NORTH);
+				center.add(methodSelector);
+				center.add(p);
+			}*/
+			middle.add(midBox, BorderLayout.NORTH);
 			JPanel flow = new JPanel(new FlowLayout(FlowLayout.LEFT)); {
 				flow.add(otherCheck);
 			}
@@ -210,6 +254,45 @@ public class Normalisation extends AbstractApp {
 				closing();
 			}
 		});
+		
+		betOpt.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				String text = betOpt.getText();
+				//Deleting of invisible characters
+				text = text.trim();
+				//Replace , by .
+				text = text.replace(",", ".");
+				if (!text.equals("")) {
+					float opt = 0;
+					try {
+						opt = Float.valueOf(text);
+					} catch (NumberFormatException nbE) {
+						Tools.showErrorMessage(getBCB().getFrame(), 
+								"The value of Brain extraction threshold" +
+								" be between 0.0 and 1.0");
+						betOpt.setText("");
+						conf.setVal(BCBEnum.Param.NBETOPT, "");
+						return;
+					}
+					if (!(opt < 0) && !(opt > 1)) {
+						conf.setVal(BCBEnum.Param.NBETOPT, text);
+					} else {
+						Tools.showErrorMessage(getBCB().getFrame(), 
+								"The value of Brain extraction threshold" +
+								" be between 0.0 and 1.0");
+						betOpt.setText("");
+						conf.setVal(BCBEnum.Param.NBETOPT, "");
+						return;
+					}
+				}
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+			}
+		});
 
 		run.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -228,6 +311,7 @@ public class Normalisation extends AbstractApp {
 						}
 						//This path could be empty if you want to just normalize a T1
 						model.setLesionDir(lesBro.getPath());
+						
 						if (Tools.isReady(frame, resBro)) {
 							model.setResultDir(resBro.getPath());
 						} else {
@@ -243,6 +327,8 @@ public class Normalisation extends AbstractApp {
 						} else {
 							model.setSaveTmp("false");
 						}
+						
+						model.setMaskingMethod((String)methodCombo.getSelectedItem());
 						
 						if (otherCheck.isSelected()) {
 							if (Tools.isReady(frame, othBro)) {

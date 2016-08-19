@@ -32,6 +32,8 @@ public class NormalisationModel extends AbstractModel {
 	private String synOpt;
 	//Should we save tempory files ? 
 	private String saveTmp;
+	//What masking method will be used
+	private String maskMeth;
 	private LoadingBar loading;
 	private FilenameFilter fileNameFilter;
 	
@@ -89,6 +91,10 @@ public class NormalisationModel extends AbstractModel {
 		synOpt = str;
 	}
 	
+	public void setMaskingMethod(String str) {
+		maskMeth = str;
+	}
+	
 	public void setSaveTmp(String str) {
 		if (str == null || str.equals("") || (!str.equals("false") && !str.equals("true"))) {
 			throw new IllegalArgumentException("The value of saveTmp must be true or false");
@@ -125,10 +131,10 @@ public class NormalisationModel extends AbstractModel {
 
 			if (other) {
 				 array = new String[]{script, t1Dir,
-						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp, othDir, othRes};
+						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp, maskMeth, othDir, othRes};
 			} else {
 				array = new String[]{script, t1Dir,
-						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp};
+						 lesDir, resDir, tempFile, betOptFinal, synOpt, saveTmp, maskMeth};
 			}
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
@@ -140,7 +146,7 @@ public class NormalisationModel extends AbstractModel {
 				String inLoop = out.nextLine();
 				if (inLoop.startsWith("#")) {
 					progress++;
-					loading.setWidth(progress);					
+					loading.setWidth(progress);				
 				}
 				System.out.println(inLoop);
 			}

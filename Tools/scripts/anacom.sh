@@ -343,12 +343,15 @@ echo "#"
 if [[ $6 == "Wilcoxon" ]];
 then 
   testname="wilcox.test";
+  testvalue="W";
 elif [[ $6 == "t-test" ]];
 then
   testname="t.test";
+  testvalue="t";
 elif [[ $6 == "Kolmogorov-Smirnov" ]];
 then
   testname="ks.test"
+  testvalue="D";
 else
   echo "This test is unknown"
 fi;
@@ -378,6 +381,7 @@ myTest <- function(fun = stat(x, y), patfile) {
     })
   }
   write(paste("\n", res\$p.value, sep=""), patfile, append=TRUE, sep="\n");
+  write(res\$statistic, patfile, append=TRUE, sep="\n");
     if (!is.null(w)) {
     write(w, patfile, append=TRUE, sep="");
   }
@@ -394,13 +398,16 @@ do
   read text < $tmp/cluster${i}sco.txt
   x="c("$text")"
   compute="myTest($testname($x, $control), \"$tmp/cluster${i}pat.txt\")"
+  patNumber="write(length($x), \"$tmp/cluster${i}pat.txt\", append=TRUE, sep=\"\\n\");"
   #echo "print('Compute : $compute')" >> $tmp/stats.r
   echo $compute >> $tmp/stats.r
+  echo $patNumber >> $tmp/stats.r
 done;
 
 #We launch the R script to compute pvalues
 $tmp/stats.r
-
+#Here, in each score file, we have patients' names, pvalue of the test, the value of the test and then 
+#the number of patients. 
 
 #Give the real representation of a number that was in scientific notation
 realVal() {
@@ -558,7 +565,7 @@ echo "#"
   ## corresponding between pvalues and cluster number
   
 ##
-echo 'Patients, p-values, Bonferroni-holm' > $3/clusters.csv
+echo "Patients, p-values, Bonferroni-holm, N, $testvalue" > $3/clusters.csv
 fslmaths $3/bonferroniClusters -mul 0 $3/correctedClusters
 exclude=''
 for i in ${!sorted[@]};
@@ -569,10 +576,13 @@ do
   else
     fslmaths $cluD/pvalcluster${indexes[$i]} -add $3/correctedClusters $3/correctedClusters
   fi;
+  #We read lines 3 and 4 in clusterpat files which correspond to the value of the test and the number of patients
+  valTest=`sed -n 4p $tmp/cluster${i}pat.txt`
+  numPat=`sed -n 3p $tmp/cluster${i}pat.txt`
   read patients < $tmp/cluster${i}pat.txt;
   read scores < $tmp/cluster${i}sco.txt;
-  echo "pvalcluster${indexes[$i]}, ${copysorted[$i]}, ${realcorr[$i]}${exclude}, $patients" >> $3/clusters.csv;
-  echo "pvalcluster${indexes[$i]}, ${copysorted[$i]}, ${realcorr[$i]}${exclude}, $scores" >> $3/clusters.csv;
+  echo "pvalcluster${indexes[$i]}, ${copysorted[$i]}, ${realcorr[$i]}${exclude}, $valTest, $numPat, $patients" >> $3/clusters.csv;
+  echo "pvalcluster${indexes[$i]}, ${copysorted[$i]}, ${realcorr[$i]}${exclude}, $valTest, $numPat, $scores" >> $3/clusters.csv;
 done;
 
 declare -a array;
@@ -589,10 +599,13 @@ done;
 
 for i in ${array[@]};
 do
+  #We read lines 3 and 4 in clusterpat files which correspond to the value of the test and the number of patients
+  valTest=`sed -n 4p $tmp/cluster${i}pat.txt`
+  numPat=`sed -n 3p $tmp/cluster${i}pat.txt`
   read patients < $tmp/cluster${i}pat.txt;
   read scores < $tmp/cluster${i}sco.txt;
-  echo "pvalcluster$i, NaN(-1), NaN, $patients" >> $3/clusters.csv;
-  echo "pvalcluster$i, NaN(-1), NaN, $scores" >> $3/clusters.csv;
+  echo "pvalcluster$i, NaN(-1), NaN, $valTest, $numPat, $patients" >> $3/clusters.csv;
+  echo "pvalcluster$i, NaN(-1), NaN, $valTest, $numPat, $scores" >> $3/clusters.csv;
 done;
 
 #We create the second csv file if there is warnings
@@ -600,7 +613,7 @@ declare -a warn;
 bool="false"
 for ((i=0; i<$numclu; i++));
 do
-  warn[$i]=`sed -n '3,$p' $tmp/cluster${i}pat.txt`
+  warn[$i]=`sed -n '5,$p' $tmp/cluster${i}pat.txt`
   if [[ ${warn[$i]} != '' ]];
   then
     bool="true"

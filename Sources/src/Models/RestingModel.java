@@ -18,9 +18,12 @@ public class RestingModel extends AbstractModel {
 	public static final String logFile = "logResting.txt"; 
 	private String T1Dir;
 	private String RSDir;
+	private String lesionDir;
 	private String resultDir;
 	private LoadingBar loading;
 	private String sliceVal;
+	//Should we save tempory files ? 
+	private String saveTmp;
 	private FilenameFilter fileNameFilter;
 	
 	public RestingModel(String path, JFrame f) {
@@ -51,8 +54,19 @@ public class RestingModel extends AbstractModel {
 		sliceVal = str;
 	}
 	
+	public void setLesionDir(String str) {
+		lesionDir = str;
+	}
+	
 	public void setResultDir(String str) {
 		resultDir = str;
+	}
+	
+	public void setSaveTmp(String str) {
+		if (str == null || str.equals("") || (!str.equals("false") && !str.equals("true"))) {
+			throw new IllegalArgumentException("The value of saveTmp must be true or false");
+		}
+		saveTmp = str;
 	}
 
 	public void setLoadingBar(LoadingBar load) {
@@ -98,7 +112,8 @@ public class RestingModel extends AbstractModel {
 		
 		try {			
 			String slice = createSliceParameter();
-			String[] array = {script, T1Dir, RSDir, resultDir, slice};
+			String[] array = {script, T1Dir, RSDir, resultDir, slice, saveTmp, lesionDir};
+			System.out.println(lesionDir);
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			

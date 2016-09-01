@@ -15,7 +15,7 @@ import IHM.LoadingBar;
 import IHM.Tools;
 
 public class CorticalModel extends AbstractModel {
-	public static final String logFile = "logCorticalThickness.txt"; 
+	public static final String logFile = "/logThickness.txt"; 
 	private String t1Dir;
 	private String resultDir;
 	private String lesionDir;
@@ -85,7 +85,7 @@ public class CorticalModel extends AbstractModel {
 				System.out.println(inLoop);
 			}
 			out.close();
-			erreur = Tools.parseLog(resultDir + "/logThickness.txt", 
+			erreur = Tools.parseLog(resultDir + logFile, 
 					new String[] {"WARNING:: Flipping Left/Right orientation (as det < 0)"}, false);
 		} catch (IOException e) {
 			Writer writer = new StringWriter();

@@ -178,6 +178,9 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	
 	public void createView() {
 		frame = new JFrame("BCBToolKit"); {
+			if (Tools.isOSX()) {
+				frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT  + Tools.OSXOffset));
+			}
 			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
 			frame.setResizable(false);
 			frame.setFocusable(true);

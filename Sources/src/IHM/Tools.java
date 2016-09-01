@@ -31,6 +31,7 @@ import javax.swing.SwingWorker;
 import Applications.AbstractApp;
 
 public final class Tools {
+	public static final int OSXOffset = 20;
 	private Tools() {
 		//Do nothing
 	}
@@ -218,18 +219,19 @@ public final class Tools {
 				line = line.trim();
 				boolean notAnError = false;
 				for (String s : ignore) {
+					String st = s.trim();
 					if (startWith) {
-						if (line.startsWith(s)) {
+						if (line.startsWith(st)) {
 							notAnError = true;
 						}
 					} else {
-						if (line.equals(s)) {
+						if (line.equals(st)) {
 							notAnError = true;
 						}
 					}
 				}
 				
-				if (notAnError & !line.startsWith("+") && !line.matches("^\\W*$")) {
+				if (!notAnError && !line.startsWith("+") && !line.matches("^\\W*$")) {
 					erreur += line + "\n";
 				}
 			}

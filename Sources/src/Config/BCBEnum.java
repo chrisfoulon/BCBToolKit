@@ -96,7 +96,9 @@ public final class BCBEnum {
 		//Resting State preprocessing
 		RT1DIR("default RESTING T1"),
 		RRSDIR("default RESTING RS"),
+		RLESDIR("default RESTING lesions"),
 		RRESDIR("default RESTING result"),
+		RSAVETMP("save RESTING tmpFiles"),
 		//Statistical analysis
 		SMAP1DIR("default STATISTICAL map1"),
 		SMAP2DIR("default STATISTICAL map2"),

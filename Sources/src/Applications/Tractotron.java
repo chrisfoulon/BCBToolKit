@@ -30,7 +30,7 @@ import Models.TractoModel;
 public class Tractotron extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 360;
+	public static final int FRAME_HEIGHT = 370;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int LINE_HEIGHT = 20;

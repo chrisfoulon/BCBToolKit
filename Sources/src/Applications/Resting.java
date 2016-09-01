@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -13,6 +14,7 @@ import java.net.URL;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -30,7 +32,7 @@ import Models.RestingModel;
 public class Resting extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 430;
+	public static final int FRAME_HEIGHT = 500;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
@@ -43,10 +45,13 @@ public class Resting extends AbstractApp {
 	private LoadingBar loading;
 	private RestingModel model;
 	private JComboBox<String> sliceCombo;
+	
+	private JCheckBox saveTmp;
 
 	//Browsers
 	private Browser T1Bro;
 	private Browser RSBro;
+	private Browser lesBro;
 	private Browser resBro;
 
 	public Resting(String path, BCBToolKitIHM b) {
@@ -108,12 +113,22 @@ public class Resting extends AbstractApp {
 
 		getBCB().addBro(RSBro.getParam(), RSBro);
 		
+		lesBro = new Browser(frame, "[Optional]Lesions directory :", 
+				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.RLESDIR, getBCB());
+		getBCB().addBro(lesBro.getParam(), lesBro);
+		
 		resBro = new Browser(frame, "Results directory :", 
 				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.RRESDIR, getBCB());
 		getBCB().addBro(resBro.getParam(), resBro);
 		
 		String[] tab = {"", "None", "Regular up", "Regular down", "Interleaved"};
 		sliceCombo = new JComboBox<String>(tab);
+		
+		saveTmp = new JCheckBox("Keep temporary files");
+		saveTmp.setPreferredSize(new Dimension(260, 20));
+		saveTmp.setIconTextGap(20);
+		saveTmp.setSelected(conf.getVal(BCBEnum.Param.CSAVETMP).equals("true"));
+		saveTmp.setMargin(new Insets(0, 0, 0, 0));
 	}
 
 	protected void placeComponents() {	
@@ -127,13 +142,18 @@ public class Resting extends AbstractApp {
 		JPanel center = new JPanel(new GridLayout(4, 0)); {
 			center.add(T1Bro);
 			center.add(RSBro);
+			center.add(lesBro);
 			center.add(resBro);
-			center.add(sliceSelector);
+		}
+		JPanel centerBig = new JPanel(new BorderLayout()); {
+			centerBig.add(center, BorderLayout.NORTH);
+			centerBig.add(sliceSelector, BorderLayout.SOUTH);			
 		}
 		frame.add(background, BorderLayout.NORTH);
-		frame.add(center, BorderLayout.CENTER);
+		frame.add(centerBig, BorderLayout.CENTER);
 		// Panel contenant la checkBox
 		JPanel r1 = new JPanel(new FlowLayout(FlowLayout.RIGHT)); {
+			r1.add(saveTmp);
 			r1.add(settings);
 		}
 		// Panel du bouton run
@@ -182,11 +202,23 @@ public class Resting extends AbstractApp {
 						} else {
 							return null;
 						}
+						
+						//This path could be empty if you don't want to mask lesions
+						model.setLesionDir(lesBro.getPath());
+						
 						if (Tools.isReady(frame, resBro)) {
 							model.setResultDir(resBro.getPath());
 						} else {
 							return null;
 						}
+						
+						// Should we save temporary files
+						if (saveTmp.isSelected()) {
+							model.setSaveTmp("true");
+						} else {
+							model.setSaveTmp("false");
+						}
+						
 						String sliceValue = (String)sliceCombo.getSelectedItem();
 						if (sliceValue.equals("")) {
 							Tools.showErrorMessage(frame, "You have to chose the right slice"
@@ -209,6 +241,16 @@ public class Resting extends AbstractApp {
 				changeRunButton(panel, 0);
 				worker.execute();
 
+			}
+		});
+		
+		saveTmp.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (saveTmp.isSelected()) {
+					conf.setVal(BCBEnum.Param.RSAVETMP, "true");
+				} else {
+					conf.setVal(BCBEnum.Param.RSAVETMP, "false");
+				}
 			}
 		});
 	}

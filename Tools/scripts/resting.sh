@@ -1,6 +1,7 @@
 #! /bin/bash
 #AnaCOM2 - Leonardo Cerliani & Michel Thiebaut de Schotten & Chris Foulon 
-[ $# -lt 4 ] && { echo "Usage : $0 T1Folder RSFolder resultsFolder sliceCorrection"; exit 1; }
+[ $# -lt 5 ] && { echo "Usage : $0 T1Folder RSFolder resultsFolder \
+  sliceCorrection saveTmp [LesionsFolder]"; exit 1; }
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logAnacom.txt
@@ -10,6 +11,70 @@ exec 2>> $3/logResting.txt
 set -x
 set -e
 path=${PWD}/Tools
+export FSLOUTPUTTYPE="NIFTI_GZ"
+
+fileName() {
+echo -n "$(basename $1 .${1#*.})"
+}
+################################################################################
+## Enantiomorphic tranformation of a T1 with a lesion, method :
+## "Enantiomorphic normalization of focally lesioned brains" 
+## P. Nachev et al. 2008
+## @Paramters : - $1 : the T1 image 
+## 	        - $2 : the lesion image with the same name as the T1
+##	        - $3 : temporary folder (The result file will be created inside)
+## 		- $4 : template to align with, the template must contain the 
+## skull
+## @output : the file Enantiomorphic${name} (name is the T1 filename) will be 
+## stored in the $3 folder)
+## $3 will also contain all temporary files created while the function is 
+## running
+################################################################################
+enantiomorphic() {
+  ttmp=$3
+  name=`fileName $1`
+  templateWSkull=$4
+  #We reorient images on the MNI coordinates with fslreorient2std
+  fslreorient2std $1 $ttmp/$name
+  fslreorient2std $2 $ttmp/les$name
+  T1=$ttmp/$name
+  les=$ttmp/les$name
+  # We compute the tranformation between the T1 and the MNI152 WITH the skull 
+  # and we apply it to the T1
+  flirt -in $T1 -ref $templateWSkull -omat $ttmp/affine.mat \
+    -out ${ttmp}/output${name}.nii.gz
+  #We also apply the transformation to the lesion file 
+  flirt -in $les -ref $templateWSkull -applyxfm -init $ttmp/affine.mat \
+    -out ${ttmp}/affineLesion${name}.nii.gz
+  #We flip the image 
+  fslswapdim ${ttmp}/affineLesion${name}.nii.gz -x y z \
+    ${ttmp}/flippedaffine${name}
+  #We mask the flipped image with the lesion 
+  fslmaths ${ttmp}/output${name}.nii.gz -mas ${ttmp}/flippedaffine${name} \
+    ${ttmp}/healthytissue${name}
+  #Re-Flip
+  fslswapdim ${ttmp}/healthytissue${name} -x y z \
+    ${ttmp}/flippedhealthytissue${name}
+  #We inverse de transformation matrice
+  convert_xfm -omat $ttmp/inverseAffine.mat -inverse $ttmp/affine.mat
+  #We apply the inverse of the tranformation on the mask of healthy tissue to 
+  #go back to the native space of the T1
+  flirt -in ${ttmp}/flippedhealthytissue${name} -ref $T1 -applyxfm \
+    -init $ttmp/inverseAffine.mat \
+    -out ${ttmp}/nativeflippedhealthytissue${name}.nii.gz
+  #We extract the lesionned area of the T1
+  fslmaths ${ttmp}/nativeflippedhealthytissue${name}.nii.gz -mas $les \
+    ${ttmp}/mnativeflippedhealthytissue${name}
+  #We substract this region to the T1 to create a "hole" of 0 values in place
+  #of the lesionned area
+  fslmaths $les -add 1 -uthr 1 -bin $ttmp/lesionedMask
+  fslmaths $T1 -mul $ttmp/lesionedMask $ttmp/T1pitted
+  #THE END (We put the final mask inside the native T1 and we have an 
+  #healthy T1
+  fslmaths $ttmp/T1pitted -add ${ttmp}/mnativeflippedhealthytissue${name} \
+  $ttmp/Enantiomorphic${name}
+  
+}
 
 extra=$path/extraFiles/restingState
 ica=$path/binaries/ICA-AROMA-master
@@ -75,15 +140,17 @@ mkdir -p $tmp
 #Static variables
 T1Folder=$1 #folder of T1 images
 RSFolder=$2 #folder of Resting States
-
+LesFolder=$6
 res=$3
-
+templateWSkull=$path/extraFiles/MNI152_wskull.nii.gz
 #The base of fsf file we'll use to make custom templates
 design_TEMPLATE=$extra/design_preproc_TEMPLATE.fsf
 
 f1_kernel=$extra/f1_kernel.nii.gz
 
 MNI2mm=$extra/MNI152_T1_2mm_brain
+
+saveTmp=$5
 
 
 #To use this : redirect the output stream !
@@ -162,19 +229,27 @@ derivative() {
 
 #Param : $1 = patient's name
 preproc() {
-
 #We will create a separate folder for each patient
 subj=$1
 resPat=${res}/${subj}
+mkdir -p $resPat
+
 T1=$T1Folder/$subj
 RS=$RSFolder/$subj
-mkdir -p $resPat
+#If you want to mask the lesion in T1 with healthy tissues
+if [[ $LesFolder != "" ]]
+then
+  ll=`ls $LesFolder/${subj}.nii*`
+  enantiomorphic $T1 $ll $tmp $templateWSkull
+  mv $tmp/Enantiomorphic${subj}.nii* $resPat
+  T1=$resPat/Enantiomorphic${subj}.nii.gz
+fi;
 #I am not sure but I think the TR is the value of pixdim[4]
 TR=`fslinfo $RS | grep ^pixdim4 | awk '{print $2}'`  
 # necessary for estimating the sigma of the bandpass temporal filters
 
 
-customFSF=${resPat}/design_preproc_${subj}.fsf
+customFSF=${tmp}/design_preproc_${subj}.fsf
 
 # in mm
 #OLD smoothing_kernel=5
@@ -193,7 +268,7 @@ slice_time_correction=$4
 # for the fsf template - automatically imported
 FEATNUMBERTIMEPOINTS=`fslinfo ${RS} | grep ^dim4 | awk '{print $2}'`
 
-FEATT1RESTORE=${resPat}/${subj}_T1_restore_brain
+FEATT1RESTORE=${tmp}/${subj}_T1_restore_brain
 
 
 # do the sed on the design_preproc_TEMPLATE.fsf
@@ -384,10 +459,6 @@ fsl_glm -i ${RS_aromatised} \
         
 # Since we demeaned the data and the design, we re-add the mean data
 fslmaths ${RS_aromatised} -Tmean ${rsDenoise}/aromatised_mean.nii.gz
-fslmaths ${rsClean} \
-         -add ${rsDenoise}/aromatised_mean.nii.gz \
-         ${rsClean}
-
 
 # do the bandpass filtering
 #
@@ -407,10 +478,11 @@ LP=`LC_ALL=en_GB awk "BEGIN {printf \"%.5f\", 1/(2*0.08*${TR})}"`
 # HP=`echo "scale=5; 1/(2*0.009*${TR})" | bc`  # HP for 0.009 Hz
 # LP=`echo "scale=5; 1/(2*0.08*${TR})" | bc`   # LP for 0.08 Hz
 
-
 fslmaths $rsClean \
          -bptf ${HP} ${LP} \
          ${resPat}/RS_denoise/RS_clean_bptf.nii.gz
+         
+
 
 # Transform into MNI space
 flirt -in ${rsDenoise}/RS_clean_bptf \
@@ -418,8 +490,42 @@ flirt -in ${rsDenoise}/RS_clean_bptf \
       -init ${featdir}/reg/example_func2standard.mat \
       -out ${rsDenoise}/RS_clean_bptf_MNI_2mm.nii.gz \
       -paddingsize 0.0 -interp trilinear -ref ${extra}/MNI152_T1_2mm_brain.nii.gz
+# Transform the mean image in the MNI space
+flirt -in ${rsDenoise}/aromatised_mean.nii.gz \
+      -applyxfm \
+      -init ${featdir}/reg/example_func2standard.mat \
+      -out ${rsDenoise}/aromatised_mean_bptf_MNI_2mm.nii.gz \
+      -paddingsize 0.0 -interp trilinear -ref ${extra}/MNI152_T1_2mm_brain.nii.gz
+      
+      
+#We add the mean to RS_clean
+fslmaths ${rsClean} \
+         -add ${rsDenoise}/aromatised_mean.nii.gz \
+         ${resPat}/RS_clean_plusmean.nii.gz
 
+#We add the mean to RS_clean_bptf
+fslmaths ${resPat}/RS_denoise/RS_clean_bptf.nii.gz \
+         -add ${rsDenoise}/aromatised_mean.nii.gz \
+         ${resPat}/RS_clean_plusmean_bptf.nii.gz
+
+#We add normalised mean to the RS_clean_bptf
+fslmaths ${rsDenoise}/RS_clean_bptf_MNI_2mm.nii.gz \
+      -add ${rsDenoise}/aromatised_mean_bptf_MNI_2mm.nii.gz \
+       ${resPat}/RS_clean_plusmean_bptf_MNI_2mm.nii.gz
+      
+if [[ $saveTmp == "true" ]]
+then
+  temporaryDir=${resPat}/temporaryFiles
+  mkdir -p $temporaryDir
+  mv ${featdir} ${temporaryDir}
+  mv ${tmp}/design_preproc_${subj}.fsf $temporaryDir
+  mv $rsDenoise $temporaryDir
+  mv $resPat/fast $temporaryDir
+fi;
+      
 }
+
+
 
 
 

@@ -28,7 +28,7 @@ import Models.CorticalModel;
 public class Cortical extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 400;
+	public static final int FRAME_HEIGHT = 380;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;

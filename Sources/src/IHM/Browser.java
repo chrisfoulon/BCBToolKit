@@ -211,7 +211,7 @@ public class Browser extends JPanel {
 
 		    @Override
 		    public void focusLost(FocusEvent e) {
-		    	String text = getFldContent();
+		    	String text = getFldContent().trim();
 		    	if (!text.equals("")) {
 		    		File f = new File(text);
 		    		if (extensionIntegrity(f)) {
@@ -219,6 +219,8 @@ public class Browser extends JPanel {
 		    		} else {
 		    			setOldFld();
 		    		}
+		    	} else {
+		    		setPath("", null);
 		    	}
 		    }
 

@@ -171,7 +171,7 @@ do
 
         #And you remake the 4D image
         fslmerge -t ${10}/OTH$pat.nii.gz OTHifyouusethisprefixyouarereallyawkward*gz
-        rm -f $tmp/*vol*
+        rm -f $tmp/*ifyouusethisprefixyouarereallyawkward*
         cd $1
     fi
     

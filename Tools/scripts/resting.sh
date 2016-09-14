@@ -193,7 +193,7 @@ findSmoothing() {
   pxd3=`fslinfo $1 | grep ^pixdim3 | awk '{print $2}'` 
   
   max=`max3 $pxd1 $pxd2 $pxd3`
-  echo `awk "BEGIN { print $max*1.5 }"`
+  echo `LC_ALL=en_GB awk "BEGIN { print $max*1.5 }"`
 }
 
 
@@ -243,6 +243,9 @@ then
   enantiomorphic $T1 $ll $tmp $templateWSkull
   mv $tmp/Enantiomorphic${subj}.nii* $resPat
   T1=$resPat/Enantiomorphic${subj}.nii.gz
+  #All images are reoriented so we need to be consistent
+  fslreorient2std $RS $tmp/reoRS
+  RS=$tmp/reoRS.nii.gz
 fi;
 #I am not sure but I think the TR is the value of pixdim[4]
 TR=`fslinfo $RS | grep ^pixdim4 | awk '{print $2}'`  

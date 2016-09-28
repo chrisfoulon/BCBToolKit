@@ -115,13 +115,11 @@ do
     ll=`ls $4/$filename.nii*`
     enantiomorphic $f $ll $tmp $templateWSkull
     mv $tmp/Enantiomorphic${filename}.nii* $intermediate
-    finalForm=$intermediate/Enantiomorphic${filename}
-  else 
-    echo "Lesion masking parameter error" >&2
+    finalForm=$intermediate/Enantiomorphic${filename}.nii.gz
   fi
   $ants/antsCorticalThickness.sh \
     -d 3 \
-    -a $finalForm.nii.gz \
+    -a $finalForm \
     -e $priors/brainWithSkullTemplate.nii.gz -m $priors/brainPrior.nii.gz \
     -p $priors/priors%d.nii.gz \
     -o $intermediate/$filename

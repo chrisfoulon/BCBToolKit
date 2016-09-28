@@ -1,16 +1,26 @@
+
 ** Current version **
+v3.0.0
+**New module : Resting State Preprocessing (by Leonardo Cerliani) **
+**New method for lesion masking**
+We added the enantiomorphic (ref : "Enantiomorphic normalization of focally lesioned brains." Nachev.P, 2007) method to mask lesion in all modules that use T1 images by replacing the leionned area by the healthy tissue of the oposite hemisphere (Obviously it won't work if lesions are like symetrical on both hemispheres). 
+-Cortical Thickness : If you have lesions associated to your T1s, you can add them in the module. Then we compute the enantiomorphic tranformation of T1s and we calculate the Cortical Thickness on this "healthy" brain to avoid non sense tranformations and after we delete the lesionned area (because cortical thickness values are not relevant in lesionned areas). 
+-Normalisation : You can choose the enantiomorphic method to mask lesions instead of simple masking. 
+-Resting State : You can add a lesion folder to mask lesions on T1s to have more precise values for the preprocessing of RS.
+Disconnectome Maps : We added the possibility to add a minimum threshold that will be applied to all results 
+Tractotron : Bug fix that may cause false negatives in the severity calculation
+
+** Previous updates **
 v2.0.20
 ** Module modifications **
 *All modules : -Log files are now available and work better for every modules
-*Tractotron : -We added a new calculation to git the proportion of overlaping 
+*Tractotron : -We added a new calculation to get the proportion of overlaping 
 between lesions and tracts, the result is in a separate file
               -Now you can just select the result folder and results files will
 be generated inside
 *Normalisation : -In the settings frame, you can now manually select the 
 The step-size impacts accuracy (SyN parameter of ANTs)
-*AnaCOM2 : 
-
-** Previous updates **
+*AnaCOM2 
 
 v2.0.5
 ** New module **

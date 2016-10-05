@@ -31,7 +31,7 @@ import javax.swing.SwingWorker;
 import Applications.AbstractApp;
 
 public final class Tools {
-	public static final int OSXOffset = 20;
+	public static int OSXOffset;
 	private Tools() {
 		//Do nothing
 	}
@@ -39,6 +39,15 @@ public final class Tools {
 	public static boolean isOSX() {
 		String osName = System.getProperty("os.name");
 		return osName.contains("OS X");
+	}
+	
+	public static int getOffset() {
+		if (isOSX()) {
+			OSXOffset = 20;
+		} else {
+			OSXOffset = 0;
+		}
+		return OSXOffset;
 	}
 
 	/**

@@ -369,6 +369,8 @@ public class Browser extends JPanel {
 		 if (ftype.contains(fType.DIR)) {
 			 if (!f.isDirectory()) {
 				 showErrorMessage("[" + f.getAbsolutePath() + "]" + " is not a directory");
+				 this.setPath("", null);
+				 this.setConf();
 				 return false;
 			 }
 		 } else {

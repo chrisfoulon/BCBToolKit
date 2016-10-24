@@ -36,6 +36,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -260,9 +261,19 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	}
 	
 	public void createControllers() {
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e) {
-				closing();
+				int retour = Tools.showConfirmMessage(getFrame(), 
+						"<html>If you close this window, all running modules will be shutdown"
+						+ "<br /> Are you sure ? </html>");
+				
+				if(retour == JOptionPane.YES_OPTION){
+					closing();
+					System.exit(0);
+				} else {
+					return;
+				}
 			}
 		});
 		
@@ -616,7 +627,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		}
 	}
 
-	public void closing() {
+	public void closing() {		
 		saveDefPaths();
 		
 		for (AbstractApp app : appMap.values()) {

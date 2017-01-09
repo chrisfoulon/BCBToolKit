@@ -48,7 +48,7 @@ import Applications.Anacom;
 import Applications.Cortical;
 import Applications.Disco;
 import Applications.Normalisation;
-import Applications.Resting;
+import Applications.Funcon;
 import Applications.Statistical;
 import Applications.Tractotron;
 import Config.BCBEnum;
@@ -71,7 +71,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 	private JButton corti;
 	private JButton norma;
 	private JButton anacom;
-	private JButton resting;
+	private JButton funcon;
 	//private JButton stat;
 	//Set of buttons
 	private HashSet<JButton> butSet;
@@ -196,7 +196,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		corti = textButton("<html><center>Cortical<br />Thickness<center/><html/>");
 		norma = textButton("Normalisation");
 		anacom = textButton("AnaCOM2");
-		resting = textButton("Resting state");
+		funcon = textButton("Funcon");
 		
 		/*tracto = new JButton(buttonIcon("tracto.png", 150, 81));
 		formatButton(tracto);
@@ -219,7 +219,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		butSet.add(corti);
 		butSet.add(norma);
 		butSet.add(anacom);
-		butSet.add(resting);
+		butSet.add(funcon);
 		//butSet.add(stat);
 		//stat.setEnabled(false);
 	}
@@ -245,7 +245,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 			p.add(corti);
 			p.add(norma);
 			p.add(anacom);
-			p.add(resting);
+			p.add(funcon);
 			//p.add(stat);
 		}
 		p.setPreferredSize(new Dimension(FRAME_WIDTH - 10, 200));
@@ -330,9 +330,9 @@ public class BCBToolKitIHM  implements BCBToolKit {
             }
 		});*/
 
-		resting.addActionListener(new ActionListener() {
+		funcon.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				callApp(BCBEnum.Index.RESTING);
+				callApp(BCBEnum.Index.FUNCON);
 			}
 		});
 		
@@ -592,8 +592,8 @@ public class BCBToolKitIHM  implements BCBToolKit {
 				case NORMALISATION:
 					app = new Normalisation(getWD(), getBCB());
 					break;
-				case RESTING:
-					app = new Resting(getWD(), getBCB());
+				case FUNCON:
+					app = new Funcon(getWD(), getBCB());
 					break;
 				case STATISTICAL:
 					app = new Statistical(getWD(), getBCB());

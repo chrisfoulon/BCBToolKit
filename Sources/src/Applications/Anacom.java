@@ -100,7 +100,7 @@ public class Anacom extends AbstractApp {
 		run.setPreferredSize(new Dimension(FRAME_WIDTH - 10, 45));
 
 
-		String[] tab = {"t-test", "Wilcoxon", "Kolmogorov-Smirnov"};
+		String[] tab = {"t-test", "Mann-Whitney", "Kolmogorov-Smirnov"};
 		testCombo = new JComboBox<String>(tab);
 		lesBro = new Browser(this.getFrame(), "Lesions directory :", BCBEnum.fType.DIR.a(),
 				this.getConf(), BCBEnum.Param.ALESDIR, this.getBCB());

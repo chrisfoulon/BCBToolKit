@@ -27,9 +27,9 @@ import IHM.Browser;
 import IHM.ImagePanel;
 import IHM.LoadingBar;
 import IHM.Tools;
-import Models.RestingModel;
+import Models.FunconModel;
 
-public class Resting extends AbstractApp {
+public class Funcon extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
 	public static final int FRAME_HEIGHT = 500;
@@ -37,13 +37,13 @@ public class Resting extends AbstractApp {
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
 	public static final int LINE_HEIGHT = 20;
-	public static final String RESTING_TITLE = "Resting State";
+	public static final String FUNCON_TITLE = "Funcon";
 	private ImagePanel background;
 	private JPanel panel;
 	private JButton settings;
 	private JButton run;
 	private LoadingBar loading;
-	private RestingModel model;
+	private FunconModel model;
 	private JComboBox<String> sliceCombo;
 	
 	private JCheckBox saveTmp;
@@ -54,15 +54,15 @@ public class Resting extends AbstractApp {
 	private Browser lesBro;
 	private Browser resBro;
 
-	public Resting(String path, BCBToolKitIHM b) {
-		super(path, b, BCBEnum.Index.RESTING);
+	public Funcon(String path, BCBToolKitIHM b) {
+		super(path, b, BCBEnum.Index.FUNCON);
 	}
 
 	//COMMANDES
 	public void display() {
 		frame.pack();
 		if (!conf.getVal(BCBEnum.Index.DISCONNECTOME.name()).equals("")) {
-			getBCB().setCustomLocation(frame, BCBEnum.Index.RESTING);
+			getBCB().setCustomLocation(frame, BCBEnum.Index.FUNCON);
 		} else {
 			frame.setLocationRelativeTo(null);
 		}
@@ -70,18 +70,18 @@ public class Resting extends AbstractApp {
 	}
 
 	protected void createModel() {
-		model = new RestingModel(path, this.getFrame());
+		model = new FunconModel(path, this.getFrame());
 	}
 
 	protected void createView() {
 		//Frame
-		frame = new JFrame(RESTING_TITLE); {
+		frame = new JFrame(FUNCON_TITLE); {
 			frame.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
 			frame.setResizable(false);
 			display();
 			frame.setFocusable(true);
 		}
-		background = new ImagePanel("Brain.jpg", 140, 112);
+		background = new ImagePanel("funcon.png", 140, 112);
 		background.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 6));
 		//Cr��ation des icones
 		URL url = getClass().getClassLoader().getResource("settings.png");
@@ -183,7 +183,7 @@ public class Resting extends AbstractApp {
 
 		settings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				getBCB().openSettings(BCBEnum.Index.RESTING);
+				getBCB().openSettings(BCBEnum.Index.FUNCON);
 			}
 		});
 

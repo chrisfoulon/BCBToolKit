@@ -12,7 +12,7 @@ public final class BCBEnum {
 		CORTICAL(3),
 		NORMALISATION(4),
 		ANACOM(5),
-		RESTING(6),
+		FUNCON(6),
 		STATISTICAL(7);
 		
 		private int index;
@@ -33,7 +33,7 @@ public final class BCBEnum {
 		NORMALISATION("normalize.sh"),
 		ANACOM("anacom.sh"),
 		INITR("preR.sh"),
-		RESTING("resting.sh"),
+		FUNCON("resting.sh"),
 		STATISTICAL("test.r");
 		
 		private String filename;
@@ -94,11 +94,11 @@ public final class BCBEnum {
 		ACTRLFILE("save ANACOM ctrlFile"),
 		ACTRLMEAN("save ANACOM ctrlMean"),
 		//Resting State preprocessing
-		RT1DIR("default RESTING T1"),
-		RRSDIR("default RESTING RS"),
-		RLESDIR("default RESTING lesions"),
-		RRESDIR("default RESTING result"),
-		RSAVETMP("save RESTING tmpFiles"),
+		RT1DIR("default FUNCON T1"),
+		RRSDIR("default FUNCON RS"),
+		RLESDIR("default FUNCON lesions"),
+		RRESDIR("default FUNCON result"),
+		RSAVETMP("save FUNCON tmpFiles"),
 		//Statistical analysis
 		SMAP1DIR("default STATISTICAL map1"),
 		SMAP2DIR("default STATISTICAL map2"),

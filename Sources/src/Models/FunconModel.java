@@ -14,7 +14,7 @@ import Config.BCBEnum;
 import IHM.LoadingBar;
 import IHM.Tools;
 
-public class RestingModel extends AbstractModel {
+public class FunconModel extends AbstractModel {
 	public static final String logFile = "logResting.txt"; 
 	private String T1Dir;
 	private String RSDir;
@@ -26,8 +26,8 @@ public class RestingModel extends AbstractModel {
 	private String saveTmp;
 	private FilenameFilter fileNameFilter;
 	
-	public RestingModel(String path, JFrame f) {
-		super(path, f, BCBEnum.Script.RESTING.endPath());
+	public FunconModel(String path, JFrame f) {
+		super(path, f, BCBEnum.Script.FUNCON.endPath());
 		
 		// create new filename filter to recognize .nii and .nii.gz files
         this.fileNameFilter = new FilenameFilter() {

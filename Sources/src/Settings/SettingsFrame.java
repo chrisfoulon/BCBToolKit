@@ -227,9 +227,9 @@ public class SettingsFrame implements Settings {
 			anacomTab.add(p);
 		}
 
-		JPanel restingTab = new JPanel(); {
-			BoxLayout boxLay3 = new BoxLayout(restingTab, BoxLayout.Y_AXIS);
-			restingTab.setLayout(boxLay3);
+		JPanel funconTab = new JPanel(); {
+			BoxLayout boxLay3 = new BoxLayout(funconTab, BoxLayout.Y_AXIS);
+			funconTab.setLayout(boxLay3);
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP1DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP2DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SRESDIR));
@@ -247,7 +247,7 @@ public class SettingsFrame implements Settings {
 		tabs.addTab("Cortical thickness", cortiTab);
 		tabs.addTab("Normalisation", normaTab);
 		tabs.addTab("anaCOM2", anacomTab);
-		tabs.addTab("Resting state", restingTab);
+		tabs.addTab("Funcon", funconTab);
 		tabs.setOpaque(true);
 
 		dialog.add(tabs, BorderLayout.CENTER);

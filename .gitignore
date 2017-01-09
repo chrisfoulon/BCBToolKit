@@ -1,10 +1,10 @@
 Tools/extraFiles/**
-jre/**    
+jre/**
 Lesions/**
 Tracts/**
-relatedPapers/** 
+relatedPapers/**
 Tracts_Colin27/**
-Example.xls 
+Example.xls
 Tools/tmp/**
 Tools/installR/**
 Tools/binaries/ANTs/**
@@ -13,3 +13,9 @@ Sources/bcbnifti/clu_*
 Sources/bcbnifti/untest.sh
 *.kdev*
 *.directory
+Tools/binaries/extras/**
+Tools/binaries/tcl/**
+Tools/binaries/etc/**
+Tools/binaries/data/**
+Tools/binaries/ICA-AROMA-master/**
+Tools/scripts/recover_stats.r

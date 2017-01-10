@@ -99,6 +99,11 @@ public final class BCBEnum {
 		RLESDIR("default FUNCON lesions"),
 		RRESDIR("default FUNCON result"),
 		RSAVETMP("save FUNCON tmpFiles"),
+		//Functionnal Connectivity
+		FRSDIR("default FUNCON RS_corr"),
+		FSEEDDIR("default FUNCON seed"),
+		FTARDIR("default FUNCON target"),
+		FRESDIR("default FUNCON res_corr"),
 		//Statistical analysis
 		SMAP1DIR("default STATISTICAL map1"),
 		SMAP2DIR("default STATISTICAL map2"),

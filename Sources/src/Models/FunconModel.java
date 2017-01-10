@@ -16,10 +16,17 @@ import IHM.Tools;
 
 public class FunconModel extends AbstractModel {
 	public static final String logFile = "logResting.txt"; 
+	//Preproc
 	private String T1Dir;
 	private String RSDir;
 	private String lesionDir;
 	private String resultDir;
+	//correlations 
+	private String RS_corr;
+	private String seed_corr;
+	private String target_corr;
+	private String result_corr;
+	
 	private LoadingBar loading;
 	private String sliceVal;
 	//Should we save tempory files ? 
@@ -141,6 +148,25 @@ public class FunconModel extends AbstractModel {
 		if (proc != null) {
 			Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resultDir);
 			return;
+		}
+	}
+	
+	public void run_corr() {
+		if (RS_corr == null) {
+			throw new IllegalStateException(
+					"You have to select the resting state_corr directory");
+		}	
+		if (seed_corr == null) {
+			throw new IllegalStateException(
+					"You have to select the seed_corr directory");
+		}
+		if (target_corr == null) {
+			throw new IllegalStateException(
+					"You have to select the target_corr file");
+		}
+		if (result_corr == null) {
+			throw new IllegalStateException(
+				"You have to select the result forlder");
 		}
 	}
 }

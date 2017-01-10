@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.net.URL;
+import java.util.ArrayList;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -19,9 +20,12 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 
 import Config.BCBEnum;
+import Config.BCBEnum.fType;
 import IHM.BCBToolKitIHM;
 import IHM.Browser;
 import IHM.ImagePanel;
@@ -32,7 +36,7 @@ import Models.FunconModel;
 public class Funcon extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 500;
+	public static final int FRAME_HEIGHT = 520;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
@@ -45,14 +49,21 @@ public class Funcon extends AbstractApp {
 	private LoadingBar loading;
 	private FunconModel model;
 	private JComboBox<String> sliceCombo;
+	private JTabbedPane tabs;
 	
 	private JCheckBox saveTmp;
 
-	//Browsers
+	//Preproc Browsers
 	private Browser T1Bro;
 	private Browser RSBro;
 	private Browser lesBro;
 	private Browser resBro;
+	
+	//Correlativity
+	private Browser RSBro_corr;
+	private Browser seedBro_corr;
+	private Browser targetBro_corr;
+	private Browser resultBro_corr;
 
 	public Funcon(String path, BCBToolKitIHM b) {
 		super(path, b, BCBEnum.Index.FUNCON);
@@ -81,13 +92,13 @@ public class Funcon extends AbstractApp {
 			display();
 			frame.setFocusable(true);
 		}
-		background = new ImagePanel("funcon.png", 140, 112);
+		background = new ImagePanel("funcon.png", 160, 112);
 		background.setPreferredSize(new Dimension(FRAME_WIDTH, LINE_HEIGHT * 6));
-		//Cr��ation des icones
+		//Création des icones
 		URL url = getClass().getClassLoader().getResource("settings.png");
 		Icon setIco = new ImageIcon(url); 
 		int setIcoW = setIco.getIconWidth();
-		//Cr��ation des boutons
+		//Création des boutons
 		int padding = 0;
 		if (!Tools.isOSX()) {
 			padding = -5;
@@ -100,7 +111,7 @@ public class Funcon extends AbstractApp {
 		run = new JButton("RUN");
 		run.setPreferredSize(new Dimension(FRAME_WIDTH - 10, 45));
 
-		//Tests browsers
+		//Browsers
 		T1Bro = new Browser(frame, "T1 images directory :", BCBEnum.fType.DIR.a(), 
 				conf, BCBEnum.Param.RT1DIR, getBCB());
 		T1Bro.setToolTipText("T1 images must have the same name as Resting state images");
@@ -124,6 +135,30 @@ public class Funcon extends AbstractApp {
 		String[] tab = {"", "None", "Regular up", "Regular down", "Interleaved"};
 		sliceCombo = new JComboBox<String>(tab);
 		
+		//Browsers
+		RSBro_corr = new Browser(frame, "Resting State directory :", BCBEnum.fType.DIR.a(), 
+				conf, BCBEnum.Param.FRSDIR, getBCB());
+		RSBro_corr.setToolTipText("T1 images must have the same name as Resting state images");
+		getBCB().addBro(RSBro_corr.getParam(), RSBro_corr);
+		
+		seedBro_corr = new Browser(frame, "Seed images directory :", BCBEnum.fType.DIR.a(), 
+				conf, BCBEnum.Param.FSEEDDIR, getBCB());
+		seedBro_corr.setToolTipText("T1 images must have the same name as Resting state images");
+		getBCB().addBro(seedBro_corr.getParam(), seedBro_corr);
+		
+		ArrayList<fType> arr = fType.NII.a();
+		arr.add(fType.NIIGZ);
+		targetBro_corr = new Browser(frame, "Target image :", arr, 
+				conf, BCBEnum.Param.FTARDIR, getBCB());
+		targetBro_corr.setToolTipText("T1 images must have the same name as Resting state images");
+		getBCB().addBro(targetBro_corr.getParam(), targetBro_corr);
+		
+		resultBro_corr = new Browser(frame, "Results directory :", BCBEnum.fType.DIR.a(), 
+				conf, BCBEnum.Param.FRESDIR, getBCB());
+		resultBro_corr.setToolTipText("T1 images must have the same name as Resting state images");
+		getBCB().addBro(resultBro_corr.getParam(), resultBro_corr);
+		
+		
 		saveTmp = new JCheckBox("Keep temporary files");
 		saveTmp.setPreferredSize(new Dimension(260, 20));
 		saveTmp.setIconTextGap(20);
@@ -131,7 +166,9 @@ public class Funcon extends AbstractApp {
 		saveTmp.setMargin(new Insets(0, 0, 0, 0));
 	}
 
-	protected void placeComponents() {	
+	protected void placeComponents() {
+		this.tabs = new JTabbedPane(SwingConstants.TOP);
+		
 		JPanel sliceSelector = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
 			JPanel comboPanel = new JPanel(new GridLayout(2, 0)); {
 				comboPanel.add(new JLabel("Select slice timing correction :"));
@@ -149,13 +186,24 @@ public class Funcon extends AbstractApp {
 			centerBig.add(center, BorderLayout.NORTH);
 			centerBig.add(sliceSelector, BorderLayout.SOUTH);			
 		}
+
+		JPanel funcorr = new JPanel(new GridLayout(4, 0)); {
+			funcorr.add(RSBro_corr);
+			funcorr.add(seedBro_corr);
+			funcorr.add(targetBro_corr);
+			funcorr.add(resultBro_corr);
+		}
+		
+		tabs.addTab("Preprocessing", centerBig);
+		tabs.addTab("Connectivity", funcorr);
 		frame.add(background, BorderLayout.NORTH);
-		frame.add(centerBig, BorderLayout.CENTER);
+		frame.add(tabs, BorderLayout.CENTER);
 		// Panel contenant la checkBox
 		JPanel r1 = new JPanel(new FlowLayout(FlowLayout.RIGHT)); {
 			r1.add(saveTmp);
 			r1.add(settings);
 		}
+		
 		// Panel du bouton run
 		panel = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
 			panel.add(run);

@@ -8,8 +8,6 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -25,13 +23,10 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 
 import Config.BCBEnum;
 import Config.BCBEnum.fType;
-import IHM.BCBToolKit;
 import IHM.BCBToolKitIHM;
 import IHM.Browser;
 import IHM.ImagePanel;
@@ -56,7 +51,7 @@ public class Normalisation extends AbstractApp {
 	private JButton run;
 	private LoadingBar loading;
 	private NormalisationModel model;
-	private JTextField betOpt;
+	private JCheckBox brainext;
 
 	//Browsers
 	private Browser tempBro;
@@ -169,8 +164,10 @@ public class Normalisation extends AbstractApp {
 		String[] tab = {"Enantiomorphic", "Classic"};
 		methodCombo = new JComboBox<String>(tab);
 		
-		betOpt = new JTextField();
-		betOpt.setPreferredSize(new Dimension(50, 20));
+		brainext = new JCheckBox("Skull stripping");
+		brainext.setSelected(false);
+		brainext.setIconTextGap(20);
+		brainext.setMargin(new Insets(0, leftOthCheck, 0, 0));
 	}
 
 	protected void placeComponents() {
@@ -184,14 +181,8 @@ public class Normalisation extends AbstractApp {
 			methodSelector.add(comboPanel);
 		}
 		JPanel p = new JPanel(new BorderLayout()); {
-			JLabel lab = new JLabel("Brain Extraction Threshold (0.0 to 1.0) :");
-			lab.setHorizontalAlignment(SwingConstants.CENTER);
-			p.add(lab, BorderLayout.CENTER);
-			JPanel p1 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
-				p1.add(betOpt);
-			}
-			p.add(p1, BorderLayout.SOUTH);
-			p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
+			p.add(brainext, BorderLayout.SOUTH);
+			//p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
 		}
 		JPanel middle = new JPanel(new BorderLayout(5, 0)); {
 			JPanel midBox = new JPanel(); {
@@ -255,42 +246,15 @@ public class Normalisation extends AbstractApp {
 			}
 		});
 		
-		betOpt.addFocusListener(new FocusListener() {
-
+		brainext.addActionListener(new ActionListener() {
 			@Override
-			public void focusLost(FocusEvent e) {
-				String text = betOpt.getText();
-				//Deleting of invisible characters
-				text = text.trim();
-				//Replace , by .
-				text = text.replace(",", ".");
-				if (!text.equals("")) {
-					float opt = 0;
-					try {
-						opt = Float.valueOf(text);
-					} catch (NumberFormatException nbE) {
-						Tools.showErrorMessage(getBCB().getFrame(), 
-								"The value of Brain extraction threshold" +
-								" be between 0.0 and 1.0");
-						betOpt.setText("");
-						conf.setVal(BCBEnum.Param.NBETOPT, "");
-						return;
-					}
-					if (!(opt < 0) && !(opt > 1)) {
-						conf.setVal(BCBEnum.Param.NBETOPT, text);
-					} else {
-						Tools.showErrorMessage(getBCB().getFrame(), 
-								"The value of Brain extraction threshold" +
-								" be between 0.0 and 1.0");
-						betOpt.setText("");
-						conf.setVal(BCBEnum.Param.NBETOPT, "");
-						return;
-					}
+			public void actionPerformed(ActionEvent e) {
+				if (!brainext.isSelected()) {
+					conf.setVal(BCBEnum.Param.NBRAINEXT, "false");
+				} else {
+					conf.setVal(BCBEnum.Param.NBRAINEXT, "true");
+					return;
 				}
-			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
 			}
 		});
 
@@ -318,7 +282,7 @@ public class Normalisation extends AbstractApp {
 							return null;
 						}
 						// Setting the brain extraction threshold
-						model.setBetOpt(conf.getVal(BCBEnum.Param.NBETOPT));
+						model.setBrainExt(conf.getVal(BCBEnum.Param.NBRAINEXT));
 						
 						model.setSynOpt(getBCB().getSettings().getNormSynValue());
 						// Should we save temporary files
@@ -326,6 +290,12 @@ public class Normalisation extends AbstractApp {
 							model.setSaveTmp("true");
 						} else {
 							model.setSaveTmp("false");
+						}
+						
+						if (brainext.isSelected()) {
+							model.setBrainExt("true");
+						} else {
+							model.setBrainExt("false");
 						}
 						
 						model.setMaskingMethod((String)methodCombo.getSelectedItem());

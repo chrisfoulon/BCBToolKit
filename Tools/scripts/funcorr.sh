@@ -40,13 +40,14 @@ rs=$1
 # Folder containing the seed masks, we will iterate on all nii file inside
 seed_folder=$2
 
+path=${PWD}/Tools
 tmp=$path/tmp/tmp_funcon
 
 for s in $2/*nii*;
 do
     seed=`fileName $s`
-    res_seed_folder=${result_folder}/${seed}
-    mkdir $res_seed_folder
+    res_seed_folder=$4/${seed}
+    mkdir -p $res_seed_folder
 
     bin_seed=${res_seed_folder}/${seed}
     # binarize seed and target, just in case

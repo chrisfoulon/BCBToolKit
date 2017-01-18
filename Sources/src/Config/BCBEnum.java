@@ -82,7 +82,7 @@ public final class BCBEnum {
 		NRESDIR("default NORMALISATION result"),
 		NOTHDIR("default NORMALISATION other"),
 		NOTHRESDIR("default NORMALISATION otherResult"),
-		NBETOPT("brain extration threshold"),
+		NBRAINEXT("brain extration"),
 		NSAVETMP("save NORMALISATION tmpFiles"),
 		//ANACOM
 		ALESDIR("default ANACOM lesions"),

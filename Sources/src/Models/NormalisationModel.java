@@ -83,7 +83,7 @@ public class NormalisationModel extends AbstractModel {
 		othRes = str;
 	}
 	
-	public void setBetOpt(String str) {
+	public void setBrainExt(String str) {
 		betOpt = str;
 	}
 	

@@ -240,46 +240,81 @@ public class Funcon extends AbstractApp {
 				worker = new SwingWorker<Void, Void>() {
 					@Override
 					public Void doInBackground() {
-						if (Tools.isReady(frame, T1Bro)) {
-							model.setT1Dir(T1Bro.getPath());
+						if (tabs.getSelectedIndex() == 0) {
+							if (Tools.isReady(frame, T1Bro)) {
+								model.setT1Dir(T1Bro.getPath());
+							} else {
+								return null;
+							}
+							if (Tools.isReady(frame, RSBro)) {
+								model.setRSDir(RSBro.getPath());
+							} else {
+								return null;
+							}
+
+							//This path could be empty if you don't want to mask lesions
+							model.setLesionDir(lesBro.getPath());
+
+							if (Tools.isReady(frame, resBro)) {
+								model.setResultDir(resBro.getPath());
+							} else {
+								return null;
+							}
+
+							// Should we save temporary files
+							if (saveTmp.isSelected()) {
+								model.setSaveTmp("true");
+							} else {
+								model.setSaveTmp("false");
+							}
+
+							String sliceValue = (String)sliceCombo.getSelectedItem();
+							if (sliceValue.equals("")) {
+								Tools.showErrorMessage(frame, "You have to chose the right slice"
+										+ " timing correction among : "
+										+ " : None"
+										+ " : Regular up (0, 1, 2, 3, ...)"
+										+ " : Regular down"
+										+ " : Interleaved (0, 2, 4 ... 1, 3, 5 ... )");
+							} else {
+								model.setSliceTiming(sliceValue);
+							}
+							model.run();
+							return null;
 						} else {
+							if (Tools.isReady(frame, RSBro_corr)) {
+								model.set_RS_corr(RSBro_corr.getPath());
+							} else {
+								return null;
+							}
+							
+							if (Tools.isReady(frame, seedBro_corr)) {
+								model.set_seed_corr(seedBro_corr.getPath());
+							} else {
+								return null;
+							}
+
+							if (Tools.isReady(frame, targetBro_corr)) {
+								model.set_target_corr(targetBro_corr.getPath());
+							} else {
+								return null;
+							}
+
+							if (Tools.isReady(frame, resultBro_corr)) {
+								model.set_res_corr(resultBro_corr.getPath());
+							} else {
+								return null;
+							}
+
+							// Should we save temporary files
+							if (saveTmp.isSelected()) {
+								model.setSaveTmp("true");
+							} else {
+								model.setSaveTmp("false");
+							}
+							model.run_corr();
 							return null;
 						}
-						if (Tools.isReady(frame, RSBro)) {
-							model.setRSDir(RSBro.getPath());
-						} else {
-							return null;
-						}
-						
-						//This path could be empty if you don't want to mask lesions
-						model.setLesionDir(lesBro.getPath());
-						
-						if (Tools.isReady(frame, resBro)) {
-							model.setResultDir(resBro.getPath());
-						} else {
-							return null;
-						}
-						
-						// Should we save temporary files
-						if (saveTmp.isSelected()) {
-							model.setSaveTmp("true");
-						} else {
-							model.setSaveTmp("false");
-						}
-						
-						String sliceValue = (String)sliceCombo.getSelectedItem();
-						if (sliceValue.equals("")) {
-							Tools.showErrorMessage(frame, "You have to chose the right slice"
-									+ " timing correction among : "
-									+ " : None"
-									+ " : Regular up (0, 1, 2, 3, ...)"
-									+ " : Regular down"
-									+ " : Interleaved (0, 2, 4 ... 1, 3, 5 ... )");
-						} else {
-							model.setSliceTiming(sliceValue);
-						}
-						model.run();
-						return null;
 					}
 					@Override
 					protected void done() {

@@ -35,16 +35,16 @@ echo -n "$(basename $1 .${1#*.})"
 
 ################################################################################
 ## Enantiomorphic tranformation of a T1 with a lesion, method :
-## "Enantiomorphic normalization of focally lesioned brains" 
+## "Enantiomorphic normalization of focally lesioned brains"
 ## P. Nachev et al. 2008
-## @Paramters : - $1 : the T1 image 
+## @Paramters : - $1 : the T1 image
 ## 	        - $2 : the lesion image with the same name as the T1
 ##	        - $3 : temporary folder (The result file will be created inside)
-## 		- $4 : template to align with, the template must contain the 
+## 		- $4 : template to align with, the template must contain the
 ## skull
-## @output : the file Enantiomorphic${name} (name is the T1 filename) will be 
+## @output : the file Enantiomorphic${name} (name is the T1 filename) will be
 ## stored in the $3 folder)
-## $3 will also contain all temporary files created while the function is 
+## $3 will also contain all temporary files created while the function is
 ## running
 ################################################################################
 enantiomorphic() {
@@ -56,17 +56,17 @@ enantiomorphic() {
   fslreorient2std $2 $ttmp/les$name
   T1=$ttmp/$name
   les=$ttmp/les$name
-  # We compute the tranformation between the T1 and the MNI152 WITH the skull 
+  # We compute the tranformation between the T1 and the MNI152 WITH the skull
   # and we apply it to the T1
   flirt -in $T1 -ref $templateWSkull -omat $ttmp/affine.mat \
     -out ${ttmp}/output${name}.nii.gz
-  #We also apply the transformation to the lesion file 
+  #We also apply the transformation to the lesion file
   flirt -in $les -ref $templateWSkull -applyxfm -init $ttmp/affine.mat \
     -out ${ttmp}/affineLesion${name}.nii.gz
-  #We flip the image 
+  #We flip the image
   fslswapdim ${ttmp}/affineLesion${name}.nii.gz -x y z \
     ${ttmp}/flippedaffine${name}
-  #We mask the flipped image with the lesion 
+  #We mask the flipped image with the lesion
   fslmaths ${ttmp}/output${name}.nii.gz -mas ${ttmp}/flippedaffine${name} \
     ${ttmp}/healthytissue${name}
   #Re-Flip
@@ -74,7 +74,7 @@ enantiomorphic() {
     ${ttmp}/flippedhealthytissue${name}
   #We inverse de transformation matrice
   convert_xfm -omat $ttmp/inverseAffine.mat -inverse $ttmp/affine.mat
-  #We apply the inverse of the tranformation on the mask of healthy tissue to 
+  #We apply the inverse of the tranformation on the mask of healthy tissue to
   #go back to the native space of the T1
   flirt -in ${ttmp}/flippedhealthytissue${name} -ref $T1 -applyxfm \
     -init $ttmp/inverseAffine.mat \
@@ -86,11 +86,11 @@ enantiomorphic() {
   #of the lesionned area
   fslmaths $les -add 1 -uthr 1 -bin $ttmp/lesionedMask
   fslmaths $T1 -mul $ttmp/lesionedMask $ttmp/T1pitted
-  #THE END (We put the final mask inside the native T1 and we have an 
+  #THE END (We put the final mask inside the native T1 and we have an
   #healthy T1
   fslmaths $ttmp/T1pitted -add ${ttmp}/mnativeflippedhealthytissue${name} \
   $ttmp/Enantiomorphic${name}
-  
+
 }
 
 if [[ $4 != "" ]]
@@ -120,7 +120,8 @@ do
   $ants/antsCorticalThickness.sh \
     -d 3 \
     -a $finalForm \
-    -e $priors/brainWithSkullTemplate.nii.gz -m $priors/brainPrior.nii.gz \
+    -e $priors/brainWithSkullTemplate.nii.gz \
+    -m $priors/brainPrior.nii.gz \
     -p $priors/priors%d.nii.gz \
     -o $intermediate/$filename
   if [[ $4 != "" ]]

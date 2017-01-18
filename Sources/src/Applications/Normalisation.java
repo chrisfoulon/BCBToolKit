@@ -168,6 +168,7 @@ public class Normalisation extends AbstractApp {
 		brainext.setSelected(false);
 		brainext.setIconTextGap(20);
 		brainext.setMargin(new Insets(0, leftOthCheck, 0, 0));
+		brainext.setSelected(true);
 	}
 
 	protected void placeComponents() {
@@ -180,7 +181,7 @@ public class Normalisation extends AbstractApp {
 			}
 			methodSelector.add(comboPanel);
 		}
-		JPanel p = new JPanel(new BorderLayout()); {
+		JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT)); {
 			p.add(brainext, BorderLayout.SOUTH);
 			//p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
 		}
@@ -254,7 +255,7 @@ public class Normalisation extends AbstractApp {
 				} else {
 					conf.setVal(BCBEnum.Param.NBRAINEXT, "true");
 					return;
-				}
+				} 
 			}
 		});
 

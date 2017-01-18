@@ -194,6 +194,15 @@ public class NormalisationModel extends AbstractModel {
 			return;
 		}
 		if (proc != null) {
+			/*
+			 * We have to handle manually the error stream because a function in the script 
+			 * use the error file descriptor to write reports about the computation so we 
+			 * will always have a non-empty error stream even without real error ...
+			 */
+			Tools.showLongMessage(frame, "Final Report", erreur);
+			return;
+		}/*
+		if (proc != null) {
 			if (!erreur.equals("")) {
 				String message = "**** SCRIPT ERROR ****\n"
 						+ erreur
@@ -211,6 +220,6 @@ public class NormalisationModel extends AbstractModel {
 						"<html>" + finish + "<br />" + str2 + "</html>");
 				return;
 			}
-		}
+		}*/
 	}
 }

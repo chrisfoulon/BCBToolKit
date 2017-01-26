@@ -1,5 +1,5 @@
 #! /bin/bash
-#AnaCOM2 - Leonardo Cerliani & Michel Thiebaut de Schotten & Chris Foulon 
+#AnaCOM2 - Leonardo Cerliani & Michel Thiebaut de Schotten & Chris Foulon
 [ $# -lt 5 ] && { echo "Usage : $0 T1Folder RSFolder resultsFolder \
   sliceCorrection saveTmp [LesionsFolder]"; exit 1; }
 
@@ -18,16 +18,16 @@ echo -n "$(basename $1 .${1#*.})"
 }
 ################################################################################
 ## Enantiomorphic tranformation of a T1 with a lesion, method :
-## "Enantiomorphic normalization of focally lesioned brains" 
+## "Enantiomorphic normalization of focally lesioned brains"
 ## P. Nachev et al. 2008
-## @Paramters : - $1 : the T1 image 
+## @Paramters : - $1 : the T1 image
 ## 	        - $2 : the lesion image with the same name as the T1
 ##	        - $3 : temporary folder (The result file will be created inside)
-## 		- $4 : template to align with, the template must contain the 
+## 		- $4 : template to align with, the template must contain the
 ## skull
-## @output : the file Enantiomorphic${name} (name is the T1 filename) will be 
+## @output : the file Enantiomorphic${name} (name is the T1 filename) will be
 ## stored in the $3 folder)
-## $3 will also contain all temporary files created while the function is 
+## $3 will also contain all temporary files created while the function is
 ## running
 ################################################################################
 enantiomorphic() {
@@ -39,17 +39,17 @@ enantiomorphic() {
   fslreorient2std $2 $ttmp/les$name
   T1=$ttmp/$name
   les=$ttmp/les$name
-  # We compute the tranformation between the T1 and the MNI152 WITH the skull 
+  # We compute the tranformation between the T1 and the MNI152 WITH the skull
   # and we apply it to the T1
   flirt -in $T1 -ref $templateWSkull -omat $ttmp/affine.mat \
     -out ${ttmp}/output${name}.nii.gz
-  #We also apply the transformation to the lesion file 
+  #We also apply the transformation to the lesion file
   flirt -in $les -ref $templateWSkull -applyxfm -init $ttmp/affine.mat \
     -out ${ttmp}/affineLesion${name}.nii.gz
-  #We flip the image 
+  #We flip the image
   fslswapdim ${ttmp}/affineLesion${name}.nii.gz -x y z \
     ${ttmp}/flippedaffine${name}
-  #We mask the flipped image with the lesion 
+  #We mask the flipped image with the lesion
   fslmaths ${ttmp}/output${name}.nii.gz -mas ${ttmp}/flippedaffine${name} \
     ${ttmp}/healthytissue${name}
   #Re-Flip
@@ -57,7 +57,7 @@ enantiomorphic() {
     ${ttmp}/flippedhealthytissue${name}
   #We inverse de transformation matrice
   convert_xfm -omat $ttmp/inverseAffine.mat -inverse $ttmp/affine.mat
-  #We apply the inverse of the tranformation on the mask of healthy tissue to 
+  #We apply the inverse of the tranformation on the mask of healthy tissue to
   #go back to the native space of the T1
   flirt -in ${ttmp}/flippedhealthytissue${name} -ref $T1 -applyxfm \
     -init $ttmp/inverseAffine.mat \
@@ -69,11 +69,11 @@ enantiomorphic() {
   #of the lesionned area
   fslmaths $les -add 1 -uthr 1 -bin $ttmp/lesionedMask
   fslmaths $T1 -mul $ttmp/lesionedMask $ttmp/T1pitted
-  #THE END (We put the final mask inside the native T1 and we have an 
+  #THE END (We put the final mask inside the native T1 and we have an
   #healthy T1
   fslmaths $ttmp/T1pitted -add ${ttmp}/mnativeflippedhealthytissue${name} \
   $ttmp/Enantiomorphic${name}
-  
+
 }
 
 extra=$path/extraFiles/restingState
@@ -90,13 +90,13 @@ mkdir -p $tmp
 # export FSLDIR=$path/binaries
 # #This line prevent missing of the bc binary for ANTs
 # export PATH=$PATH:$path/binaries/bin
-# 
+#
 # export LD_LIBRARY_PATH=$lib
 # export FSLLOCKDIR=""
 # export FSLMACHINELIST=""
 # export FSLMULTIFILEQUIT="TRUE"
 # export FSLOUTPUTTYPE="NIFTI_GZ"
-# export FSLREMOTECALL="" 
+# export FSLREMOTECALL=""
 # #IMPORTANT
 # export FSLTCLSH=$bin/fsltclsh
 
@@ -124,15 +124,15 @@ mkdir -p $tmp
 # From this example it should be clear that the folder containing the data
 # has the name of the subject number/name
 #
-# The script assumes that FSL is installed and available in the path, so 
+# The script assumes that FSL is installed and available in the path, so
 # that fsl commands (e.g. fsl_glm) can be called directly without having
 # to specify the path.
 #
 # In order to run ICA AROMA, Python 2.7 must be installed, and the directory
 # containing the scripts must be downloaded from https://github.com/rhr-pruim/ICA-AROMA
 #
-# NB: the script determines the TR and the number of time points using the fslinfo, 
-#     therefore it is assumed that these information are correctly reported in the 
+# NB: the script determines the TR and the number of time points using the fslinfo,
+#     therefore it is assumed that these information are correctly reported in the
 #     header of the original 4D RS.nii.gz file
 
 ##We will use two folders in parameters : one for patients' T1 and one for patients' resting state
@@ -186,12 +186,12 @@ echo -n "$(basename $1 .${1#*.})"
 }
 
 
-#Param : the RS image 
+#Param : the RS image
 findSmoothing() {
-  pxd1=`fslinfo $1 | grep ^pixdim1 | awk '{print $2}'`  
-  pxd2=`fslinfo $1 | grep ^pixdim2 | awk '{print $2}'`  
-  pxd3=`fslinfo $1 | grep ^pixdim3 | awk '{print $2}'` 
-  
+  pxd1=`fslinfo $1 | grep ^pixdim1 | awk '{print $2}'`
+  pxd2=`fslinfo $1 | grep ^pixdim2 | awk '{print $2}'`
+  pxd3=`fslinfo $1 | grep ^pixdim3 | awk '{print $2}'`
+
   max=`max3 $pxd1 $pxd2 $pxd3`
   echo `LC_ALL=en_GB awk "BEGIN { print $max*1.5 }"`
 }
@@ -202,7 +202,7 @@ findSmoothing() {
 # ti = ti+1 - ti-1
 derivative() {
   t=0
-  #Yeah ... because if not, you fill the file infinitely ... 
+  #Yeah ... because if not, you fill the file infinitely ...
   echo -n "" > $1_f1
   declare -a col
   while read col[$t]
@@ -248,7 +248,7 @@ then
   RS=$tmp/reoRS.nii.gz
 fi;
 #I am not sure but I think the TR is the value of pixdim[4]
-TR=`fslinfo $RS | grep ^pixdim4 | awk '{print $2}'`  
+TR=`fslinfo $RS | grep ^pixdim4 | awk '{print $2}'`
 # necessary for estimating the sigma of the bandpass temporal filters
 
 
@@ -275,7 +275,7 @@ FEATT1RESTORE=${tmp}/${subj}_T1_restore_brain
 
 
 # do the sed on the design_preproc_TEMPLATE.fsf
-# in order to create the design to perform the 
+# in order to create the design to perform the
 # preprocessing on the 4D RS data
 sed -e "s@FEATBASEDIR@${resPat}@g" \
     -e "s@FEATTR@${TR}@g" \
@@ -319,8 +319,8 @@ fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 -o $resPat/fast/${subj}_T1_restore_brain \
 #
 # Steps (2) and (5) require manually inputting parameters by the user. In addition,
 # Some of the parameters displayed in the feat log are difficult to retrieve (e.g. for Susan),
-# Therefore the easiest way to perform this preprocessing part is to create a design.fsf 
-# using the Feat_gui, and the running it using the feat command. 
+# Therefore the easiest way to perform this preprocessing part is to create a design.fsf
+# using the Feat_gui, and the running it using the feat command.
 #
 # P.S. this will be replaced later by a function that takes in subj-specific arguments
 # and modifies a design.fsf template
@@ -338,8 +338,8 @@ feat ${customFSF}
 
 
 # Estimation of WM and CSF time courses
-# (1) Register the T1_restore_brain to the EPI using the previously estimated transformation in 
-#     ${featdir}/reg/highres2example_func.mat. 
+# (1) Register the T1_restore_brain to the EPI using the previously estimated transformation in
+#     ${featdir}/reg/highres2example_func.mat.
 # (2) Segment the T1_restore_brain_epispace and take the p=0.9 of WM (pve_2) and CSF (pve_0)
 # (3) Use them to extract the mean time course in the filtered_func_data
 # (4) Compute their first derivative
@@ -383,12 +383,12 @@ targetdir=$featdir/mc_conf
 rm -rf ${targetdir}
 mkdir -p ${targetdir}
 
-# This separates the 6 columns of the motion parameters, 
+# This separates the 6 columns of the motion parameters,
 # and writes them to a text file
 for ((i=1;i<=6;i++)); do
     cat ${mot} | awk -v row=${i} '{print $row}' > ${targetdir}/Tmot_${i}
     derivative ${targetdir}/Tmot_${i}
-done  
+done
 
 
 
@@ -432,8 +432,8 @@ tt=`which python2.7 2>&1`
 
 if [[ $tt =~ which.* ]]; then
   echo "############### WARNING ############# \n Python 2.7 can't be found on your system \
-  so ICA_AROMA cannot be used"; 
-else 
+  so ICA_AROMA cannot be used";
+else
   mkdir -p ${featdir}/AROMATISED
   python2.7 ${ica}/ICA_AROMA.py \
           -in ${ffdata} \
@@ -452,14 +452,14 @@ rsClean=${rsDenoise}/RS_clean.nii.gz
 
 # Regress out the estimated nuisance parameters
 # IMPORTANT: --demean IS ALSO FOR DEMEANING THE DESIGN MATRIX
-#            but it will also demean the data, so we add it 
+#            but it will also demean the data, so we add it
 #            again later
 fsl_glm -i ${RS_aromatised} \
         -d $nuisMat \
         --out_res=${rsClean} \
         --out_t=${resPat}/RS_denoise/motion_fit.nii.gz \
         --demean
-        
+
 # Since we demeaned the data and the design, we re-add the mean data
 fslmaths ${RS_aromatised} -Tmean ${rsDenoise}/aromatised_mean.nii.gz
 
@@ -468,11 +468,11 @@ fslmaths ${RS_aromatised} -Tmean ${rsDenoise}/aromatised_mean.nii.gz
 # to calculate the required sigma values in volumes, to give to fslmaths, use:
 # 1. get the period in seconds for the frequency of interest, e.g. for 0.08
 #    1 / 0.08 = 12.5
-# 2. divide the results by the TR to get it in terms of TRs, e.g. for TR=2.2	
+# 2. divide the results by the TR to get it in terms of TRs, e.g. for TR=2.2
 #    12.5 / 2.2 = 5.68
 # 3. divide again by two to get the sigma
 #    5.68 / 2 = 2.84
-# 
+#
 # So the general formula is 1/(2*f*TR)
 
 
@@ -484,7 +484,7 @@ LP=`LC_ALL=en_GB awk "BEGIN {printf \"%.5f\", 1/(2*0.08*${TR})}"`
 fslmaths $rsClean \
          -bptf ${HP} ${LP} \
          ${resPat}/RS_denoise/RS_clean_bptf.nii.gz
-         
+
 
 
 # Transform into MNI space
@@ -499,8 +499,8 @@ flirt -in ${rsDenoise}/aromatised_mean.nii.gz \
       -init ${featdir}/reg/example_func2standard.mat \
       -out ${rsDenoise}/aromatised_mean_bptf_MNI_2mm.nii.gz \
       -paddingsize 0.0 -interp trilinear -ref ${extra}/MNI152_T1_2mm_brain.nii.gz
-      
-      
+
+
 #We add the mean to RS_clean
 fslmaths ${rsClean} \
          -add ${rsDenoise}/aromatised_mean.nii.gz \
@@ -515,7 +515,7 @@ fslmaths ${resPat}/RS_denoise/RS_clean_bptf.nii.gz \
 fslmaths ${rsDenoise}/RS_clean_bptf_MNI_2mm.nii.gz \
       -add ${rsDenoise}/aromatised_mean_bptf_MNI_2mm.nii.gz \
        ${resPat}/RS_clean_plusmean_bptf_MNI_2mm.nii.gz
-      
+
 if [[ $saveTmp == "true" ]]
 then
   temporaryDir=${resPat}/temporaryFiles
@@ -525,7 +525,7 @@ then
   mv $rsDenoise $temporaryDir
   mv $resPat/fast $temporaryDir
 fi;
-      
+
 }
 
 

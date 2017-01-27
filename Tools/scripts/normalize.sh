@@ -200,3 +200,17 @@ do
     echo "#"
 done
 rm -rf $tmp
+
+# Later update for other tranformations in case of multiple files for each
+# patient :
+# mkdir A;
+# mkdir B;
+# mv 4DA.nii.gz A/4DA.nii.gz;
+# mv 4DB.nii.gz B/4DB.nii.gz;
+# fslplit A/4DA.nii.gz; num_a=number_of_volumes
+# fslsplit B/4DB.nii.gz;
+# fslmerge -t big4D A/vol* B/vol*
+# apply transformations
+# fslsplit big4D
+# fslmerge vol000 to vol$num_a 4DA_normalised
+# fslmerge vol$num_a to vol999 4DB_normalised

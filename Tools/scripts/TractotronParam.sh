@@ -25,7 +25,9 @@ mkdir -p $path/tmp/multresh
 tmpMult=$path/tmp/multresh
 
 fileName() {
-echo -n "$(basename $1 .${1#*.})"
+  name=$(basename $1)
+  name=${name%%.*}
+  echo -n $name
 }
 
 proba=$3/probability.xls
@@ -39,7 +41,7 @@ do
 nbPat=$((nbPat + 1))
 done
 echo "#$nbPat"
-cd $2 
+cd $2
 printf "\t">>$proba
 printf "\t" >> $prop
 #We print tract names in xls files and we create tmp Tracts thresholded at 50%
@@ -47,7 +49,7 @@ for d in *.nii*
 do
 printf "%s\t" `fileName $d`>>$proba
 printf "%s\t" `fileName $d` >> $prop
-#We have to binarise to avoid a bug issue with fslstats which can give 
+#We have to binarise to avoid a bug issue with fslstats which can give
 #erroneous values if you use a non-binary mask
 $bin/fslmaths $d -thr 0.5 -bin $tmpMult/tmp$d
 echo "#"
@@ -63,7 +65,7 @@ do
   for b in *.nii*
   do
     $bin/fslmaths $2/$b -mul $1/$a $tmpMult/multresh_$b || (rm -rf $tmpMult; exit 1)
-    
+
     echo "#"
     max=`$bin/fslstats $tmpMult/multresh_$b -R` || (rm -rf $tmpMult; exit 1)
     printf "%s\t" ${max#* }>>$proba
@@ -75,7 +77,7 @@ do
     lesTracVol=`$bin/fslstats $1/$a -k $tmpMult/tmp$b -V | awk '{print $1}'`;
     #And we compute the volume ratio between the lesion and the tract
     if [[ $tractVol == "" || $tractVol =~ ^0\.0+$|^0$ ]];
-    then 
+    then
       printf  "%s\t" "0.000000" >> $prop
     else
       printf  "%s\t" `LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $lesTracVol / $tractVol}"` >> $prop

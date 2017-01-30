@@ -22,7 +22,9 @@
 $3 = target(GrayMatterMask) $4 = resultFolder"; exit 1; }
 
 fileName() {
-echo -n "$(basename $1 .${1#*.})"
+  name=$(basename $1)
+  name=${name%%.*}
+  echo -n $name
 }
 
 subject=`fileName $1`

@@ -14,7 +14,9 @@ path=${PWD}/Tools
 export FSLOUTPUTTYPE="NIFTI_GZ"
 
 fileName() {
-echo -n "$(basename $1 .${1#*.})"
+  name=$(basename $1)
+  name=${name%%.*}
+  echo -n $name
 }
 ################################################################################
 ## Enantiomorphic tranformation of a T1 with a lesion, method :

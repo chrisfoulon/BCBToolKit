@@ -30,7 +30,9 @@ export FSLOUTPUTTYPE="NIFTI_GZ"
 export FSLREMOTECALL=""
 
 fileName() {
-echo -n "$(basename $1 .${1#*.})"
+  name=$(basename $1)
+  name=${name%%.*}
+  echo -n $name
 }
 
 ################################################################################

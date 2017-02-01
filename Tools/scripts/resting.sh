@@ -395,12 +395,12 @@ done
 
 
 
-
+rsDenoise=${resPat}/RS_denoise
 # Write the nuisance matrix to a text file, and perform the regression
-rm -rf ${resPat}/RS_denoise
-mkdir -p ${resPat}/RS_denoise
+rm -rf ${rsDenoise}
+mkdir -p ${rsDenoise}
 
-nuisMat=${resPat}/RS_denoise/nuisance_mat_18
+nuisMat=${rsDenoise}/nuisance_mat_18
 paste -d "\t" \
       $featdir/mc_conf/Tmot_1 \
       ${featdir}/mc_conf/Tmot_1_f1 \
@@ -431,9 +431,9 @@ immv ${featdir}/reg/example_func_betted_4_AROMA_mask ${featdir}/AROMask
 
 #We need to detect if python is installed, if not we can skip this part
 tt=`which python2.7 2>&1`
-
+RS_aromatised=$ffdata
 if [[ $tt =~ which.* ]]; then
-  echo "############### WARNING ############# \n Python 2.7 can't be found \
+  echo "############### WARNING ############# \n Python 2 can't be found \
   on your system so ICA_AROMA cannot be used";
 else
   python2 -c 'import numpy';
@@ -446,15 +446,14 @@ else
             -mc ${featdir}/mc/prefiltered_func_data_mcf.par \
             -affmat ${featdir}/reg/example_func2standard.mat \
             -m ${featdir}/AROMask.nii.gz
+
+    RS_aromatised=`ls ${featdir}/AROMATISED/denoised_*.nii.gz`
   else
-    echo "############### WARNING ############# \n Python 2.7 does not contain \
+    echo "############### WARNING ############# \n Python 2 does not contain \
     the numpy package so ICA_AROMA cannot be used";
   fi;
 fi;
 #prendre le denoise de feat si on a pas fait ica_aroma
-RS_aromatised=`ls ${featdir}/AROMATISED/denoised_*.nii.gz`
-
-rsDenoise=${resPat}/RS_denoise
 
 rsClean=${rsDenoise}/RS_clean.nii.gz
 

@@ -1,8 +1,17 @@
 #! /bin/bash
 # AnaCOM2 - Serge Kinkingnéhun & Emmanuelle Volle & Michel Thiebaut de Schotten
 # & Chris Foulon
-[ $# -lt 9 ] && { echo "Usage : $0 csvFile LesionFolder ResultFolder threshold\
-controlScores test keepTmp detZero nbvox"; exit 1; }
+[ $# -lt 9 ] && { echo 'Usage $0 :
+   $1:    csvFile
+   $2:    LesionFolder
+   $3:    ResultFolder
+   $4:    threshold
+   $5:    controlScores
+   $6:    test (Mann-Whitney, t-test, Kolmogorov-Smirnov)
+   $7:    keepTmp
+   $8:    detZero
+   $9:    nbvox
+   ${10}: ph_mode (co_deco, deco_ctr, co_ctr, classic)'; exit 1; }
 
 # Those lines are the handling of the script's trace and errors
 # Traces and errors will be stored in $3/logAnacom.txt
@@ -75,8 +84,9 @@ do
   fi;
 done;
 
-#We maybe have unset some cells of arrays so maybe some indexes are not valid anymore
-#We will correct arrays to be sure that array cells are contiguous
+# We maybe have unset some cells of arrays so maybe some indexes
+# are not valid anymore
+# We will correct arrays to be sure that array cells are contiguous
 tmppat=( "${pat[@]}" )
 tmpsco=( "${sco[@]}" )
 unset pat
@@ -91,7 +101,8 @@ do
   sco[$ii]=${tmpsco[$i]};
   ii=$((ii + 1));
 done;
-#We store original scores to write them correctly in txt files and in the cluster.csv result file
+#We store original scores to write them correctly in txt files and in the
+# cluster.csv result file
 originalSco=( "${sco[@]}" )
 
 #We need control scores, we can have a mean if we have wilcoxon or ttest
@@ -125,7 +136,8 @@ else
     done;
 fi
 
-#It will be the number when you add it to scores you remove zeros, when you substract it you retrieve original scores
+# We calculate the value that you need to add to your score to avoid zeros AND
+# negative values
 subZero=0
 if [[ $8 == "true" ]];
 then
@@ -142,7 +154,8 @@ then
       sco[$i]=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", ${sco[$i]} + 1}"`
       if [[ ${sco[$i]} == "0.000000" ]]; #if the new value is equal to 0
       then
-	stillZero="true" #So we generated a new zero value and we need to make another loop
+	       stillZero="true"
+         #So we generated a new zero value and we need to make another loop
       fi;
     done;
     if [[ $5 =~ ^[0-9]+\.[0-9]+|[0-9]+$ ]];
@@ -150,7 +163,8 @@ then
       valMu=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $valMu + 1}"`
       if [[ $valMu == "0.000000" ]]; #if the new value is equal to 0
       then
-	stillZero="true" #So we generated a new zero value and we need to make another loop
+	       stillZero="true"
+         #So we generated a new zero value and we need to make another loop
       fi;
     else
       for i in ${!full[@]}; #for all scores
@@ -343,27 +357,99 @@ done;
 echo "#"
 
 
-#Just define the test we will compute
-if [[ $6 == "Wilcoxon" ]];
+# Just define the test we will compute
+if [[ $6 == "Mann-Whitney" ]];
 then
   testname="wilcox.test";
   testvalue="W";
+  test_number=2
 elif [[ $6 == "t-test" ]];
 then
   testname="t.test";
   testvalue="t";
+  test_number=1
 elif [[ $6 == "Kolmogorov-Smirnov" ]];
 then
   testname="ks.test"
   testvalue="D";
+  test_number=3
 else
   echo "This test is unknown"
+  exit(1)
 fi;
 
-#It is the function that will handle the result of the statistical test
-Rscript stats_proper.r $tmp $5 ////////TO BE CONTINUED
+# We can use 4 comparison modes : classic(only post_hoc), co_deco, co_ctr,
+# deco_ctr
+if [[ ${10} == "classic" ]];
+then
+  ph_mode=4
+elif [[ ${10} == "co_deco" ]];
+then
+  ph_mode=1
+elif [[ ${10} == "deco_ctr" ]];
+then
+  ph_mode=2
+elif [[ ${10} == "co_ctr" ]];
+then
+  ph_mode=3
+else
+  echo "This ph_mode is unknown"
+  exit(1)
+fi;
 
-#We can read clustersco files and apply statistical tests
+
+# It is the function that will handle the result of the statistical test
+Rscript stats_proper.r $tmp $5 $ph_mode $test_number $3
+
+
+une carte avec kruskal significatif et une avec les post_hoc significatifs
+et aussi leur carte de toutes les pval pour les deux
+Et un mask binaire pour chaque cluster (avant les tests)
+
+# We need to extract the pvalues from the results of the R script
+#### READING the csv file containing patient name and their score ####
+#Counter for adding value in cells
+i=0
+#Here we fill arrays with the two columns of the csv file, IFS define separators
+
+declare -a pat
+declare -a sco
+while IFS=, read pat[$i] sco[$i]
+do
+    i=$((i+1))
+done < $1
+
+#We have to manage empty lines in the csv file so we unset empty cells
+for ((i=0; i < ${#pat[@]};i++));
+do
+  if [[ ${pat[$i]} == "" ]];
+  then
+    unset pat[$i];
+  fi;
+  if [[ ${sco[$i]} == "" ]];
+  then
+    unset sco[$i];
+  fi;
+done;
+
+tmppat=( "${pat[@]}" )
+tmpsco=( "${sco[@]}" )
+unset pat
+unset sco
+declare -a pat
+declare -a sco
+
+ii=0;
+for i in ${!tmppat[@]};
+do
+  pat[$ii]=${tmppat[$i]};
+  sco[$ii]=${tmpsco[$i]};
+  ii=$((ii + 1));
+done;
+
+
+
+# We can read clustersco files and apply statistical tests
 for ((i=0; i<$numclu; i++));
 do
   read text < $tmp/cluster${i}sco.txt
@@ -378,7 +464,7 @@ do
 done;
 
 #We launch the R script to compute pvalues
-$tmp/stats.r
+# $tmp/stats.r
 # Here, in each score file, we have patients' names, pvalue of the test, the
 # value of the test and then the number of patients.
 
@@ -604,7 +690,6 @@ then
     fi;
   done;
 fi;
-
 #CLEANING
 
 rm -rf $cluD/cluster*

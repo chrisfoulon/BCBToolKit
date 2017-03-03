@@ -2,12 +2,12 @@ options(warn=0)
 args <- commandArgs(TRUE)
 
 # What post-hoc comparison we want to do
-mode <- c(co_deco = "Connected versus disconnected",
-deco_ctr = "Disconnected versus controls", co_ctr = "Connected versus controls",
-classic = "Classic disconnected versus controls")
+mode <- c(no_ph = "No post-hoc test", co_deco = "Connected versus Spared",
+deco_ctr = "Disconnected versus controls", co_ctr = "Spared versus controls")
 
-ph_test <- c(ttest = "t-test", mw = "Mann-Whitney", ks = "Kolmogorov-Smirnov")
-ph_fun <- c(ttest = t.test, mw = wilcox.test, ks = ks.test) # access : ph_fun$ks
+ph_test <- c(ttest = "t-test", mw = "Mann-Whitney", ks = "Kolmogorov-Smirnov",
+kw = "Kuskal-Wallis")
+ph_fun <- c(ttest = t.test, mw = wilcox.test, ks = ks.test, kw = kruskal.test)
 
 # The end of the files created by the first part of AnaCOM2
 pat_re <- "pat.txt"
@@ -107,6 +107,7 @@ post_hoc <- function(func, vec1, vec2, vec_kw=NULL, use_mu=FALSE) {
     ww <- "Error : data are essentially constant";
     withCallingHandlers({
         res$p.value <- NaN;
+        res$statistic <- NaN;
     }, warning = function(w) {
         warnosef <<- conditionMessage(w);
         invokeRestart("muffleWarning");
@@ -127,19 +128,19 @@ post_hoc <- function(func, vec1, vec2, vec_kw=NULL, use_mu=FALSE) {
 post_hoc_all <- function(func, st, lst, ctr, use_mu, m) {
   warn = list()
   for (clu in row.names(st)) {
-    # Disconnected versus connected
-    if (m == mode[1] || m == mode[4]) {
+    # Disconnected versus Spared
+    if (m == mode[2] || m == mode[5]) {
       vec1 <- unlist(lst[[clu]]$sco)
       vec2 <- unlist(lst[[clu]]$co)
       st[clu, "nb_disco"] <- length(vec1)
       res <- post_hoc(func, vec1, vec2, use_mu=use_mu)
     # Disconnected versus controls
-    } else if (m == mode[2]) {
+    } else if (m == mode[3]) {
       vec1 <- unlist(lst[[clu]]$sco)
       res <- post_hoc(func, vec1, ctr, use_mu=use_mu)
       st[clu, "nb_disco"] <- length(vec1)
-    # Connected versus controls
-    } else if (m == mode [3]) {
+    # Spared versus controls
+    } else if (m == mode [4]) {
       vec1 <- unlist(lst[[clu]]$co)
       res <- post_hoc(func, vec1, ctr, use_mu=use_mu)
       st[clu, "nb_co"] <- length(vec1)
@@ -161,7 +162,7 @@ ctr <- controls(args[2])
 # The selection of the mode we will use for post-hoc comparison
 ph_mode <- mode[as.numeric(args[3])]
 # The selection of the post_hoc test we will use
-test <- ph_test[as.numeric(args[4])]
+test <- ph_fun[[as.numeric(args[4])]]
 # The result file, we assume it's parent folders exist
 res_folder <- args[5]
 
@@ -173,6 +174,8 @@ if (!use_mu) {
   control_file <- read_txt_in_list(ctr)
   # If we don't use mu, we store the list of scores in ctr
   ctr <- control_file[,1]
+} else {
+  ctr <- as.numeric(ctr)
 }
 
 # We store the lists of the different text files
@@ -185,27 +188,41 @@ ll <- create_list(pat, sco, co)
 #### COMPUTATION ####
 
 # table will contain the final results of the post_hoc stats
-if (ph_mode != mode["classic"]) {
+if (test != ph_test[kw]) {
   liste <- kruskal_on_clusters(ll, ctr)
   st <- liste$res
   kw_warn <- liste$warn
   st <- mult_comp_corr(st, "kw_pval", col_name="kw_holm")
-  table <- subset(st, kw_holm < 0.05)
+  write.csv(st, file_path(res_folder, "kruskal_pvalues.csv"), sep=",",
+    fileEncoding="UTF-8")
+  table <- st[st$kw_holm < 0.05,]#subset(st, kw_holm < 0.05)
 } else {
   # Here we didn't compute Kruskal so we just fill table with the cluster names
   table = data.frame(row.names=names(ll))
 }
-liste <- post_hoc_all(wilcox.test, table, ll, ctr, use_mu, ph_mode)
-res <- liste$res
-warn <- liste$warn
-# warn
+if (nrow(table) != 0 && ph_mode != mode[1]) {
+  liste <- post_hoc_all(test, table, ll, ctr, use_mu, ph_mode)
+  res <- liste$res
+  warn <- liste$warn
+  # warn
+  res <- mult_comp_corr(res, "pval")
+  #### WRITING RESULTS ####
 
-res <- mult_comp_corr(res, "pval")
-#### WRITING RESULTS ####
-
-warnings <- data.frame(row.names=names(warn))
-warnings$warnings <- unlist(warn)
-# warnings$warnings <- warnings[order(row.names(warnings)),]
-write.csv(res, "test_rscript.csv", sep=",", fileEncoding="UTF-8")
-write.csv(warnings, "test_warn.csv", sep=",", row.names=TRUE,
-fileEncoding="UTF-8")
+  warnings <- data.frame(row.names=names(warn))
+  warnings$warnings <- unlist(warn)
+  # warnings$warnings <- warnings[order(row.names(warnings)),]
+  write.csv(res, file_path(res_folder, "clusters.csv"), sep=",",
+    fileEncoding="UTF-8")
+  write.csv(warnings, file_path(res_folder, "test_warn.csv"), sep=",",
+    row.names=TRUE,
+  fileEncoding="UTF-8")
+} else {
+  if (ph_mode == mode[1]) {
+    print(paste("Kruskal-Wallis tests can be found in : ",
+      file_path(res_folder, "kruskal_pvalues.csv")))
+  } else {
+    print(paste("No cluster has passed the significant threshold after the
+    bonferroni holm correction, if you choose the kruskal-wallis test you can
+    see the pvalues inside : ", file_path(res_folder, "kruskal_pvalues.csv")))
+  }
+}

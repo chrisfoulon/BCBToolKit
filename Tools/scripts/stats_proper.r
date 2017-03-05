@@ -188,7 +188,7 @@ ll <- create_list(pat, sco, co)
 #### COMPUTATION ####
 
 # table will contain the final results of the post_hoc stats
-if (test != ph_test[kw]) {
+if (test == ph_test[kw]) {
   liste <- kruskal_on_clusters(ll, ctr)
   st <- liste$res
   kw_warn <- liste$warn
@@ -217,7 +217,7 @@ if (nrow(table) != 0 && ph_mode != mode[1]) {
     row.names=TRUE,
   fileEncoding="UTF-8")
 } else {
-  if (ph_mode == mode[1]) {
+  if (ph_mode == mode[1] && test == ph_test[kw]) {
     print(paste("Kruskal-Wallis tests can be found in : ",
       file_path(res_folder, "kruskal_pvalues.csv")))
   } else {

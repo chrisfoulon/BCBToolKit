@@ -380,18 +380,18 @@ fi;
 
 # We can use 4 comparison modes : classic(only post_hoc), co_deco, co_ctr,
 # deco_ctr
-if [[ ${10} == "classic" ]];
-then
-  ph_mode=4
-elif [[ ${10} == "co_deco" ]];
+if [[ ${10} == "1" ]];
 then
   ph_mode=1
-elif [[ ${10} == "deco_ctr" ]];
+elif [[ ${10} == "2" ]];
 then
   ph_mode=2
-elif [[ ${10} == "co_ctr" ]];
+elif [[ ${10} == "3" ]];
 then
   ph_mode=3
+elif [[ ${10} == "4" ]];
+then
+  ph_mode=4
 else
   echo "This ph_mode is unknown"
   exit(1)
@@ -408,46 +408,37 @@ Et un mask binaire pour chaque cluster (avant les tests)
 
 # We need to extract the pvalues from the results of the R script
 #### READING the csv file containing patient name and their score ####
-#Counter for adding value in cells
-i=0
-#Here we fill arrays with the two columns of the csv file, IFS define separators
 
-declare -a pat
-declare -a sco
-while IFS=, read pat[$i] sco[$i]
+#Here we fill arrays with the two columns of the csv file, IFS define separators
+kw_res="$3/kruskal_pvalues.csv"
+#Counter for adding value in cells
+kw_i=0
+# cluster names
+declare -a kw_clu
+# pvalues of the KW tests
+declare -a kw_pval
+# holm correction of the KW tests
+declare -a kw_holm
+# Number of disconnected patients
+declare -a nb_disco
+# pval of the post_hoc tests
+declare -a ph_pval
+# holm correction of the post_hoc tests
+declare -a ph_holm
+
+useless=""
+# Be careful, the first index of values is 1, 0 is the index of the column name
+while IFS=, read kw_clu[$kw_i] useless kw_pval[$kw_i] kw_holm[$kw_i]\
+ nb_disco[$kw_i] ph_pval[$kw_i] ph_osef ph_holm[$kw_i];
 do
-    i=$((i+1))
+    kw_i=$((kw_i+1))
 done < $1
 
-#We have to manage empty lines in the csv file so we unset empty cells
-for ((i=0; i < ${#pat[@]};i++));
+# Here we just binarize the clusters
+for n in ${#kw_clu[#]};
 do
-  if [[ ${pat[$i]} == "" ]];
-  then
-    unset pat[$i];
-  fi;
-  if [[ ${sco[$i]} == "" ]];
-  then
-    unset sco[$i];
-  fi;
+  fslmaths $cluD/${kw_clu[$n]} -bin $cluD/${kw_clu[$n]}
 done;
-
-tmppat=( "${pat[@]}" )
-tmpsco=( "${sco[@]}" )
-unset pat
-unset sco
-declare -a pat
-declare -a sco
-
-ii=0;
-for i in ${!tmppat[@]};
-do
-  pat[$ii]=${tmppat[$i]};
-  sco[$ii]=${tmpsco[$i]};
-  ii=$((ii + 1));
-done;
-
-
 
 # We can read clustersco files and apply statistical tests
 for ((i=0; i<$numclu; i++));

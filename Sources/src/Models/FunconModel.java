@@ -195,7 +195,6 @@ public class FunconModel extends AbstractModel {
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
 			setNbTicks(new File(RS_corr).listFiles(fileNameFilter).length * new File(seed_corr).listFiles(fileNameFilter).length);
-			System.out.println("ça marche ? ");
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
 				System.out.println(inLoop);

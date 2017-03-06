@@ -282,7 +282,7 @@ public final class Tools {
 	 * WARNING : You can only make the zero's detection on files with the comma
 	 * as cell's separator (like csv files) 
 	 */
-	public static boolean cleanCopy(String filename, String copypath, boolean detZero) {
+	public static boolean cleanCopy(String filename, String copypath, boolean detZero, JFrame frame) {
 		boolean bool = false;
 		File source = new File(filename);
 		//Create the copy or erase the file with the same name
@@ -331,8 +331,8 @@ public final class Tools {
 					if (!bool) { //Just avoiding useless tests if we have already a zero
 						String[] cells = line.split(",");
 						for (String c : cells)  {
-							//If one cell contains a zero, bool take the value true
-							if (c.matches("0|0\\.0*")) {
+							float val = Float.parseFloat(c);
+							if (val <= 0.0) {
 								bool = true;
 							}
 						}

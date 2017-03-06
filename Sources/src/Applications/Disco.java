@@ -110,7 +110,7 @@ public class Disco extends AbstractApp {
 				BCBEnum.fType.DIR.a(), conf, BCBEnum.Param.DRESDIR, getBCB());
 		getBCB().addBro(resBro.getParam(), resBro);
 
-		thrOpt = new JTextField("0.0");
+		thrOpt = new JTextField("0.5");
 		thrOpt.setPreferredSize(new Dimension(50, 20));
 		thrOpt.setToolTipText("<html> Increasing your % threshold of your disconnectome"
 				+ "<br /> maps increase intersubjects reliability"
@@ -199,13 +199,13 @@ public class Disco extends AbstractApp {
 							} catch (NumberFormatException nbE) {
 								Tools.showErrorMessage(getBCB().getFrame(), 
 										"Threshold have to be between 0.0 and 1.0");
-								thrOpt.setText("0.0");
+								thrOpt.setText("0.5");
 								return null;
 							}
 							if (opt < 0.0f || opt > 1.0f) {
 								Tools.showErrorMessage(getBCB().getFrame(), 
 										"Threshold have to be between 0.0 and 1.0");
-								thrOpt.setText("0.0");
+								thrOpt.setText("0.5");
 								return null;
 							}
 						}

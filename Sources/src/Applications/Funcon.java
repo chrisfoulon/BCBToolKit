@@ -36,7 +36,7 @@ import Models.FunconModel;
 public class Funcon extends AbstractApp {
 	//ATTRIBUTS
 	public static final int FRAME_WIDTH = 310;
-	public static final int FRAME_HEIGHT = 520;
+	public static final int FRAME_HEIGHT = 540;
 	// Ecart entre l'icone et les bordure des boutons. 
 	public static final int ICON_PADDING = 4;
 	public static final int INFRAME_PADDING = 20;
@@ -114,13 +114,13 @@ public class Funcon extends AbstractApp {
 		//Browsers
 		T1Bro = new Browser(frame, "T1 images directory :", BCBEnum.fType.DIR.a(), 
 				conf, BCBEnum.Param.RT1DIR, getBCB());
-		T1Bro.setToolTipText("T1 images must have the same name as Resting state images");
+		T1Bro.setToolTipText("T1 images must have the same name as fMRI images");
 
 		getBCB().addBro(T1Bro.getParam(), T1Bro);
 		
-		RSBro = new Browser(frame, "Resting State directory :", BCBEnum.fType.DIR.a(), 
+		RSBro = new Browser(frame, "fMRI images directory :", BCBEnum.fType.DIR.a(), 
 				conf, BCBEnum.Param.RRSDIR, getBCB());
-		RSBro.setToolTipText("Resting stats images must have the same name as T1 images");
+		RSBro.setToolTipText("fMRI images must have the same name as T1 images");
 
 		getBCB().addBro(RSBro.getParam(), RSBro);
 		
@@ -136,26 +136,22 @@ public class Funcon extends AbstractApp {
 		sliceCombo = new JComboBox<String>(tab);
 		
 		//Browsers
-		RSBro_corr = new Browser(frame, "Resting State directory :", BCBEnum.fType.DIR.a(), 
+		RSBro_corr = new Browser(frame, "fMRI images directory :", BCBEnum.fType.DIR.a(), 
 				conf, BCBEnum.Param.FRSDIR, getBCB());
-		RSBro_corr.setToolTipText("T1 images must have the same name as Resting state images");
 		getBCB().addBro(RSBro_corr.getParam(), RSBro_corr);
 		
 		seedBro_corr = new Browser(frame, "Seed images directory :", BCBEnum.fType.DIR.a(), 
 				conf, BCBEnum.Param.FSEEDDIR, getBCB());
-		seedBro_corr.setToolTipText("T1 images must have the same name as Resting state images");
 		getBCB().addBro(seedBro_corr.getParam(), seedBro_corr);
 		
 		ArrayList<fType> arr = fType.NII.a();
 		arr.add(fType.NIIGZ);
-		targetBro_corr = new Browser(frame, "Target image :", arr, 
+		targetBro_corr = new Browser(frame, "Target mask :", arr, 
 				conf, BCBEnum.Param.FTARDIR, getBCB());
-		targetBro_corr.setToolTipText("T1 images must have the same name as Resting state images");
 		getBCB().addBro(targetBro_corr.getParam(), targetBro_corr);
 		
 		resultBro_corr = new Browser(frame, "Results directory :", BCBEnum.fType.DIR.a(), 
 				conf, BCBEnum.Param.FRESDIR, getBCB());
-		resultBro_corr.setToolTipText("T1 images must have the same name as Resting state images");
 		getBCB().addBro(resultBro_corr.getParam(), resultBro_corr);
 		
 		

@@ -35,7 +35,7 @@ import Models.AnacomModel;
 public class Anacom extends AbstractApp {
 	public static final String ANACOM_TITLE = "AnaCOM2";
 	public static final int FRAME_WIDTH = 330;
-	public static final int FRAME_HEIGHT = 540;
+	public static final int FRAME_HEIGHT = 580;
 
 	private ImagePanel background;
 	private JPanel panel;
@@ -43,6 +43,8 @@ public class Anacom extends AbstractApp {
 	private JButton settings;
 	private JButton run;
 	private LoadingBar loading;
+	
+	private JComboBox<String> modeCombo;
 
 	private JComboBox<String> testCombo;
 	private Browser lesBro;
@@ -100,8 +102,11 @@ public class Anacom extends AbstractApp {
 		run.setPreferredSize(new Dimension(FRAME_WIDTH - 10, 45));
 
 
-		String[] tab = {"t-test", "Mann-Whitney", "Kolmogorov-Smirnov"};
+		String[] tab = {"Kruskal-Wallis", "Mann-Whitney", "t-test", "Kolmogorov-Smirnov"};
 		testCombo = new JComboBox<String>(tab);
+		String[] tab_mode = {"No post-hoc test", "Connected versus disconnected", "Disconnected versus controls", 
+				"Connected versus controls"};
+		modeCombo = new JComboBox<String>(tab_mode);
 		lesBro = new Browser(this.getFrame(), "Lesions directory :", BCBEnum.fType.DIR.a(),
 				this.getConf(), BCBEnum.Param.ALESDIR, this.getBCB());
 		resBro = new Browser(this.getFrame(), "Result directory :", BCBEnum.fType.DIR.a(),
@@ -163,8 +168,14 @@ public class Anacom extends AbstractApp {
 
 	protected void placeComponents() {
 
-		JPanel testSelector = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
-			testSelector.add(testCombo);
+		JPanel testSelector = new JPanel(new GridLayout(2,0)); {
+
+			JPanel c_down = new JPanel(new FlowLayout(FlowLayout.CENTER));
+			c_down.add(modeCombo);
+			JPanel c_top = new JPanel(new FlowLayout(FlowLayout.CENTER));
+			c_top.add(testCombo);
+			testSelector.add(c_top);
+			testSelector.add(c_down);
 		}
 
 		JPanel center = new JPanel(new GridLayout(3, 0)); {
@@ -186,10 +197,10 @@ public class Anacom extends AbstractApp {
 		JPanel centerGrid = new JPanel(new BorderLayout()); {
 			//centerGrid.setLayout(new BoxLayout(centerGrid, BoxLayout.Y_AXIS));
 			// A box layout could be more logical but ... it works
-			JPanel grid = new JPanel(new BorderLayout()); {
-				grid.add(testSelector, BorderLayout.NORTH);
-				grid.add(center, BorderLayout.CENTER);
-				grid.add(thr, BorderLayout.SOUTH);
+			JPanel middle_top = new JPanel(new BorderLayout()); {
+				middle_top.add(testSelector, BorderLayout.NORTH);
+				middle_top.add(center, BorderLayout.CENTER);
+				middle_top.add(thr, BorderLayout.SOUTH);
 			}
 
 			JPanel bg1 = new JPanel(new GridLayout(4, 0)); {
@@ -201,7 +212,7 @@ public class Anacom extends AbstractApp {
 				}
 				bg1.add(fl);
 			}
-			centerGrid.add(grid, BorderLayout.NORTH);
+			centerGrid.add(middle_top, BorderLayout.NORTH);
 			centerGrid.add(bg1, BorderLayout.CENTER);
 		}
 		frame.add(centerGrid, BorderLayout.CENTER);
@@ -251,6 +262,9 @@ public class Anacom extends AbstractApp {
 						}
 						String testName = (String)testCombo.getSelectedItem();
 						model.setTest(testName);
+						
+						String ph_name = (String)modeCombo.getSelectedItem();
+						model.setMode(ph_name);
 						// We test if the string is an integer
 						try {
 							Integer.parseInt(threshFld.getText());
@@ -262,8 +276,14 @@ public class Anacom extends AbstractApp {
 
 						if (Tools.isReady(frame, csvBro)) {
 							String copypath = resBro.getPath() + "/copypatients.csv";
-							containsZero = Tools.cleanCopy(csvBro.getPath(), copypath, true) 
+							containsZero = Tools.cleanCopy(csvBro.getPath(), copypath, true, frame) 
 									|| containsZero ;
+							if (containsZero) {
+								Tools.showErrorMessage(frame, csvBro.getPath() + " contains" + 
+										"values <= 0, please correct those " + 
+										"values before launching AnaCOM2");
+								return null;
+							}
 							model.setCSV(copypath);
 						} else {
 							return null;
@@ -285,8 +305,14 @@ public class Anacom extends AbstractApp {
 						} else {
 							if (Tools.isReady(frame, ctrlBro)) {
 								String copypath = resBro.getPath() + "/copycontrols.csv";
-								containsZero = Tools.cleanCopy(ctrlBro.getPath(), copypath, true)
+								containsZero = Tools.cleanCopy(ctrlBro.getPath(), copypath, true, frame)
 										|| containsZero;
+								if (containsZero) {
+									Tools.showErrorMessage(frame, csvBro.getPath() + " contains" + 
+											"values <= 0, please correct those " + 
+											"values before launching AnaCOM2");
+									return null;
+								}
 								model.setControls(copypath);
 							} else {
 								return null;

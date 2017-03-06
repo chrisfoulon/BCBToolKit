@@ -31,7 +31,7 @@ public final class BCBEnum {
 		DISCONNECTOME("HypertronModified.sh"),
 		CORTICAL("thickLoop.sh"),
 		NORMALISATION("normalize.sh"),
-		ANACOM("anacom.sh"),
+		ANACOM("anacom_proper.sh"),
 		INITR("preR.sh"),
 		FUNCON("resting.sh"),
 		STATISTICAL("test.r");

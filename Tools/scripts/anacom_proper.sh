@@ -409,8 +409,21 @@ Et un mask binaire pour chaque cluster (avant les tests)
 # We need to extract the pvalues from the results of the R script
 #### READING the csv file containing patient name and their score ####
 
-#Here we fill arrays with the two columns of the csv file, IFS define separators
-kw_res="$3/kruskal_pvalues.csv"
+
+En fait ce que je dois faire : Dans tous les cas je récupère les valeurs dans
+kruskal_pvalues.csv et je crée les clusters binaires ET les deux cartes :
+tous les clusters avec leur pvalues du KW ET celle de tous les clusters significatifs
+après le kruskal.
+
+Ensuite, SI le mode only kruskal est séléctionné OU que la carte des clusters
+significatifs du kruskal est vide je crée les deux cartes (Tous et ceux qui sont
+significatifs) pour les tests post hoc.
+
+
+#Here we fill arrays with the columns of the csv file, IFS define separators
+kw_csv="$3/kruskal_pvalues.csv"
+kw_res="$3/kruskal_clusters.nii.gz"
+kw_corr="$3/kruskal_holm_clusters.nii.gz"
 #Counter for adding value in cells
 kw_i=0
 # cluster names
@@ -419,6 +432,38 @@ declare -a kw_clu
 declare -a kw_pval
 # holm correction of the KW tests
 declare -a kw_holm
+
+# Be careful, the first index of values is 1, 0 is the index of the column name
+while IFS=, read kw_clu[$kw_i] useless kw_pval[$kw_i] kw_holm[$kw_i]
+do
+  kw_i=$((kw_i+1))
+done < $kw_csv
+
+# Here we binarize the clusters and we create the maps of pvalues for the KW
+for n in ${#kw_clu[#]};
+do
+  fslmaths $cluD/${kw_clu[$n]} -bin $cluD/${kw_clu[$n]}
+  fslmaths $cluD/${kw_clu[$n]} -add $kw_res $kw_res
+  if [ `awk "BEGIN { print (${kw_holm[$n]} < 0.05)}"` == 1 ];
+  then
+    fslmaths $cluD/${kw_clu[$n]} -add $kw_corr $kw_corr
+  fi;
+done;
+# if [ `awk "BEGIN { print (${bonf[$index]} > 1)}"` == 1 ];
+# Now we create the overlap of all clusters with their pvalue in the KW
+
+
+ph_csv="$3/clusters.csv"
+ph_res="$3/cluters.nii.gz"
+ph_corr="$3/clusters_holm.nii.gz"
+#Counter for adding value in cells
+ph_i=0
+# cluster names
+declare -a ph_clu
+# pvalues of the KW tests
+declare -a ph_kw_pval
+# holm correction of the KW tests
+declare -a ph_kw_holm
 # Number of disconnected patients
 declare -a nb_disco
 # pval of the post_hoc tests
@@ -426,278 +471,29 @@ declare -a ph_pval
 # holm correction of the post_hoc tests
 declare -a ph_holm
 
-useless=""
 # Be careful, the first index of values is 1, 0 is the index of the column name
-while IFS=, read kw_clu[$kw_i] useless kw_pval[$kw_i] kw_holm[$kw_i]\
- nb_disco[$kw_i] ph_pval[$kw_i] ph_osef ph_holm[$kw_i];
+while IFS=, read ph_clu[$ph_i] useless ph_kw_pval[$ph_i] ph_kw_holm[$ph_i]\
+ nb_disco[$ph_i] ph_pval[$ph_i] ph_osef ph_holm[$ph_i];
 do
-    kw_i=$((kw_i+1))
-done < $1
+  kw_i=$((kw_i+1))
+done < $ph_csv
 
-# Here we just binarize the clusters
-for n in ${#kw_clu[#]};
+for n in ${#ph_clu[#]};
 do
-  fslmaths $cluD/${kw_clu[$n]} -bin $cluD/${kw_clu[$n]}
-done;
-
-# We can read clustersco files and apply statistical tests
-for ((i=0; i<$numclu; i++));
-do
-  read text < $tmp/cluster${i}sco.txt
-  x="c("$text")"
-  read co_text < $tmp/cluster${i}co_perf.txt
-  co_x="c("$co_text")"
-  compute="myTest($testname, \"$tmp/cluster${i}pat.txt\", $co_x, $x, $control)"
-  patNumber="write(length($x), \"$tmp/cluster${i}pat.txt\", append=TRUE, sep=\"\\n\");"
-  #echo "print('Compute : $compute')" >> $tmp/stats.r
-  echo $compute >> $tmp/stats.r
-  echo $patNumber >> $tmp/stats.r
-done;
-
-#We launch the R script to compute pvalues
-# $tmp/stats.r
-# Here, in each score file, we have patients' names, pvalue of the test, the
-# value of the test and then the number of patients.
-
-#Give the real representation of a number that was in scientific notation
-realVal() {
-  nu=`echo $1 | sed 's/e-.*//g'`
-  #In exp we have the exponent of $1
-  exp=`printf "%s" ${1#*e-}`
-  exp=`awk "BEGIN {print $exp - 1}"`
-  #we compute the number of decimals : It's the number of digits of $numb
-  # (so without the '.') plus the exponent minus 1 because of the notation
-  # ex : 1.3e-4 == 0.00013
-  nbdec=`awk "BEGIN {print ${#nu} - 1 + $exp}"`
-  #Now we can write $1 without the scientific notation and without
-  # precision loss
-  echo `LC_ALL=en_GB awk "BEGIN {printf \"%.${nbdec}f\", ${nu}/10e${exp}}"`
-}
-
-#We declare an array to store pvalues for bonferroni-holm correction
-declare -a bonf
-#Creation of an empty file #ugly
-fslmaths $overMask -mul 0 $3/mergedPvalClusters
-for ((i=0; i<$numclu; i++));
-do
-  #We read the second line of every cluster*pat.txt which contain the pvalue
-  pval=`sed -n 2p $tmp/cluster${i}pat.txt`
-
-  if [[ $pval != "NaN" ]];
+  fslmaths $cluD/${ph_clu[$n]} -add $ph_res $ph_res
+  if [ `awk "BEGIN { print (${ph_holm[$n]} < 0.05)}"` == 1 ];
   then
-    if [[ $pval =~ ^[0-9]+\.[0-9]+e-[0-9]+$ ]];
-    then
-      bonf[$i]=`realVal $pval`
-    else
-      bonf[$i]=$pval;
-    fi;
-  else
-    pval=-1
-  fi;
-  # if pval != 0
-  if [ `awk "BEGIN { print ($pval == 0)}"` == 0 ];
-  then
-    # We round $pval
-    pval=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $pval}");
-    # If $pval is round to 0.000000 we set pval to 0.000001 because it means that
-    # the real pval is less than 0.000001
-    if [ `awk "BEGIN { print ($pval == 0)}"` == 1 ];
-    then
-        pval="0.000001";
-    fi;
-#pval=$(awk "BEGIN { if ($pval == 0) {print \"0.000001\";} else {print $pval }")
-  fi;
-  #We make 1 - pval for a better visualizing
-  oneminuspval=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", 1 - $pval}");
-  fslmaths $cluD/cluster${i} -bin -mul $oneminuspval $cluD/pvalcluster${i}
-
-#   fslmaths $cluD/cluster${i} -bin $cluD/pvalcluster${i}
-
-#   fslmaths $cluD/pvalcluster${i} -mul $pval $cluD/pvalcluster${i}
-  # Creation of a file containing all clusters with pvalues. ($3/mergedPvalClusters)
-  fslmaths $cluD/pvalcluster${i} -add $3/mergedPvalClusters $3/mergedPvalClusters
-
-done;
-#Here we have all pvalues (without NaN) stored in bonf indexed by cluster number
-#To correct pvalues with Bonferroni-Holm method we have to sort them in ascending order
-declare -a sorted;
-declare -a indexes;
-# Sort with -g (for floats)
-# IFS=$'\n' var=($(sort -g <<<"${bonf[@]}"))
-# unset IFS
-set +x
-var=`for i in "${bonf[@]}"; do echo "$i"; done | sort -g`
-set -x
-# Sort give a string so we convert it as an array in $sorted
-IFS=$'\n ' read -r -a sorted <<< $var
-#we make a copy of sorted to use it later
-copysorted=( "${sorted[@]}" )
-#We will make calculation without precision loss in the array
-realcorr=( "${sorted[@]}" )
-
-# Now we create an array to associate $sorted's values with bonf's indexes
-# We destroy bonf cell by cell (sorry bro)
-
-# We store indexes of bonf
-read -r -a arrInd <<< ${!bonf[@]}
-# We fill indexes with indexex of bonf sorted like in ... $sorted
-for i in ${!sorted[@]};
-do
-  ind=0;
-  while [[ ${bonf[${arrInd[$ind]}]} != ${sorted[$i]} ]];
-  do
-    ind=$((ind + 1));
-  done;
-  indexes[$i]=${arrInd[$ind]};
-  unset bonf[${arrInd[$ind]}];
-done;
-# In fact we have not to be careful about the stability of the sort (I feared)
-# The bash sort is not stable but because we unset bonf's cells
-# we preserve the order and make the final sort stable
-# for example if bonf[23]=0.45 and bonf[34]=0.45, in the loop we will find :
-# bonf[23] == sorted[i], we remove bonf[23], at i+1 we will have again
-# sorted[i+1] = 0.45, in the loop we will only find now bonf[34] == 0.45
-
-# We make Bonferroni-Holm corrections
-numb=${#sorted[@]}
-for ((i=0;i<${#sorted[@]};i++));
-do
-  tt=${sorted[$i]};
-  numdec=${#tt};
-  realcorr[$i]=$(LC_ALL=en_GB awk "BEGIN {printf \"%.${numdec}f\", ${sorted[$i]}*$((numb - $i))}");
-  sorted[$i]=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", ${sorted[$i]}*$((numb - $i))}");
-
-  # If sorted[$i] is round to 0.000000 we set sorted[$i] to 0.000001 because it means that
-  # the real sorted[$i] is less than 0.000001
-if [ `awk "BEGIN { print (${sorted[$i]} == 0)}"` == 1 ];
-then
-sorted[$i]="0.000001";
-fi;
-#sorted[$i]=$(awk "BEGIN { if (${sorted[$i]} == 0) print \"0.000001\"; else print ${sorted[$i]} }")
-done;
-# We re-create bonf with corrected pvalues
-for ((i=0;i<${#sorted[@]};i++));
-do
-  bonf[${indexes[$i]}]=${sorted[$i]};
-done;
-# We create new maps with corrected pvalues
-fslmaths $overMask -mul 0 $cluD/mergedBHcorrClusters
-for index in ${!bonf[@]};
-do
-  if [ `awk "BEGIN { print (${bonf[$index]} > 1)}"` == 1 ];
-  then
-    tmpmul=1
-  else
-    tmpmul=${bonf[$index]}
-  fi;
-  oneminusBH=$(LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", 1 - $tmpmul}");
-  fslmaths $cluD/pvalcluster${index} -bin -mul $oneminusBH $cluD/BHcorrCluster${index}
-  # We fill the map with all corrected pvalues
-  fslmaths $cluD/BHcorrCluster${index} -add $cluD/mergedBHcorrClusters $cluD/mergedBHcorrClusters
-done;
-
-
-# Bonferroni correction
-fslmaths $3/mergedPvalClusters -mul $numclu $tmp/tmpbonf
-
-fslmaths $tmp/tmpbonf -uthr 1 -bin $tmp/ubonfmask
-
-fslmaths $tmp/tmpbonf -thr 1 -bin $tmp/bonfmask
-
-fslmaths $tmp/tmpbonf -mas $tmp/ubonfmask -add $tmp/bonfmask $3/bonferroniClusters
-echo "#"
-
-#We create csv files to display results (One with cluster names associated
-#to patient names and scores with pvalues and BHcorrected pvalues and another
-#for warnings if they occurs
-  ## Here we have sorted pvalues in copysorted, BHcorrected pvalues, in
-  ## increasing (non-corrected) pvalues, in sorted and in indexes we have
-  ## corresponding between pvalues and cluster number
-
-##
-echo "Patients, p-values, Bonferroni-holm, N, $testvalue" > $3/clusters.csv
-fslmaths $3/bonferroniClusters -mul 0 $3/correctedClusters
-exclude=''
-for i in ${!sorted[@]};
-do
-  if [[ $(awk "BEGIN {print (${realcorr[$i]} >= 0.05)}") == 1 ]];
-  then
-    exclude="(excluded)"
-  else
-    fslmaths $cluD/pvalcluster${indexes[$i]} -add $3/correctedClusters $3/correctedClusters
-  fi;
-  #We read lines 3 and 4 in clusterpat files which correspond to the value of the test and the number of patients
-  valTest=`sed -n 4p $tmp/cluster${i}pat.txt`
-  numPat=`sed -n 3p $tmp/cluster${i}pat.txt`
-  read patients < $tmp/cluster${i}pat.txt;
-  read scores < $tmp/cluster${i}sco.txt;
-  echo "pvalcluster${indexes[$i]}, ${copysorted[$i]}, ${realcorr[$i]}${exclude}, $valTest, $numPat, $patients" >> $3/clusters.csv;
-  echo "pvalcluster${indexes[$i]}, ${copysorted[$i]}, ${realcorr[$i]}${exclude}, $valTest, $numPat, $scores" >> $3/clusters.csv;
-done;
-
-declare -a array;
-number=0
-#We add every clusters without valid pvalues at the end of the first csv file
-for ((i=0; i<$numclu; i++));
-do
-  if [[ ${bonf[$i]} == '' ]];
-  then
-    array[$number]=$i;
-    number=$((number + 1));
+    fslmaths $cluD/${ph_clu[$n]} -add $ph_corr $ph_corr
   fi;
 done;
 
-for i in ${array[@]};
-do
-  #We read lines 3 and 4 in clusterpat files which correspond to the value of the test and the number of patients
-  valTest=`sed -n 4p $tmp/cluster${i}pat.txt`
-  numPat=`sed -n 3p $tmp/cluster${i}pat.txt`
-  read patients < $tmp/cluster${i}pat.txt;
-  read scores < $tmp/cluster${i}sco.txt;
-  echo "pvalcluster$i, NaN(-1), NaN, $valTest, $numPat, $patients" >> $3/clusters.csv;
-  echo "pvalcluster$i, NaN(-1), NaN, $valTest, $numPat, $scores" >> $3/clusters.csv;
-done;
-
-#We create the second csv file if there is warnings
-declare -a warn;
-bool="false"
-for ((i=0; i<$numclu; i++));
-do
-  warn[$i]=`sed -n '5,$p' $tmp/cluster${i}pat.txt`
-  if [[ ${warn[$i]} != '' ]];
-  then
-    bool="true"
-  fi;
-done;
-
-if [[ $bool == "true" ]];
-then
-  echo  "Cluster Name, Warning / Error" > $3/warnings.csv;
-  for w in ${!warn[@]};
-  do
-    if [[ ${warn[$w]} != '' ]];
-    then
-      echo "pvalcluster$w, ${warn[$w]}" >> $3/warnings.csv;
-    fi;
-  done;
-fi;
-#CLEANING
-
-rm -rf $cluD/cluster*
-rm -rf $cluD/BHcorrCluster*
+# CLEANING
 
 if [[ -e $saveTmp ]];
 then
-  mv $cluD/mergedBHcorrClusters* $3
   mv $cluD $saveTmp;
-  #We have to substract subZero to the maskedMeanValMap if we had zeros in scores
-  if [[ $8 == "true" ]];
-  then
-    fslmaths $map -sub $subZero $saveTmp/maskedMeanValMap-$subZero;
-  else
-    mv $map $saveTmp;
-  fi;
   mv $tmp/maskedStd.* $saveTmp;
+  mv $map $saveTmp;
 else
   mv $cluD $tmp/;
 fi;

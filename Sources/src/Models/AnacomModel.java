@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.swing.JFrame;
@@ -28,12 +30,27 @@ public class AnacomModel extends AbstractModel {
 	private String saveTmp;
 	//Have we found zero inside data ? 
 	private String detZero;
+	// Which comparison we will use
+	private String mode;
 	//The minimum of voxels number per cluster
 	private String nbVox = "0";
 	private LoadingBar loading;
+	
+	private Map<String, String> test_map;
+	private Map<String, String> mode_map;
 
 	public AnacomModel(String path, JFrame f) {
 		super(path, f, BCBEnum.Script.ANACOM.endPath());
+		test_map = new HashMap<String, String>();
+		test_map.put("No post-hoc test", "1");
+		test_map.put("Connected versus Spared", "2");
+		test_map.put("Disconnected versus controls", "3");
+		test_map.put("Spared versus controls", "4");
+		mode_map = new HashMap<String, String>();
+		mode_map.put("t-test", "1");
+		mode_map.put("Mann-Whitney", "2");
+		mode_map.put("Kolmogorov-Smirnov", "3");
+		mode_map.put("Kuskal-Wallis", "4");
 	}
 	
 	public void setCSV(String str) {
@@ -57,7 +74,11 @@ public class AnacomModel extends AbstractModel {
 	}
 	
 	public void setTest(String str) {
-		test = str;
+		test = test_map.get(str);
+	}
+	
+	public void setMode(String str) {
+		mode = mode_map.get(str);
 	}
 
 	public void setSaveTmp(String str) {
@@ -95,7 +116,7 @@ public class AnacomModel extends AbstractModel {
 		try {
 
 			String[] array = {this.script,
-					csvFile, lesDir, resDir, thresh, controls, test, saveTmp, detZero, nbVox};
+					csvFile, lesDir, resDir, thresh, controls, test, saveTmp, detZero, nbVox, mode};
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 

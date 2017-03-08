@@ -104,9 +104,18 @@ public class Anacom extends AbstractApp {
 
 		String[] tab = {"Kruskal-Wallis", "Mann-Whitney", "t-test", "Kolmogorov-Smirnov"};
 		testCombo = new JComboBox<String>(tab);
-		String[] tab_mode = {"No post-hoc test", "Connected versus disconnected", "Disconnected versus controls", 
-				"Connected versus controls"};
+		testCombo.setSelectedIndex(3);
+		String test_conf_val = conf.getVal(Param.ADEFTEST);
+		if (!test_conf_val.equals("")) {
+			testCombo.setSelectedIndex(Integer.valueOf(test_conf_val));
+		}
+		String[] tab_mode = {"No post-hoc test", "Disconnected versus spared", "Disconnected versus controls", 
+				"Spared versus controls"};
 		modeCombo = new JComboBox<String>(tab_mode);
+		String mode_conf_val = conf.getVal(Param.ADEFMODE);
+		if (!mode_conf_val.equals("")) {
+			modeCombo.setSelectedIndex(Integer.valueOf(mode_conf_val));
+		}	
 		lesBro = new Browser(this.getFrame(), "Lesions directory :", BCBEnum.fType.DIR.a(),
 				this.getConf(), BCBEnum.Param.ALESDIR, this.getBCB());
 		resBro = new Browser(this.getFrame(), "Result directory :", BCBEnum.fType.DIR.a(),
@@ -261,6 +270,7 @@ public class Anacom extends AbstractApp {
 							return null;
 						}
 						String testName = (String)testCombo.getSelectedItem();
+						System.out.println("SELECTED ITEM : " + testName);
 						model.setTest(testName);
 						
 						String ph_name = (String)modeCombo.getSelectedItem();
@@ -279,7 +289,7 @@ public class Anacom extends AbstractApp {
 							containsZero = Tools.cleanCopy(csvBro.getPath(), copypath, true, frame) 
 									|| containsZero ;
 							if (containsZero) {
-								Tools.showErrorMessage(frame, csvBro.getPath() + " contains" + 
+								Tools.showErrorMessage(frame, csvBro.getPath() + " contains " + 
 										"values <= 0, please correct those " + 
 										"values before launching AnaCOM2");
 								return null;
@@ -308,7 +318,7 @@ public class Anacom extends AbstractApp {
 								containsZero = Tools.cleanCopy(ctrlBro.getPath(), copypath, true, frame)
 										|| containsZero;
 								if (containsZero) {
-									Tools.showErrorMessage(frame, csvBro.getPath() + " contains" + 
+									Tools.showErrorMessage(frame, csvBro.getPath() + " contains " + 
 											"values <= 0, please correct those " + 
 											"values before launching AnaCOM2");
 									return null;
@@ -330,17 +340,7 @@ public class Anacom extends AbstractApp {
 						} else {
 							return null;
 						}
-						if (containsZero) {
-							/*
-							 * Here we will display a popup to report that there are zeros 
-							 * inside patient or control scores and we will give the choice to
-							 * cancel their action or modify all scores with the same addition
-							 * to avoid zeros (and keep the same statistics). 
-							 */
-							model.setDetZero("true");
-						} else {
-							model.setDetZero("false");
-						}
+						model.setDetZero("false");
 						model.setNbVox(getBCB().getSettings().getNbVox());
 						model.run();
 						return null;
@@ -429,6 +429,8 @@ public class Anacom extends AbstractApp {
 			//We reset the path of ctrlBro
 			ctrlBro.setPath("", null);
 		}
+		conf.setVal(Param.ADEFTEST, String.valueOf(testCombo.getSelectedIndex() + 1));
+		conf.setVal(Param.ADEFMODE, String.valueOf(modeCombo.getSelectedIndex() + 1));
 		super.closing();
 	}
 	

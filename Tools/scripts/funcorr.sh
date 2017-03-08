@@ -49,12 +49,12 @@ then
 fi;
 mkdir -p $tmp
 
-default_gm=$path/Tools/extraFiles/Thr100_2mm_avg152T1_gray.nii.gz
+default_gm=$path/extraFiles/Thr100_2mm_avg152T1_gray.nii.gz
 
 # We will mask the seeds with the gray matter to avoid noise due to voxels
 # in the white matter
 seed_folder=$tmp/masked_seeds
-mkdir -p $seeds_folder
+mkdir -p $seed_folder
 for s in $2/*nii*;
 do
   seed=`fileName $s`

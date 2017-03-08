@@ -90,6 +90,7 @@ public final class BCBEnum {
 		ACSVFILE("default ANACOM csvFile"),
 		ATHRESH("default ANACOM threshold"),
 		ADEFTEST("default ANACOM test"),
+		ADEFMODE("default ANACOM mode"),
 		ASAVETMP("save ANACOM tmpFiles"),
 		ACTRLFILE("save ANACOM ctrlFile"),
 		ACTRLMEAN("save ANACOM ctrlMean"),

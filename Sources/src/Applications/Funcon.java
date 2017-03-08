@@ -42,6 +42,7 @@ public class Funcon extends AbstractApp {
 	public static final int INFRAME_PADDING = 20;
 	public static final int LINE_HEIGHT = 20;
 	public static final String FUNCON_TITLE = "Funcon";
+	public static final String DEF_TAR = "/Tools/extraFiles/Thr100_2mm_avg152T1_gray.nii.gz";
 	private ImagePanel background;
 	private JPanel panel;
 	private JButton settings;
@@ -148,6 +149,7 @@ public class Funcon extends AbstractApp {
 		arr.add(fType.NIIGZ);
 		targetBro_corr = new Browser(frame, "Target mask :", arr, 
 				conf, BCBEnum.Param.FTARDIR, getBCB());
+		targetBro_corr.setDefPath(path + getDefaultTarget());
 		getBCB().addBro(targetBro_corr.getParam(), targetBro_corr);
 		
 		resultBro_corr = new Browser(frame, "Results directory :", BCBEnum.fType.DIR.a(), 
@@ -158,7 +160,7 @@ public class Funcon extends AbstractApp {
 		saveTmp = new JCheckBox("Keep temporary files");
 		saveTmp.setPreferredSize(new Dimension(260, 20));
 		saveTmp.setIconTextGap(20);
-		saveTmp.setSelected(conf.getVal(BCBEnum.Param.CSAVETMP).equals("true"));
+		saveTmp.setSelected(conf.getVal(BCBEnum.Param.RSAVETMP).equals("true"));
 		saveTmp.setMargin(new Insets(0, 0, 0, 0));
 	}
 
@@ -270,7 +272,7 @@ public class Funcon extends AbstractApp {
 										+ " timing correction among : "
 										+ " : None"
 										+ " : Regular up (0, 1, 2, 3, ...)"
-										+ " : Regular down"
+										+ " : Regular down (... , 3, 2, 1, 0)"
 										+ " : Interleaved (0, 2, 4 ... 1, 3, 5 ... )");
 							} else {
 								model.setSliceTiming(sliceValue);
@@ -332,6 +334,10 @@ public class Funcon extends AbstractApp {
 				}
 			}
 		});
+	}
+	
+	public String getDefaultTarget() {
+		return DEF_TAR;
 	}
 
 	//Modifications des composants

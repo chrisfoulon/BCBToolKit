@@ -230,6 +230,7 @@ public class SettingsFrame implements Settings {
 		JPanel funconTab = new JPanel(); {
 			BoxLayout boxLay3 = new BoxLayout(funconTab, BoxLayout.Y_AXIS);
 			funconTab.setLayout(boxLay3);
+			funconTab.add(butMap.get(BCBEnum.Param.FTARDIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP1DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SMAP2DIR));
 			//statTab.add(butMap.get(BCBEnum.Param.SRESDIR));

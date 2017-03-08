@@ -41,16 +41,16 @@ public class AnacomModel extends AbstractModel {
 
 	public AnacomModel(String path, JFrame f) {
 		super(path, f, BCBEnum.Script.ANACOM.endPath());
-		test_map = new HashMap<String, String>();
-		test_map.put("No post-hoc test", "1");
-		test_map.put("Connected versus Spared", "2");
-		test_map.put("Disconnected versus controls", "3");
-		test_map.put("Spared versus controls", "4");
 		mode_map = new HashMap<String, String>();
-		mode_map.put("t-test", "1");
-		mode_map.put("Mann-Whitney", "2");
-		mode_map.put("Kolmogorov-Smirnov", "3");
-		mode_map.put("Kuskal-Wallis", "4");
+		mode_map.put("No post-hoc test", "1");
+		mode_map.put("Disconnected versus spared", "2");
+		mode_map.put("Disconnected versus controls", "3");
+		mode_map.put("Spared versus controls", "4");
+		test_map = new HashMap<String, String>();
+		test_map.put("Kruskal-Wallis", "1");
+		test_map.put("Mann-Whitney", "2");
+		test_map.put("t-test", "3");
+		test_map.put("Kolmogorov-Smirnov", "4");
 	}
 	
 	public void setCSV(String str) {
@@ -74,6 +74,7 @@ public class AnacomModel extends AbstractModel {
 	}
 	
 	public void setTest(String str) {
+		System.out.println(str);
 		test = test_map.get(str);
 	}
 	
@@ -117,13 +118,18 @@ public class AnacomModel extends AbstractModel {
 
 			String[] array = {this.script,
 					csvFile, lesDir, resDir, thresh, controls, test, saveTmp, detZero, nbVox, mode};
+			int i = 0;
+			for (String s : array) {
+				System.out.println(i + " : " + s);
+				i++;
+			}
+
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
 			setNbTicks(5);
-					
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
 				if (inLoop.startsWith("#")) {

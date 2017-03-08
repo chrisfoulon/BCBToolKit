@@ -338,11 +338,12 @@ public final class Tools {
 						try {
 					    	num = Float.parseFloat(cells[0]);
 					    } catch (NumberFormatException e) {
-					      	is_num = false;
+					    	is_num = false;
 					    }
 						// If not we test if the second cell is
 						if (!is_num) {
 							try {
+								is_num = true;
 						    	num = Float.parseFloat(cells[1]);
 						    } catch (NumberFormatException e) {
 						      	is_num = false;

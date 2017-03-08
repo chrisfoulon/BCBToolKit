@@ -188,7 +188,11 @@ public class FunconModel extends AbstractModel {
 			String xargs = this.path + "/Tools/scripts" + "/xargs_launch.sh";
 			String funcorr = this.path + "/Tools/scripts" + "/funcorr.sh";
 			String[] array = {xargs, funcorr, RS_corr, seed_corr, target_corr, result_corr, saveTmp};
-			System.out.println(RS_corr);
+			int i = 0;
+			for (String s : array) {
+				System.out.println(i + " : " + s);
+				i++;
+			}
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			
@@ -204,7 +208,8 @@ public class FunconModel extends AbstractModel {
 				}
 			}
 			out.close();
-			for (File fi : new File(resultDir + "/" + logDir_corr).listFiles()) {
+			File[] ff = new File(result_corr + "/" + logDir_corr).listFiles();
+			for (File fi : ff) {
 				erreur += Tools.parseLog(fi.getAbsolutePath());
 			}
 			

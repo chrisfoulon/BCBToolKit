@@ -39,13 +39,29 @@ set -x
 # 4D file of rs data
 rs=$1
 
-# Folder containing the seed masks, we will iterate on all nii file inside
-seed_folder=$2
+
 
 path=${PWD}/Tools
 tmp=$path/tmp/tmp_funcon
+if [[ -e $tmp ]];
+then
+  rm -rf $tmp;
+fi;
+mkdir -p $tmp
 
+default_gm=$path/Tools/extraFiles/Thr100_2mm_avg152T1_gray.nii.gz
+
+# We will mask the seeds with the gray matter to avoid noise due to voxels
+# in the white matter
+seed_folder=$tmp/masked_seeds
+mkdir -p $seeds_folder
 for s in $2/*nii*;
+do
+  seed=`fileName $s`
+  fslmaths $s -mas $default_gm $seed_folder/$seed
+done;
+
+for s in $seed_folder/*nii*;
 do
     seed=`fileName $s`
     res_seed_folder=$4/${seed}
@@ -74,7 +90,7 @@ do
     zcorr_results=${results_folder}/${subject}${seed}_rtoz
 
 
-
+# masquer matière grise sur la lésion
 
 
     # Please do not modify below this line

@@ -2,13 +2,12 @@ options(warn=0)
 args <- commandArgs(TRUE)
 
 # What post-hoc comparison we want to do
-mode <- c(no_ph = "No post-hoc test", co_deco = "Connected versus Spared",
+mode <- c(no_ph = "No post-hoc test", co_deco = "Disconnected versus spared",
 deco_ctr = "Disconnected versus controls", co_ctr = "Spared versus controls")
 
-ph_test <- c(ttest = "t-test", mw = "Mann-Whitney", ks = "Kolmogorov-Smirnov",
-kw = "Kuskal-Wallis")
-ph_fun <- c(ttest = t.test, mw = wilcox.test, ks = ks.test, kw = kruskal.test)
-
+# ph_test <- c(kw = "Kuskal-Wallis", mw = "Mann-Whitney", ttest = "t-test",
+# ks = "Kolmogorov-Smirnov")
+ph_fun <- c(kw = kruskal.test, mw = wilcox.test, ttest = t.test, ks = ks.test)
 # The end of the files created by the first part of AnaCOM2
 pat_re <- "pat.txt"
 sco_re <- "sco.txt"
@@ -133,6 +132,8 @@ post_hoc_all <- function(func, st, lst, ctr, use_mu, m) {
       vec1 <- unlist(lst[[clu]]$sco)
       vec2 <- unlist(lst[[clu]]$co)
       st[clu, "nb_disco"] <- length(vec1)
+      print(vec1)
+      print(vec2)
       res <- post_hoc(func, vec1, vec2, use_mu=use_mu)
     # Disconnected versus controls
     } else if (m == mode[3]) {
@@ -162,7 +163,12 @@ ctr <- controls(args[2])
 # The selection of the mode we will use for post-hoc comparison
 ph_mode <- mode[as.numeric(args[3])]
 # The selection of the post_hoc test we will use
-test <- ph_fun[[as.numeric(args[4])]]
+test <- ph_fun[as.numeric(args[4])]
+test_name = names(ph_fun[as.numeric(args[4])])
+print("TEST")
+print(test)
+print("TESTNAME")
+print(test_name)
 # The result file, we assume it's parent folders exist
 res_folder <- args[5]
 
@@ -185,22 +191,39 @@ co <- list.files(path = folder, pattern = co_re)
 
 ll <- create_list(pat, sco, co)
 
-#### COMPUTATION ####
+out_info <- file_path(res_folder, "patients_info.csv")
+file.create(out_info)
+clu_names <- list()
+pat_name_sco <- list()
+for (clu in names(ll)) {
+  p = sapply(ll[[clu]]$pat, levels)
+  s = unlist(ll[[clu]]$sco)
+  # A line for the names
+  write(paste(c(clu, p), collapse=','), file=out_info, append=TRUE)
+  # A line for the scores
+  write(paste(c(clu, s), collapse=','), file=out_info, append=TRUE)
+}
 
+# print(ll)
+
+#### COMPUTATION ####
 # table will contain the final results of the post_hoc stats
-if (test == ph_test[kw]) {
+if (test_name == 'kw') {
   liste <- kruskal_on_clusters(ll, ctr)
+  print(liste)
   st <- liste$res
   kw_warn <- liste$warn
   st <- mult_comp_corr(st, "kw_pval", col_name="kw_holm")
   write.csv(st, file_path(res_folder, "kruskal_pvalues.csv"), sep=",",
     fileEncoding="UTF-8")
   table <- st[st$kw_holm < 0.05,]#subset(st, kw_holm < 0.05)
+  # After the KW test we use the MW as post-hoc
+  test = ph_fun["mw"]
 } else {
   # Here we didn't compute Kruskal so we just fill table with the cluster names
   table = data.frame(row.names=names(ll))
 }
-if (nrow(table) != 0 && ph_mode != mode[1]) {
+if (nrow(table) != 0 && ph_mode != mode['no_ph']) {
   liste <- post_hoc_all(test, table, ll, ctr, use_mu, ph_mode)
   res <- liste$res
   warn <- liste$warn
@@ -214,15 +237,12 @@ if (nrow(table) != 0 && ph_mode != mode[1]) {
   write.csv(res, file_path(res_folder, "clusters.csv"), sep=",",
     fileEncoding="UTF-8")
   write.csv(warnings, file_path(res_folder, "test_warn.csv"), sep=",",
-    row.names=TRUE,
-  fileEncoding="UTF-8")
+    row.names=TRUE, fileEncoding="UTF-8")
 } else {
-  if (ph_mode == mode[1] && test == ph_test[kw]) {
+  if (ph_mode == mode['no_ph'] && test_name == 'kw') {
     print(paste("Kruskal-Wallis tests can be found in : ",
       file_path(res_folder, "kruskal_pvalues.csv")))
   } else {
-    print(paste("No cluster has passed the significant threshold after the
-    bonferroni holm correction, if you choose the kruskal-wallis test you can
-    see the pvalues inside : ", file_path(res_folder, "kruskal_pvalues.csv")))
+    print(paste("No cluster has passed the significant threshold after the bonferroni holm correction, if you choose the kruskal-wallis test you can see the pvalues inside : ", file_path(res_folder, "kruskal_pvalues.csv")))
   }
 }

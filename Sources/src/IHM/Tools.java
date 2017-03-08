@@ -271,6 +271,8 @@ public final class Tools {
 	/**
 	 * Given an absolute file path, create a copy of this file
 	 * in copypath encoded in UTF-8 (to avoiding weird characters)
+	 * It works only for parameter for anaCOM2 so csv files with 
+	 * only one or two columns
 	 * @param filename : The path of the source
 	 *        copypath : The path of the destination
 	 *        detZero  : True if we want to detect zeros in the source file
@@ -330,13 +332,34 @@ public final class Tools {
 					//First we split cells in each line
 					if (!bool) { //Just avoiding useless tests if we have already a zero
 						String[] cells = line.split(",");
-						for (String c : cells)  {
-							float val = Float.parseFloat(c);
-							if (val <= 0.0) {
-								bool = true;
-							}
+						boolean is_num = true;
+						float num = 0;
+						// We test if the first cell of the line is a number
+						try {
+					    	num = Float.parseFloat(cells[0]);
+					    } catch (NumberFormatException e) {
+					      	is_num = false;
+					    }
+						// If not we test if the second cell is
+						if (!is_num) {
+							try {
+						    	num = Float.parseFloat(cells[1]);
+						    } catch (NumberFormatException e) {
+						      	is_num = false;
+						    }
+						}
+						// If not we have a bad input so we go out from the function
+						if (!is_num) {
+							bool = true;
+							return bool;
+						}
+						// If we have a number but <= 0 we leave the function
+						if (num <= 0.0) {
+							bool = true;
+							return bool;
 						}
 					}
+					// if all the line passed all the tests we write it in UTF8
 					out.write(line + "\n");
 				}
 			} catch (IOException e) {

@@ -7,11 +7,11 @@
    $3:    ResultFolder
    $4:    threshold
    $5:    controlScores
-   $6:    test (Mann-Whitney, t-test, Kolmogorov-Smirnov)
+   $6:    test (Mann-Whitney, t-test, Kolmogorov-Smirnov, Kruskal-Wallis)
    $7:    keepTmp
    $8:    detZero
    $9:    nbvox
-   ${10}: ph_mode (co_deco, deco_ctr, co_ctr, classic)'; exit 1; }
+   ${10}: ph_mode (no post-hoc, co_deco, deco_ctr, co_ctr)'; exit 1; }
 
 # Those lines are the handling of the script's trace and errors
 # Traces and errors will be stored in $3/logAnacom.txt
@@ -40,8 +40,6 @@ if [[ -e $tmp ]];
 then
   rm -rf $tmp;
 fi;
-
-
 mkdir -p $tmp
 
 if [[ $7 == "true" ]];
@@ -321,9 +319,9 @@ do
       numclu=$((numclu + 1));
     fi;
   done;
-  #Be careful, here, in clusters, we have the added scores of patients
+  #Be careful, here, in clusters, we have the sum of scores of patients
   #ADDED to the standard deviation. For now we don't use this value but it could
-  #make errors if we use it. (Solution is to substract each cluster by maskedStd)
+  #make errors if we use it.(but we could substract each cluster by maskedStd)
 done;
 
 echo "#"
@@ -333,6 +331,7 @@ for ((i=0; i<$numclu; i++));
 do
   index=0;
   score="";
+  co_perf=""
   patient="";
   for p in ${pat[*]};
   do
@@ -341,9 +340,11 @@ do
     #the score else we remove the file
     if [ `fslstats $tmp/tmpMask${i}_${p} -V | awk '{ print $1 }'` == 0 ];
     then
-      co_scores="$score${originalSco[$index]},"
-      rm -rf $tmp/tmpMask${i}_${p}.*;
+      echo "SPARED Clu : $i, name : $p, val : $co_perf${originalSco[$index]},"
+      co_perf="$co_perf${originalSco[$index]},"
+      imrm $tmp/tmpMask${i}_${p};
     else
+      echo "DISCO Clu : $i, name : $p, val : $score${originalSco[$index]},"
       patient="$patient$p,"
       score="$score${originalSco[$index]},"
     fi;
@@ -352,141 +353,116 @@ do
   #We remove the last comma of strings and we store values in files
   echo -n "${patient:0:${#patient}-1}" >> $tmp/cluster${i}pat.txt
   echo -n "${score:0:${#score}-1}" >> $tmp/cluster${i}sco.txt
-  echo -n "${score:0:${#co_score}-1}" >> $tmp/cluster${i}co_perf.txt
+  echo -n "${co_perf:0:${#co_perf}-1}" >> $tmp/cluster${i}co_perf.txt
 done;
 echo "#"
 
-
-# Just define the test we will compute
-if [[ $6 == "Mann-Whitney" ]];
-then
-  testname="wilcox.test";
-  testvalue="W";
-  test_number=2
-elif [[ $6 == "t-test" ]];
-then
-  testname="t.test";
-  testvalue="t";
-  test_number=1
-elif [[ $6 == "Kolmogorov-Smirnov" ]];
-then
-  testname="ks.test"
-  testvalue="D";
-  test_number=3
-else
-  echo "This test is unknown"
-  exit(1)
-fi;
-
-# We can use 4 comparison modes : classic(only post_hoc), co_deco, co_ctr,
+# We can use 4 comparison modes : No only post_hoc, co_deco, co_ctr,
 # deco_ctr
-if [[ ${10} == "1" ]];
-then
-  ph_mode=1
-elif [[ ${10} == "2" ]];
-then
-  ph_mode=2
-elif [[ ${10} == "3" ]];
-then
-  ph_mode=3
-elif [[ ${10} == "4" ]];
-then
-  ph_mode=4
-else
-  echo "This ph_mode is unknown"
-  exit(1)
-fi;
 
 
 # It is the function that will handle the result of the statistical test
-Rscript stats_proper.r $tmp $5 $ph_mode $test_number $3
-
-
-une carte avec kruskal significatif et une avec les post_hoc significatifs
-et aussi leur carte de toutes les pval pour les deux
-Et un mask binaire pour chaque cluster (avant les tests)
+Rscript $path/scripts/stats_proper.r $tmp $5 ${10} $6 $3
 
 # We need to extract the pvalues from the results of the R script
 #### READING the csv file containing patient name and their score ####
 
-
-En fait ce que je dois faire : Dans tous les cas je récupère les valeurs dans
-kruskal_pvalues.csv et je crée les clusters binaires ET les deux cartes :
-tous les clusters avec leur pvalues du KW ET celle de tous les clusters significatifs
-après le kruskal.
-
-Ensuite, SI le mode only kruskal est séléctionné OU que la carte des clusters
-significatifs du kruskal est vide je crée les deux cartes (Tous et ceux qui sont
-significatifs) pour les tests post hoc.
-
-
-#Here we fill arrays with the columns of the csv file, IFS define separators
-kw_csv="$3/kruskal_pvalues.csv"
-kw_res="$3/kruskal_clusters.nii.gz"
-kw_corr="$3/kruskal_holm_clusters.nii.gz"
-#Counter for adding value in cells
-kw_i=0
-# cluster names
-declare -a kw_clu
-# pvalues of the KW tests
-declare -a kw_pval
-# holm correction of the KW tests
-declare -a kw_holm
-
-# Be careful, the first index of values is 1, 0 is the index of the column name
-while IFS=, read kw_clu[$kw_i] useless kw_pval[$kw_i] kw_holm[$kw_i]
-do
-  kw_i=$((kw_i+1))
-done < $kw_csv
-
-# Here we binarize the clusters and we create the maps of pvalues for the KW
-for n in ${#kw_clu[#]};
-do
-  fslmaths $cluD/${kw_clu[$n]} -bin $cluD/${kw_clu[$n]}
-  fslmaths $cluD/${kw_clu[$n]} -add $kw_res $kw_res
-  if [ `awk "BEGIN { print (${kw_holm[$n]} < 0.05)}"` == 1 ];
-  then
-    fslmaths $cluD/${kw_clu[$n]} -add $kw_corr $kw_corr
-  fi;
-done;
-# if [ `awk "BEGIN { print (${bonf[$index]} > 1)}"` == 1 ];
-# Now we create the overlap of all clusters with their pvalue in the KW
-
+# 4 is the Kruskal-Wallis
+if [[ ${6} != "4" ]];
+then
+  #Here we fill arrays with the columns of the csv file, IFS define separators
+  kw_csv="$3/kruskal_pvalues.csv"
+  kw_res="$3/kruskal_clusters.nii.gz"
+  kw_corr="$3/kruskal_holm_clusters.nii.gz"
+  fslmaths $map -mul 0 $kw_res
+  fslmaths $map -mul 0 $kw_corr
+  #Counter for adding value in cells
+  kw_i=0
+  # cluster names
+  declare -a kw_clu
+  # pvalues of the KW tests
+  declare -a kw_pval
+  # holm correction of the KW tests
+  declare -a kw_holm
+  useless=0
+  # Be careful, the first index of values is 1, 0 is the index of the column name
+  while IFS=, read kw_clu[$kw_i] useless kw_pval[$kw_i] kw_holm[$kw_i]
+  do
+    kw_i=$((kw_i+1))
+  done < $kw_csv
+  unset kw_clu[0]
+  unset kw_pval[0]
+  unset kw_holm[0]
+  # Here we binarize the clusters and we create the maps of pvalues for the KW
+  for n in ${!kw_clu[@]};
+  do
+    if [[ ${kw_clu[$n]//\"} != "" ]];
+    then
+      # //\" inside ${} will remove the character " from strings !
+      fslmaths $cluD/${kw_clu[$n]//\"} -bin $cluD/${kw_clu[$n]//\"}
+      fslmaths $cluD/${kw_clu[$n]//\"} -mul ${kw_pval[$n]} -add $kw_res $kw_res
+      if [ `awk "BEGIN { print (${kw_holm[$n]} < 0.05)}"` == 1 ];
+      then
+        fslmaths $cluD/${kw_clu[$n]//\"} -mul ${kw_holm[$n]} -add \
+        $kw_corr $kw_corr
+      fi;
+    fi;
+  done;
+fi;
 
 ph_csv="$3/clusters.csv"
-ph_res="$3/cluters.nii.gz"
-ph_corr="$3/clusters_holm.nii.gz"
-#Counter for adding value in cells
-ph_i=0
-# cluster names
-declare -a ph_clu
-# pvalues of the KW tests
-declare -a ph_kw_pval
-# holm correction of the KW tests
-declare -a ph_kw_holm
-# Number of disconnected patients
-declare -a nb_disco
-# pval of the post_hoc tests
-declare -a ph_pval
-# holm correction of the post_hoc tests
-declare -a ph_holm
 
-# Be careful, the first index of values is 1, 0 is the index of the column name
-while IFS=, read ph_clu[$ph_i] useless ph_kw_pval[$ph_i] ph_kw_holm[$ph_i]\
- nb_disco[$ph_i] ph_pval[$ph_i] ph_osef ph_holm[$ph_i];
-do
-  kw_i=$((kw_i+1))
-done < $ph_csv
+if [ ${10} != "1" ] && [ -e $ph_csv ];
+then
+  # Now we create the overlap of all clusters with their pvalue in the KW
 
-for n in ${#ph_clu[#]};
-do
-  fslmaths $cluD/${ph_clu[$n]} -add $ph_res $ph_res
-  if [ `awk "BEGIN { print (${ph_holm[$n]} < 0.05)}"` == 1 ];
-  then
-    fslmaths $cluD/${ph_clu[$n]} -add $ph_corr $ph_corr
-  fi;
-done;
+  ph_res="$3/clusters.nii.gz"
+  ph_corr="$3/clusters_holm.nii.gz"
+  fslmaths $map -mul 0 $ph_res
+  fslmaths $map -mul 0 $ph_corr
+  #Counter for adding value in cells
+  ph_i=0
+  # cluster names
+  declare -a ph_clu
+  # pvalues of the KW tests
+  declare -a ph_kw_pval
+  # holm correction of the KW tests
+  declare -a ph_kw_holm
+  # Number of disconnected patients
+  declare -a nb_disco
+  # pval of the post_hoc tests
+  declare -a ph_pval
+  # holm correction of the post_hoc tests
+  declare -a ph_holm
+  useless=0
+  ph_osef=0
+  # Be careful the first index of values is 1, 0 is the index of the column name
+  while IFS=, read ph_clu[$ph_i] useless ph_kw_pval[$ph_i] ph_kw_holm[$ph_i]\
+   nb_disco[$ph_i] ph_pval[$ph_i] ph_osef ph_holm[$ph_i];
+  do
+    kw_i=$((kw_i+1))
+  done < $ph_csv
 
+  unset ph_clu[0]
+  unset ph_kw_pval[0]
+  unset ph_kw_holm[0]
+  unset nb_disco[0]
+  unset ph_pval[0]
+  unset ph_holm[0]
+
+  for n in ${!ph_clu[@]};
+  do
+    if [[ ${kw_clu[$n]//\"} != "" ]];
+    then
+      fslmaths $cluD/${ph_clu[$n]//\"} -mul ${ph_pval[$n]} -add $ph_res $ph_res
+      if [ `awk "BEGIN { print (${ph_holm[$n]} < 0.05)}"` == 1 ];
+      then
+        fslmaths $cluD/${ph_clu[$n]//\"}-mul ${ph_holm[$n]} -add \
+        $ph_corr $ph_corr
+      fi;
+    fi;
+  done;
+fi;
 # CLEANING
 
 if [[ -e $saveTmp ]];
@@ -497,6 +473,7 @@ then
 else
   mv $cluD $tmp/;
 fi;
+echo "#"
 # If you forget to check saveTmp, you can recover tmp files if you don't
 # launch anacom2 again
 

@@ -201,7 +201,6 @@ public class FunconModel extends AbstractModel {
 			setNbTicks(new File(RS_corr).listFiles(fileNameFilter).length * new File(seed_corr).listFiles(fileNameFilter).length);
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
-				System.out.println(inLoop);
 				if (inLoop.startsWith("#")) {
 					progress++;
 					loading.setWidth(progress);			

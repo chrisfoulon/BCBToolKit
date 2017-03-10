@@ -26,6 +26,7 @@ import javax.swing.SwingConstants;
 
 import Applications.Tractotron;
 import Config.BCBEnum;
+import Config.BCBEnum.Param;
 import Config.Config;
 import IHM.BCBToolKit;
 import IHM.BCBToolKitIHM;
@@ -119,7 +120,13 @@ public class SettingsFrame implements Settings {
 				+ "<br /> Smaller is generally more accurate but takes more time"
 				+ "<br /> to compute and may not capture as much deformation if the"
 				+ "<br /> optimization is caught in a local minimum. </html>");
-		nbVox = new JTextField("0");
+		String nbvox_str = conf.getVal(Param.AVOXNB);
+		if (nbvox_str.equals("")) {
+			nbVox = new JTextField("512");
+		} else {
+			nbVox = new JTextField(nbvox_str);
+		}
+		
 		nbVox.setPreferredSize(new Dimension(50, 20));
 		//LoadSettings
 		loadSettings();
@@ -370,7 +377,7 @@ public class SettingsFrame implements Settings {
 				} catch (NumberFormatException n) {
 					Tools.showErrorMessage(getBCB().getFrame(), 
 							"The number of voxels must be an integer >= 0");
-					nbVox.setText("0");
+					nbVox.setText("512");
 					return;
 				}
 			}
@@ -505,6 +512,7 @@ public class SettingsFrame implements Settings {
 
 	@Override
 	public void applyChanges() {
+		conf.setVal(Param.AVOXNB, nbVox.getText());
 		if (startCheck.isSelected()) {
 			this.startBro.setConf();
 		} else {

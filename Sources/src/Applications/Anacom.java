@@ -6,6 +6,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.net.URL;
@@ -104,7 +106,6 @@ public class Anacom extends AbstractApp {
 
 		String[] tab = {"Kruskal-Wallis", "Mann-Whitney", "t-test", "Kolmogorov-Smirnov"};
 		testCombo = new JComboBox<String>(tab);
-		testCombo.setSelectedIndex(3);
 		String test_conf_val = conf.getVal(Param.ADEFTEST);
 		if (!test_conf_val.equals("")) {
 			testCombo.setSelectedIndex(Integer.valueOf(test_conf_val));
@@ -115,7 +116,8 @@ public class Anacom extends AbstractApp {
 		String mode_conf_val = conf.getVal(Param.ADEFMODE);
 		if (!mode_conf_val.equals("")) {
 			modeCombo.setSelectedIndex(Integer.valueOf(mode_conf_val));
-		}	
+		}
+		modeCombo.setEnabled(((String)testCombo.getSelectedItem()).equals("Kruskal-Wallis"));
 		lesBro = new Browser(this.getFrame(), "Lesions directory :", BCBEnum.fType.DIR.a(),
 				this.getConf(), BCBEnum.Param.ALESDIR, this.getBCB());
 		resBro = new Browser(this.getFrame(), "Result directory :", BCBEnum.fType.DIR.a(),
@@ -270,7 +272,6 @@ public class Anacom extends AbstractApp {
 							return null;
 						}
 						String testName = (String)testCombo.getSelectedItem();
-						System.out.println("SELECTED ITEM : " + testName);
 						model.setTest(testName);
 						
 						String ph_name = (String)modeCombo.getSelectedItem();
@@ -354,7 +355,42 @@ public class Anacom extends AbstractApp {
 				changeRunButton(panel, 0);
 				worker.execute();
 			}
-		});	
+		});
+		
+		threshFld.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				String text = threshFld.getText();
+				//Deleting of invisible characters
+				text = text.trim();
+				try {
+					Integer.parseInt(text);
+				} catch (NumberFormatException n) {
+					Tools.showErrorMessage(getBCB().getFrame(), 
+							"The minimum of overlaps must be an integer >= 3");
+					threshFld.setText("3");
+					return;
+				}
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+			}
+		});
+		
+		testCombo.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (!testCombo.getSelectedItem().equals("Kruskal-Wallis")) {
+					modeCombo.setEnabled(false);
+				} else {
+					modeCombo.setEnabled(true);
+				}
+				
+			}
+		});
 
 		vectMode.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -429,8 +465,9 @@ public class Anacom extends AbstractApp {
 			//We reset the path of ctrlBro
 			ctrlBro.setPath("", null);
 		}
-		conf.setVal(Param.ADEFTEST, String.valueOf(testCombo.getSelectedIndex() + 1));
-		conf.setVal(Param.ADEFMODE, String.valueOf(modeCombo.getSelectedIndex() + 1));
+		conf.setVal(Param.ADEFTEST, String.valueOf(testCombo.getSelectedIndex()));
+		conf.setVal(Param.ADEFMODE, String.valueOf(modeCombo.getSelectedIndex()));
+		conf.setVal(BCBEnum.Param.ATHRESH, threshFld.getText());
 		super.closing();
 	}
 	

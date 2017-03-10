@@ -89,10 +89,6 @@ do
     # Z score calculated with Fisher r-to-z transformation
     zcorr_results=${results_folder}/${subject}${seed}_rtoz
 
-
-# masquer matière grise sur la lésion
-
-
     # Please do not modify below this line
 
     # fslmaths ${GM} -div ${GM} ${GM}

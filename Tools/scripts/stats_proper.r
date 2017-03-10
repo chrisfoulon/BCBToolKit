@@ -103,7 +103,7 @@ post_hoc <- function(func, vec1, vec2, vec_kw=NULL, use_mu=FALSE) {
     invokeRestart("muffleWarning");
   })
   if (class(res) == "try-error") {
-    ww <- "Error : data are essentially constant";
+    ww <- "Error";
     withCallingHandlers({
         res$p.value <- NaN;
         res$statistic <- NaN;
@@ -128,12 +128,10 @@ post_hoc_all <- function(func, st, lst, ctr, use_mu, m) {
   warn = list()
   for (clu in row.names(st)) {
     # Disconnected versus Spared
-    if (m == mode[2] || m == mode[5]) {
+    if (m == mode[2] || m == mode[1]) {
       vec1 <- unlist(lst[[clu]]$sco)
       vec2 <- unlist(lst[[clu]]$co)
       st[clu, "nb_disco"] <- length(vec1)
-      print(vec1)
-      print(vec2)
       res <- post_hoc(func, vec1, vec2, use_mu=use_mu)
     # Disconnected versus controls
     } else if (m == mode[3]) {
@@ -163,12 +161,8 @@ ctr <- controls(args[2])
 # The selection of the mode we will use for post-hoc comparison
 ph_mode <- mode[as.numeric(args[3])]
 # The selection of the post_hoc test we will use
-test <- ph_fun[as.numeric(args[4])]
+test <- ph_fun[[as.numeric(args[4])]]
 test_name = names(ph_fun[as.numeric(args[4])])
-print("TEST")
-print(test)
-print("TESTNAME")
-print(test_name)
 # The result file, we assume it's parent folders exist
 res_folder <- args[5]
 
@@ -210,7 +204,6 @@ for (clu in names(ll)) {
 # table will contain the final results of the post_hoc stats
 if (test_name == 'kw') {
   liste <- kruskal_on_clusters(ll, ctr)
-  print(liste)
   st <- liste$res
   kw_warn <- liste$warn
   st <- mult_comp_corr(st, "kw_pval", col_name="kw_holm")
@@ -218,7 +211,7 @@ if (test_name == 'kw') {
     fileEncoding="UTF-8")
   table <- st[st$kw_holm < 0.05,]#subset(st, kw_holm < 0.05)
   # After the KW test we use the MW as post-hoc
-  test = ph_fun["mw"]
+  test = ph_fun[["mw"]]
 } else {
   # Here we didn't compute Kruskal so we just fill table with the cluster names
   table = data.frame(row.names=names(ll))

@@ -134,51 +134,6 @@ else
     done;
 fi
 
-# We calculate the value that you need to add to your score to avoid zeros AND
-# negative values
-subZero=0
-if [[ $8 == "true" ]];
-then
-  stillZero=$8
-  valMu=$5 #In case of mean control value
-  while [[ $stillZero == "true" ]]; #While we have a zero in data
-  do
-    subZero=$((subZero + 1));
-    stillZero="false"
-    #If there are zeros, we will add 1 to all scores until they are all gone
-    for i in ${!sco[@]}; #for all scores
-    do
-      #We add 1 to the value of the cell
-      sco[$i]=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", ${sco[$i]} + 1}"`
-      if [[ ${sco[$i]} == "0.000000" ]]; #if the new value is equal to 0
-      then
-	       stillZero="true"
-         #So we generated a new zero value and we need to make another loop
-      fi;
-    done;
-    if [[ $5 =~ ^[0-9]+\.[0-9]+|[0-9]+$ ]];
-    then
-      valMu=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", $valMu + 1}"`
-      if [[ $valMu == "0.000000" ]]; #if the new value is equal to 0
-      then
-	       stillZero="true"
-         #So we generated a new zero value and we need to make another loop
-      fi;
-    else
-      for i in ${!full[@]}; #for all scores
-      do
-	#We add 1 to the value of the cell
-	full[$i]=`LC_ALL=en_GB awk "BEGIN {printf \"%.6f\", ${full[$i]} + 1}"`
-	if [[ ${full[$i]} == "0.000000" ]]; #if the new value is equal to 0
-	then
-	  stillZero="true" #So we generated a new zero value and we need to make another loop
-	fi;
-      done;
-    fi;
-  done;
-fi;
-#So here we have removed ALL zeros of every scores we have !
-
 if [[ $5 =~ ^[0-9]+\.[0-9]+|[0-9]+$ ]];
 then
   control="mu=$valMu"
@@ -367,8 +322,8 @@ Rscript $path/scripts/stats_proper.r $tmp $5 ${10} $6 $3
 # We need to extract the pvalues from the results of the R script
 #### READING the csv file containing patient name and their score ####
 
-# 4 is the Kruskal-Wallis
-if [[ ${6} != "4" ]];
+# 1 is the Kruskal-Wallis
+if [[ ${6} == "1" ]];
 then
   #Here we fill arrays with the columns of the csv file, IFS define separators
   kw_csv="$3/kruskal_pvalues.csv"

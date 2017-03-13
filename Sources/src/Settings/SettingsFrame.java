@@ -414,13 +414,11 @@ public class SettingsFrame implements Settings {
 	}
 
 	public void updateResetControllers() {
-		HashMap<BCBEnum.Param, Browser> map = getBCB().getBroMap(); 
-		for (BCBEnum.Param p : map.keySet()) {
-			final Browser b = map.get(p);
+		for (BCBEnum.Param p : butMap.keySet()) {
 			butMap.get(p).addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					if (b != null) {
-						b.resetPath();
+					if (getBCB().getBroMap().get(p) != null) {
+						getBCB().resetBro(p);
 					}
 				}
 			});

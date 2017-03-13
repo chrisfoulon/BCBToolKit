@@ -499,15 +499,15 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		this.broMap.put(p, bro);
 	}
 	
+	public void resetBro(BCBEnum.Param p) {
+		this.broMap.get(p).resetPath();
+	}
+	
 	/**
 	 * Add the location of a frame to the posMap
 	 */
 	public void addLoc(BCBEnum.Index i, Point p) {
 		posMap.put(i, p);
-	}
-	
-	public void updateReset() {
-		getSettings().updateResetControllers();
 	}
 	
 	/**
@@ -651,22 +651,6 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		}
 		conf.saveConfig();
 		frame.dispose();
-	}
-	
-	public void deactivateButtons(JButton but) {
-		for (JButton j : butSet) {
-			if (j != but) {
-				j.setEnabled(false);
-			}
-		}
-		// Update reset buttons of the SettingsFrame
-		updateReset();
-	}
-	
-	public void activateButtons() {
-		for (JButton j : butSet) {
-				j.setEnabled(true);
-		}
 	}
 
 	public void savePaths(boolean b) {

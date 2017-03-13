@@ -118,11 +118,6 @@ public class AnacomModel extends AbstractModel {
 
 			String[] array = {this.script,
 					csvFile, lesDir, resDir, thresh, controls, test, saveTmp, detZero, nbVox, mode};
-			int i = 0;
-			for (String s : array) {
-				System.out.println(i + " : " + s);
-				i++;
-			}
 
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));

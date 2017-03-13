@@ -436,11 +436,12 @@ if [[ $tt =~ which.* ]]; then
   echo "############### WARNING ############# \n Python 2 can't be found \
   on your system so ICA_AROMA cannot be used";
 else
-  python2 -c 'import numpy';
+  python2.7 -c 'import numpy';
   import_error=$?
-  if [[ import_error == 0]]
+  if [[ import_error == 0 ]]
+  then
     mkdir -p ${featdir}/AROMATISED
-    python2 ${ica}/ICA_AROMA.py \
+    python2.7 ${ica}/ICA_AROMA.py \
             -in ${ffdata} \
             -out ${featdir}/AROMATISED \
             -mc ${featdir}/mc/prefiltered_func_data_mcf.par \
@@ -526,6 +527,10 @@ fslmaths ${rsDenoise}/RS_clean_bptf_MNI_2mm.nii.gz \
 if [[ $saveTmp == "true" ]]
 then
   temporaryDir=${resPat}/temporaryFiles
+  if [[ -e $temporaryDir ]];
+  then
+    rm -rf $temporaryDir;
+  fi;
   mkdir -p $temporaryDir
   mv ${featdir} ${temporaryDir}
   mv ${tmp}/design_preproc_${subj}.fsf $temporaryDir

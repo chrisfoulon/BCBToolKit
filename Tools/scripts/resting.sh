@@ -13,6 +13,35 @@ set -e
 path=${PWD}/Tools
 export FSLOUTPUTTYPE="NIFTI_GZ"
 
+# Firstly we will test if the user machine contains python2.7 and numpy
+
+if [[ $(python2.7 --version 2>&1) != *2\.7\.* ]];
+then
+  echo "Python 2 can't be found on your system you can install it by following\
+  this website : \
+  https://www.continuum.io/downloads" >&2;
+  exit
+else
+function test_numpy {
+python2.7 - <<END
+try:
+  import numpy
+  print(0)
+except ImportError:
+  print(1)
+exit
+END
+}
+  import_error=$(test_numpy)
+  if [ $import_error != 0 ];
+  then
+    echo "Python 2 does not contain the numpy package. \
+    To install it you can use \"sudo pip install numpy\"" >&2
+    exit
+  fi;
+fi;
+
+
 fileName() {
   name=$(basename $1)
   name=${name%%.*}
@@ -37,10 +66,10 @@ enantiomorphic() {
   name=`fileName $1`
   templateWSkull=$4
   #We reorient images on the MNI coordinates with fslreorient2std
-  fslreorient2std $1 $ttmp/$name
-  fslreorient2std $2 $ttmp/les$name
   T1=$ttmp/$name
   les=$ttmp/les$name
+  fslreorient2std $1 $T1
+  fslreorient2std $2 $les
   # We compute the tranformation between the T1 and the MNI152 WITH the skull
   # and we apply it to the T1
   flirt -in $T1 -ref $templateWSkull -omat $ttmp/affine.mat \

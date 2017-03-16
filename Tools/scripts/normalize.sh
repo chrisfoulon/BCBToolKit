@@ -15,6 +15,9 @@ exec 2>> $3/logNormalisation.txt
 set -x
 set -e
 
+PATH=$( echo $PATH | tr ":" "\n" | grep  -v "fsl" | tr -s "\n" ":" | sed 's/:$//')
+LD_LIBRARY_PATH=$( echo $LD_LIBRARY_PATH | tr ":" "\n" | grep  -v "fsl" | tr -s "\n" ":" | sed 's/:$//')
+
 path=${PWD}/Tools
 
 lib=$path/libraries/lib

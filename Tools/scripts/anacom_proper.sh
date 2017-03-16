@@ -20,9 +20,6 @@ echo -n "" > $3/logAnacom.txt
 exec 2>> $3/logAnacom.txt
 set -x
 
-PATH=$( echo $PATH | tr ":" "\n" | grep  -v "fsl" | tr -s "\n" ":" | sed 's/:$//')
-LD_LIBRARY_PATH=$( echo $LD_LIBRARY_PATH | tr ":" "\n" | grep  -v "fsl" | tr -s "\n" ":" | sed 's/:$//')
-
 path=${PWD}/Tools
 
 lib=$path/libraries/lib

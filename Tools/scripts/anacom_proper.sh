@@ -225,7 +225,12 @@ done;
 #erorded is now full of 0
 rm -rf $tmp/eroded
 echo "#"
-
+# Here we test if layer files were created
+if [ `find $tmp/layer* -maxdepth 0 -type f | wc -l` == 0 ];
+then
+  echo "No clusters passed the thresholds" >&2;
+  exit;
+fi;
 
 #Here, we will compute the standard deviation because if, in a layer, we can
 #have different area with the same score once added but not the same

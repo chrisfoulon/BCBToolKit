@@ -25,7 +25,7 @@ Disconnectome maps mode uses Trackvis library http://trackvis.org
 
 Cortical Thickness and Normalisation use ANTs (Advanced Normalization Tools) http://stnava.github.io/ANTs
 
-Enantiomorphic tranformation : Nachev et al. (2008) Enantiomorphic normalization of focally lesioned brains
+Enantiomorphic transformation : Nachev et al. (2008) Enantiomorphic normalization of focally lesioned brains
 
 #### Practical information: ####
 

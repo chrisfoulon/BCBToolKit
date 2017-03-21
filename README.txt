@@ -1,9 +1,9 @@
 Created by Michel Thiebaut de Schotten and Chris Foulon.
-Tractotron is not approved for clinical use.
-Tractotron is the property of Chris Foulon and Michel Thiebaut de Schotten.
+BCBtoolkit is not approved for clinical use.
+BCBtoolkit is the property of Chris Foulon and Michel Thiebaut de Schotten.
 Contact : hd.chrisfoulon@gmail.com or michel.thiebaut@gmail.com
 
-This software is compatible with 10.7, 10.8, 10.9 and 10.10 versions of Mac OSX and Linux.
+This software is compatible with 10.7, 10.8, 10.9 and 10.10 versions of Mac OSX and Linux(ArchLinux, (K)Ubuntu 14.04/16.04, Debian 8 tested).
 
 Thanks for citing: 
 Thiebaut de Schotten, M., et al. (2014) Damage to white
@@ -25,18 +25,20 @@ Disconnectome maps mode uses Trackvis library http://trackvis.org
 
 Cortical Thickness and Normalisation use ANTs (Advanced Normalization Tools) http://stnava.github.io/ANTs
 
+Enantiomorphic tranformation : Nachev et al. (2008) Enantiomorphic normalization of focally lesioned brains
+
 #### Practical information: ####
 
 The folder of this application includes a default tracts folder.
 
 If you are on OSX : 
 
-To launch the BCBToolKit, double-click on the script : BCBToolKit.command
+To launch the BCBtoolkit, double-click on the script : BCBToolKit.command
 
 If you are on Linux : 
 
-To launch the BCBToolKit, double-click on the script : BCBToolKit.sh (Or launch it in console if .sh scripts are not directly executable by double-click on your OS) 
+To launch the BCBtoolkit, double-click on the script : BCBToolKit.sh (Or launch it in console if .sh scripts are not directly executable by double-click on your OS) 
 
 --------- IMPORTANT ---------
-Be careful about file extension, this application recognises only nifti (i.e.: .nii) and compressed nifti (i.e.: .nii.gz) extensions in the MNI152 stereotaxic space
+Be careful about file extension, this application recognises only nifti (i.e.: .nii) and compressed nifti (i.e.: .nii.gz) extensions.
 Do not use files or directories containing space, tabulation or parenthesis.

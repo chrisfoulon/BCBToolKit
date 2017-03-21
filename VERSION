@@ -1,6 +1,20 @@
 
 ** Current version **
-v3.0.0
+v4.0.0 release
+**Major modifications in AnaCOM2 module**
+We replaced the self-made bash bonferroni-holm correction by the bonferroni_holm correction from R (Results which are significant or not won't change but corrected pvalues might be different).
+We also added the possibility to compare disconnected patients, spared patients and controls using a Kruskal-Wallis test before applying a post-hoc Mann-Whitney test which can now compare 
+diconnected patients with spared patients or controls, or spared patients with controls. 
+
+** Previous updates **
+v3.2.0 beta
+**New method for brain extraction**
+We replaced the bet2 method by the antsBrainExtraction from ants.
+
+v3.1.0 beta
+**New module : Functionnal connectivity on fMRI images (by Leonardo Cerliani) **
+
+v3.0.0 beta
 **New module : Resting State Preprocessing (by Leonardo Cerliani) **
 **New method for lesion masking**
 We added the enantiomorphic (ref : "Enantiomorphic normalization of focally lesioned brains." Nachev.P, 2007) method to mask lesion in all modules that use T1 images by replacing the leionned area by the healthy tissue of the oposite hemisphere (Obviously it won't work if lesions are like symetrical on both hemispheres). 
@@ -10,7 +24,6 @@ We added the enantiomorphic (ref : "Enantiomorphic normalization of focally lesi
 Disconnectome Maps : We added the possibility to add a minimum threshold that will be applied to all results 
 Tractotron : Bug fix that may cause false negatives in the severity calculation
 
-** Previous updates **
 v2.0.20
 ** Module modifications **
 *All modules : -Log files are now available and work better for every modules

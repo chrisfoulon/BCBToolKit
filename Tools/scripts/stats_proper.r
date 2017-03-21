@@ -142,7 +142,7 @@ post_hoc_all <- function(func, st, lst, ctr, use_mu, m) {
     } else if (m == mode [4]) {
       vec1 <- unlist(lst[[clu]]$co)
       res <- post_hoc(func, vec1, ctr, use_mu=use_mu)
-      st[clu, "nb_co"] <- length(vec1)
+      st[clu, "nb_spared"] <- length(vec1)
     } else {
       stop("This mode does not exist")
     }

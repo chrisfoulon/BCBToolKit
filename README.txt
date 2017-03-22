@@ -31,11 +31,11 @@ Enantiomorphic transformation : Nachev et al. (2008) Enantiomorphic normalizatio
 
 The folder of this application includes a default tracts folder.
 
-If you are on OSX : 
+For OSX users : 
 
 To launch the BCBtoolkit, double-click on the script : BCBToolKit.command
 
-If you are on Linux : 
+For Linux users : 
 
 To launch the BCBtoolkit, double-click on the script : BCBToolKit.sh (Or launch it in console if .sh scripts are not directly executable by double-click on your OS) 
 

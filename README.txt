@@ -40,5 +40,5 @@ For Linux users :
 To launch the BCBtoolkit, double-click on the script : BCBToolKit.sh (Or launch it in console if .sh scripts are not directly executable by double-click on your OS) 
 
 --------- IMPORTANT ---------
-Be careful about file extension, this application recognises only nifti (i.e.: .nii) and compressed nifti (i.e.: .nii.gz) extensions.
+Be careful with file extension, this application recognises only nifti (i.e.: .nii) and compressed nifti (i.e.: .nii.gz) extensions.
 Do not use files or directories containing space, tabulation or parenthesis.

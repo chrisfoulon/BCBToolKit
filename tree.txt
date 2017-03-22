@@ -1,0 +1,481 @@
+BCBToolKit
+├── ACKNOWLEDGEMENT
+├── BCBToolKit.sh
+├── COPYING.txt
+├── DISCLAIMER
+├── Lesions
+│   └── lesionpatient1.nii.gz
+├── README.txt
+├── relatedPapers
+│   ├── A novel approach to clinical–radiological correlations (AnaCOM).pdf
+│   ├── REF_Atlasing Location.pdf
+│   ├── REF_Damage to White Matter Pathways in Subacute and Chronic Spatial Neglect.pdf
+│   ├── REF_Frontal Atlas.pdf
+│   ├── REF_Monkey to human comparative anatomy of the frontal lobe association tracts Cortex.pdf
+│   └── REF_Short frontal lobe connections of the human brain.pdf
+├── Sources
+│   ├── images
+│   │   ├── anacom.jpg
+│   │   ├── anacom.png
+│   │   ├── anacomtxt.png
+│   │   ├── BCBLogo.png
+│   │   ├── BCBLogoR.png
+│   │   ├── Brain.jpg
+│   │   ├── corti.png
+│   │   ├── disco.png
+│   │   ├── funcon.png
+│   │   ├── HLogo.png
+│   │   ├── icon.png
+│   │   ├── iconT.png
+│   │   ├── Logo.png
+│   │   ├── LogoT.png
+│   │   ├── norma.png
+│   │   ├── settings.png
+│   │   ├── tracto.png
+│   │   └── undercons.png
+│   └── src
+│       ├── Applications
+│       │   ├── AbstractApp.java
+│       │   ├── Anacom.java
+│       │   ├── Cortical.java
+│       │   ├── Disco.java
+│       │   ├── Funcon.java
+│       │   ├── Normalisation.java
+│       │   ├── Statistical.java
+│       │   └── Tractotron.java
+│       ├── Config
+│       │   ├── BCBEnum.java
+│       │   └── Config.java
+│       ├── IHM
+│       │   ├── BCBToolKitIHM.java
+│       │   ├── BCBToolKit.java
+│       │   ├── Browser.java
+│       │   ├── ImagePanel.java
+│       │   ├── LoadingBar.java
+│       │   ├── Renamer.java
+│       │   └── Tools.java
+│       ├── Models
+│       │   ├── AbstractModel.java
+│       │   ├── AnacomModel.java
+│       │   ├── CorticalModel.java
+│       │   ├── DiscoModel.java
+│       │   ├── FunconModel.java
+│       │   ├── NormalisationModel.java
+│       │   ├── StatisticalModel.java
+│       │   └── TractoModel.java
+│       └── Settings
+│           ├── SettingsFrame.java
+│           └── Settings.java
+├── sources.jar
+├── Tools
+│   ├── binaries
+│   │   ├── ANTs
+│   │   │   ├── ANTS
+│   │   │   ├── antsAffineInitializer
+│   │   │   ├── antsaffine.sh
+│   │   │   ├── antsAlignOrigin
+│   │   │   ├── antsApplyTransforms
+│   │   │   ├── antsApplyTransformsToPoints
+│   │   │   ├── antsASLProcessing.R
+│   │   │   ├── antsASLProcessing.sh
+│   │   │   ├── antsAtroposN4.sh
+│   │   │   ├── ANTSAverage2DAffine.sh
+│   │   │   ├── ANTSAverage3DAffine.sh
+│   │   │   ├── antsbashstats.sh
+│   │   │   ├── antsBOLDNetworkAnalysis.R
+│   │   │   ├── antsBrainExtraction.sh
+│   │   │   ├── antsCorticalThickness.sh
+│   │   │   ├── antsdeformationmag.sh
+│   │   │   ├── ANTSIntegrateVectorField
+│   │   │   ├── ANTSIntegrateVelocityField
+│   │   │   ├── antsIntermodalityIntrasubject.sh
+│   │   │   ├── antsIntroduction.sh
+│   │   │   ├── ANTSJacobian
+│   │   │   ├── antsLaplacianBoundaryCondition.R
+│   │   │   ├── antsLongitudinalCorticalThickness.sh
+│   │   │   ├── antsMalfLabeling.sh
+│   │   │   ├── antsMotionCorr
+│   │   │   ├── antsMotionCorrDiffusionDirection
+│   │   │   ├── antsMotionCorrExample
+│   │   │   ├── antsMotionCorrStats
+│   │   │   ├── antsMultivariateTemplateConstruction2.sh
+│   │   │   ├── antsMultivariateTemplateConstruction.sh
+│   │   │   ├── antsNetworkAnalysis.R
+│   │   │   ├── antsNeuroimagingBattery
+│   │   │   ├── ANTSpexec.sh
+│   │   │   ├── antsqsub.sh
+│   │   │   ├── antsRegistration
+│   │   │   ├── antsRegistrationSyNQuick.sh
+│   │   │   ├── antsRegistrationSyN.sh
+│   │   │   ├── ants.sh
+│   │   │   ├── antsSliceRegularizedRegistration
+│   │   │   ├── antsTransformInfo
+│   │   │   ├── ANTSUseDeformationFieldToGetAffineTransform
+│   │   │   ├── ANTSUseLandmarkImagesToGetAffineTransform
+│   │   │   ├── ANTSUseLandmarkImagesToGetBSplineDisplacementField
+│   │   │   ├── antsUtilitiesTesting
+│   │   │   ├── antswithdt.sh
+│   │   │   ├── asymmetry.sh
+│   │   │   ├── Atropos
+│   │   │   ├── AverageAffineTransform
+│   │   │   ├── AverageAffineTransformNoRigid
+│   │   │   ├── AverageImages
+│   │   │   ├── AverageTensorImages
+│   │   │   ├── basic_ants_example.sh
+│   │   │   ├── bl
+│   │   │   ├── buildtemplateparallel.sh
+│   │   │   ├── cbf_pasl_robust_batch.R
+│   │   │   ├── cbf_pcasl_robust_batch.R
+│   │   │   ├── ClusterImageStatistics
+│   │   │   ├── compareTwoTransforms
+│   │   │   ├── ComposeMultiTransform
+│   │   │   ├── CompositeTransformUtil
+│   │   │   ├── ConvertImagePixelType
+│   │   │   ├── ConvertInputImagePixelTypeToFloat
+│   │   │   ├── ConvertScalarImageToRGB
+│   │   │   ├── ConvertToJpg
+│   │   │   ├── ConvertTransformFile
+│   │   │   ├── CopyImageHeaderInformation
+│   │   │   ├── CreateDisplacementField
+│   │   │   ├── CreateDTICohort
+│   │   │   ├── CreateImage
+│   │   │   ├── CreateJacobianDeterminantImage
+│   │   │   ├── CreateTiledMosaic
+│   │   │   ├── CreateWarpedGridImage
+│   │   │   ├── DeNrrd
+│   │   │   ├── directlabels.sh
+│   │   │   ├── ExtractRegionFromImage
+│   │   │   ├── ExtractRegionFromImageByMask
+│   │   │   ├── ExtractSliceFromImage
+│   │   │   ├── FitBSplineCurveToPoints
+│   │   │   ├── geodesicinterpolation.sh
+│   │   │   ├── GetConnectedComponentsFeatureImages
+│   │   │   ├── guidedregistration.sh
+│   │   │   ├── H5detect
+│   │   │   ├── H5make_libsettings
+│   │   │   ├── ImageCompare
+│   │   │   ├── ImageIntensityStatistics
+│   │   │   ├── ImageMath
+│   │   │   ├── ImageSetStatistics
+│   │   │   ├── itkTestDriver
+│   │   │   ├── jointfusion
+│   │   │   ├── KellyKapowski
+│   │   │   ├── KellySlater
+│   │   │   ├── LabelClustersUniquely
+│   │   │   ├── LabelGeometryMeasures
+│   │   │   ├── LabelOverlapMeasures
+│   │   │   ├── landmarkmatch.sh
+│   │   │   ├── LaplacianThickness
+│   │   │   ├── LesionFilling
+│   │   │   ├── lohmann.sh
+│   │   │   ├── MeasureImageSimilarity
+│   │   │   ├── MeasureMinMaxMean
+│   │   │   ├── MemoryTest
+│   │   │   ├── MultiplyImages
+│   │   │   ├── multi_template_script.sh
+│   │   │   ├── N3BiasFieldCorrection
+│   │   │   ├── N4BiasFieldCorrection
+│   │   │   ├── newAntsExample.sh
+│   │   │   ├── optimalsmooth.sh
+│   │   │   ├── PasteImageIntoImage
+│   │   │   ├── PermuteFlipImageOrientationAxes
+│   │   │   ├── phantomstudy.sh
+│   │   │   ├── PrintHeader
+│   │   │   ├── RebaseTensorImage
+│   │   │   ├── registerimages.pl
+│   │   │   ├── ReorientTensorImage
+│   │   │   ├── ResampleImage
+│   │   │   ├── ResampleImageBySpacing
+│   │   │   ├── ResetDirection
+│   │   │   ├── runprogramonimageset.pl
+│   │   │   ├── sa
+│   │   │   ├── sccan
+│   │   │   ├── sccan_tests
+│   │   │   ├── SetDirectionByMatrix
+│   │   │   ├── SetOrigin
+│   │   │   ├── SetSpacing
+│   │   │   ├── shapeupdatetotemplate.sh
+│   │   │   ├── simpleSynRegistration
+│   │   │   ├── skel.sh
+│   │   │   ├── SmoothImage
+│   │   │   ├── StackSlices
+│   │   │   ├── submitexperimentalbuild.sh
+│   │   │   ├── SurfaceBasedSmoothing
+│   │   │   ├── SurfaceCurvature
+│   │   │   ├── sygnccavg.sh
+│   │   │   ├── TextureCooccurrenceFeatures
+│   │   │   ├── TextureRunLengthFeatures
+│   │   │   ├── thickstudy.sh
+│   │   │   ├── ThresholdImage
+│   │   │   ├── TileImages
+│   │   │   ├── TimeSCCAN
+│   │   │   ├── unbiased_longitudinal_map
+│   │   │   ├── unbiased_pairwise_registration.sh
+│   │   │   ├── unbiased_pairwise_registration_with_aux_images.sh
+│   │   │   ├── waitForPBSQJobs.pl
+│   │   │   ├── waitForSGEQJobs.pl
+│   │   │   ├── waitForXGridJobs.pl
+│   │   │   ├── WarpImageMultiTransform
+│   │   │   ├── warpimages.pl
+│   │   │   ├── WarpTensorImageMultiTransform
+│   │   │   ├── WarpTimeSeriesImageMultiTransform
+│   │   │   ├── weightedaverage.pl
+│   │   │   └── weightedaverage.sh
+│   │   ├── bin
+│   │   │   ├── applywarp
+│   │   │   ├── avscale
+│   │   │   ├── bc
+│   │   │   ├── bet
+│   │   │   ├── bet2
+│   │   │   ├── convert_xfm
+│   │   │   ├── fast
+│   │   │   ├── flirt
+│   │   │   ├── fslcpgeom
+│   │   │   ├── fslhd
+│   │   │   ├── fslinfo
+│   │   │   ├── fslmaths
+│   │   │   ├── fslmerge
+│   │   │   ├── fslreorient2std
+│   │   │   ├── fslsplit
+│   │   │   ├── fslstats
+│   │   │   ├── fslswapdim
+│   │   │   ├── fslswapdim_exe
+│   │   │   ├── fslval
+│   │   │   ├── imcp
+│   │   │   ├── immv
+│   │   │   ├── imrm
+│   │   │   ├── imtest
+│   │   │   ├── remove_ext
+│   │   │   └── track_vis
+│   │   ├── data
+│   │   │   └── standard
+│   │   │       ├── avg152T1_brain.nii.gz
+│   │   │       ├── avg152T1.nii.gz
+│   │   │       ├── FMRIB58_FA_1mm.nii.gz
+│   │   │       ├── FMRIB58_FA-skeleton_1mm.nii.gz
+│   │   │       ├── LowerCingulum_1mm.nii.gz
+│   │   │       ├── MNI152lin_T1_1mm_brain.nii.gz
+│   │   │       ├── MNI152lin_T1_1mm.nii.gz
+│   │   │       ├── MNI152lin_T1_1mm_subbr_mask.nii.gz
+│   │   │       ├── MNI152lin_T1_2mm_brain_mask.nii.gz
+│   │   │       ├── MNI152lin_T1_2mm_brain.nii.gz
+│   │   │       ├── MNI152lin_T1_2mm.nii.gz
+│   │   │       ├── MNI152_T1_0.5mm.nii.gz
+│   │   │       ├── MNI152_T1_1mm_brain_mask_dil.nii.gz
+│   │   │       ├── MNI152_T1_1mm_brain_mask.nii.gz
+│   │   │       ├── MNI152_T1_1mm_brain.nii.gz
+│   │   │       ├── MNI152_T1_1mm_first_brain_mask.nii.gz
+│   │   │       ├── MNI152_T1_1mm_Hipp_mask_dil8.nii.gz
+│   │   │       ├── MNI152_T1_1mm.nii.gz
+│   │   │       ├── MNI152_T1_2mm_b0.nii.gz
+│   │   │       ├── MNI152_T1_2mm_brain_mask_deweight_eyes.nii.gz
+│   │   │       ├── MNI152_T1_2mm_brain_mask_dil1.nii.gz
+│   │   │       ├── MNI152_T1_2mm_brain_mask_dil.nii.gz
+│   │   │       ├── MNI152_T1_2mm_brain_mask.nii.gz
+│   │   │       ├── MNI152_T1_2mm_brain.nii.gz
+│   │   │       ├── MNI152_T1_2mm_edges.nii.gz
+│   │   │       ├── MNI152_T1_2mm_eye_mask.nii.gz
+│   │   │       ├── MNI152_T1_2mm_LR-masked.nii.gz
+│   │   │       ├── MNI152_T1_2mm.nii.gz
+│   │   │       ├── MNI152_T1_2mm_skull.nii.gz
+│   │   │       ├── MNI152_T1_2mm_strucseg.nii.gz
+│   │   │       ├── MNI152_T1_2mm_strucseg_periph.nii.gz
+│   │   │       ├── MNI152_T1_2mm_VentricleMask.nii.gz
+│   │   │       └── tissuepriors
+│   │   │           ├── avg152T1_brain.hdr
+│   │   │           ├── avg152T1_brain.img
+│   │   │           ├── avg152T1_csf.hdr
+│   │   │           ├── avg152T1_csf.img
+│   │   │           ├── avg152T1_gray.hdr
+│   │   │           ├── avg152T1_gray.img
+│   │   │           ├── avg152T1_white.hdr
+│   │   │           └── avg152T1_white.img
+│   │   └── ICA-AROMA-master
+│   │       ├── ICA_AROMA_functions.py
+│   │       ├── ICA_AROMA_functions.pyc
+│   │       ├── ICA_AROMA.py
+│   │       ├── Manual.pdf
+│   │       ├── mask_csf.nii.gz
+│   │       ├── mask_edge.nii.gz
+│   │       ├── mask_out.nii.gz
+│   │       └── README.md
+│   ├── extraFiles
+│   │   ├── avg152T1_gray.nii.gz
+│   │   ├── BCBToolKit.conf
+│   │   ├── Hypertron
+│   │   │   ├── 000Hypertron_linear.mat
+│   │   │   ├── 000Hypertron_nonlinear.nii.gz
+│   │   │   ├── 000Hypotron_linear.mat
+│   │   │   ├── 000Hypotron_nonlinear.nii.gz
+│   │   │   ├── 000.trk
+│   │   │   ├── 001Hypertron_linear.mat
+│   │   │   ├── 001Hypertron_nonlinear.nii.gz
+│   │   │   ├── 001Hypotron_linear.mat
+│   │   │   ├── 001Hypotron_nonlinear.nii.gz
+│   │   │   ├── 001.trk
+│   │   │   ├── 002Hypertron_linear.mat
+│   │   │   ├── 002Hypertron_nonlinear.nii.gz
+│   │   │   ├── 002Hypotron_linear.mat
+│   │   │   ├── 002Hypotron_nonlinear.nii.gz
+│   │   │   ├── 002.trk
+│   │   │   ├── 003Hypertron_linear.mat
+│   │   │   ├── 003Hypertron_nonlinear.nii.gz
+│   │   │   ├── 003Hypotron_linear.mat
+│   │   │   ├── 003Hypotron_nonlinear.nii.gz
+│   │   │   ├── 003.trk
+│   │   │   ├── 004Hypertron_linear.mat
+│   │   │   ├── 004Hypertron_nonlinear.nii.gz
+│   │   │   ├── 004Hypotron_linear.mat
+│   │   │   ├── 004Hypotron_nonlinear.nii.gz
+│   │   │   ├── 004.trk
+│   │   │   ├── 005Hypertron_linear.mat
+│   │   │   ├── 005Hypertron_nonlinear.nii.gz
+│   │   │   ├── 005Hypotron_linear.mat
+│   │   │   ├── 005Hypotron_nonlinear.nii.gz
+│   │   │   ├── 005.trk
+│   │   │   ├── 006Hypertron_linear.mat
+│   │   │   ├── 006Hypertron_nonlinear.nii.gz
+│   │   │   ├── 006Hypotron_linear.mat
+│   │   │   ├── 006Hypotron_nonlinear.nii.gz
+│   │   │   ├── 006.trk
+│   │   │   ├── 007Hypertron_linear.mat
+│   │   │   ├── 007Hypertron_nonlinear.nii.gz
+│   │   │   ├── 007Hypotron_linear.mat
+│   │   │   ├── 007Hypotron_nonlinear.nii.gz
+│   │   │   ├── 007.trk
+│   │   │   ├── 008Hypertron_linear.mat
+│   │   │   ├── 008Hypertron_nonlinear.nii.gz
+│   │   │   ├── 008Hypotron_linear.mat
+│   │   │   ├── 008Hypotron_nonlinear.nii.gz
+│   │   │   ├── 008.trk
+│   │   │   ├── 009Hypertron_linear.mat
+│   │   │   ├── 009Hypertron_nonlinear.nii.gz
+│   │   │   ├── 009Hypotron_linear.mat
+│   │   │   ├── 009Hypotron_nonlinear.nii.gz
+│   │   │   ├── 009.trk
+│   │   │   ├── l000.nii.gz
+│   │   │   ├── l001.nii.gz
+│   │   │   ├── l002.nii.gz
+│   │   │   ├── l003.nii.gz
+│   │   │   ├── l004.nii.gz
+│   │   │   ├── l005.nii.gz
+│   │   │   ├── l006.nii.gz
+│   │   │   ├── l007.nii.gz
+│   │   │   ├── l008.nii.gz
+│   │   │   ├── l009.nii.gz
+│   │   │   ├── mask.nii.gz
+│   │   │   ├── MNI152.nii.gz
+│   │   │   └── track_vis.log
+│   │   ├── MNI152_for_antsBrainExtractionBrain.nii.gz
+│   │   ├── MNI152_for_antsBrainExtractionMask.nii.gz
+│   │   ├── MNI152_for_antsBrainExtractionPrior0GenericAffine.mat
+│   │   ├── MNI152.nii.gz
+│   │   ├── MNI152_wskull.nii.gz
+│   │   ├── Priors
+│   │   │   ├── brainPrior.nii.gz
+│   │   │   ├── brainWithSkullTemplate.nii.gz
+│   │   │   ├── priors1.nii.gz
+│   │   │   ├── priors2.nii.gz
+│   │   │   ├── priors3.nii.gz
+│   │   │   ├── priors4.nii.gz
+│   │   │   ├── priors5.nii.gz
+│   │   │   └── priors6.nii.gz
+│   │   ├── restingState
+│   │   │   ├── design_preproc_TEMPLATE.fsf
+│   │   │   ├── f1_kernel.nii.gz
+│   │   │   └── MNI152_T1_2mm_brain.nii.gz
+│   │   └── Thr100_2mm_avg152T1_gray.nii.gz
+│   ├── libraries
+│   │   └── lib
+│   │       ├── libfslio.so
+│   │       ├── libmiscmaths.so
+│   │       ├── libnewimage.so
+│   │       ├── libnewmat.so.10
+│   │       ├── libniftiio.so.2
+│   │       ├── libprob.so
+│   │       ├── libutils.so
+│   │       └── libznz.so.2
+│   ├── scripts
+│   │   ├── anacom_proper.sh
+│   │   ├── funcorr.sh
+│   │   ├── HypertronModified.sh
+│   │   ├── normalize.sh
+│   │   ├── resting.sh
+│   │   ├── stats_proper.r
+│   │   ├── thickLoop.sh
+│   │   ├── TractotronParam.sh
+│   │   └── xargs_launch.sh
+│   └── tmp
+├── Tracts
+│   ├── Anterior_Commissure.nii.gz
+│   ├── Anterior_Thalamic_Projections_Left.nii.gz
+│   ├── Anterior_Thalamic_Projections_Right.nii.gz
+│   ├── Arcuate_Anterior_Segment_Left.nii.gz
+│   ├── Arcuate_Anterior_Segment_Right.nii.gz
+│   ├── Arcuate_Long_Segment_Left.nii.gz
+│   ├── Arcuate_Long_Segment_Right.nii.gz
+│   ├── Arcuate_Posterior_Segment_Left.nii.gz
+│   ├── Arcuate_Posterior_Segment_Right.nii.gz
+│   ├── Cingulum_Left_anterior.nii.gz
+│   ├── Cingulum_Left.nii.gz
+│   ├── Cingulum_Left_posterior.nii.gz
+│   ├── Cingulum_Right_Anterior.nii.gz
+│   ├── Cingulum_Right.nii.gz
+│   ├── Cingulum_Right_Posterior.nii.gz
+│   ├── Corpus_callosum.nii.gz
+│   ├── Cortico_Spinal_Left.nii.gz
+│   ├── Cortico_Spinal_Right.nii.gz
+│   ├── Face_U_tract_Left.nii.gz
+│   ├── Face_U_tract_Right.nii.gz
+│   ├── Fornix.nii.gz
+│   ├── Frontal_Aslant_Tract_Left.nii.gz
+│   ├── Frontal_Aslant_tract_Right.nii.gz
+│   ├── Frontal_Commissural.nii.gz
+│   ├── Frontal_Inferior_longitudinal_Left.nii.gz
+│   ├── Frontal_Inferior_longitudinal_Right.nii.gz
+│   ├── Frontal_Orbito_Polar_Left.nii.gz
+│   ├── Frontal_Orbito_Polar_Right.nii.gz
+│   ├── Frontal_Superior_Longitudinal_Left.nii.gz
+│   ├── Frontal_Superior_Longitudinal_Right.nii.gz
+│   ├── Fronto_Insular_tract1_Left.nii.gz
+│   ├── Fronto_Insular_tract1_Right.nii.gz
+│   ├── Fronto_Insular_tract2_Left.nii.gz
+│   ├── Fronto_Insular_tract2_Right.nii.gz
+│   ├── Fronto_Insular_tract3_Left.nii.gz
+│   ├── Fronto_Insular_tract3_Right.nii.gz
+│   ├── Fronto_Insular_tract4_Left.nii.gz
+│   ├── Fronto_Insular_tract4_Right.nii.gz
+│   ├── Fronto_Insular_tract5_Left.nii.gz
+│   ├── Fronto_Insular_tract5_Right.nii.gz
+│   ├── Fronto_Marginal_tract_left.nii.gz
+│   ├── Fronto_Marginal_tract_right.nii.gz
+│   ├── Fronto_Striatal_Left.nii.gz
+│   ├── Fronto_Striatal_Right.nii.gz
+│   ├── Handinf_U_tract_Left.nii.gz
+│   ├── Handinf_U_tract_Right.nii.gz
+│   ├── Handmid_U_tract_Left.nii.gz
+│   ├── Handmid_U_tract_Right.nii.gz
+│   ├── Handsup_U_tract_Left.nii.gz
+│   ├── Handsup_U_tract_Right.nii.gz
+│   ├── Inferior_Fronto_Occipital_fasciculus_Left.nii.gz
+│   ├── Inferior_Fronto_Occipital_fasciculus_Right.nii.gz
+│   ├── Inferior_Longitudinal_Left.nii.gz
+│   ├── Inferior_Longitudinal_Right.nii.gz
+│   ├── Optic_Radiations_Left.nii.gz
+│   ├── Optic_Radiations_Right.nii.gz
+│   ├── Paracentral_U_tract_Left.nii.gz
+│   ├── Paracentral_U_tract_Right.nii.gz
+│   ├── Pons_Left.nii.gz
+│   ├── Pons_Right.nii.gz
+│   ├── Superior_Londgitudinal_Fasciculus_III_Left.nii.gz
+│   ├── Superior_Londgitudinal_Fasciculus_III_Right.nii.gz
+│   ├── Superior_Londgitudinal_Fasciculus_II_Left.nii.gz
+│   ├── Superior_Londgitudinal_Fasciculus_II_Right.nii.gz
+│   ├── Superior_Londgitudinal_Fasciculus_I_Left.nii.gz
+│   ├── Superior_Londgitudinal_Fasciculus_I_Right.nii.gz
+│   ├── Uncinate_Left.nii.gz
+│   └── Uncinate_Right.nii.gz
+├── tree.txt
+└── VERSION
+
+27 directories, 451 files

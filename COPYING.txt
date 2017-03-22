@@ -69,31 +69,6 @@ Thalamus: behrens@fmrib.ox.ac.uk
 Cerebellum: j.diedrichsen@bangor.ac.uk
 Striatum: andri.tziortzi@gmail.com
 
--------------------------------------------------------------------
-
-FSLView
-
-FSLView sources are released under the terms of the GPLv2
-(http://www.gnu.org/licenses/old-licenses/gpl-2.0.html). FSLView 
-binaries use Qt (http://qt.nokia.com) which is released under LGPLv2.1.
-The FSLView binaries are released under the GPL, with the added 
-exception that we also give permission to link this program with the Qt
-non-commercial edition, and distribute the resulting executable,
-without including the source code for the Qt non-commercial edition in
-the source distribution.
-
-FSLView is distributed "AS IS" under this Licence in the hope that it
-will be useful, but in order that the University as a charitable
-foundation protects its assets for the benefit of its educational and
-research purposes, the University makes clear that no condition is
-made or to be implied, nor is any warranty given or to be implied, as
-to the accuracy of the Software, or that it will be suitable for any
-particular purpose or for use under any specific conditions.
-Furthermore, the University disclaims all responsibility for the use
-which is made of the Software. It further disclaims any liability for
-the outcomes arising from using the Software.
-
-
 ### Licence ANTs ###
 Copyright (c) 2009-2013 ConsortiumOfANTS
 All rights reserved.

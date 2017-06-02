@@ -459,30 +459,17 @@ bet2 ${featdir}/reg/example_func \
 immv ${featdir}/reg/example_func_betted_4_AROMA_mask ${featdir}/AROMask
 
 #We need to detect if python is installed, if not we can skip this part
-tt=`which python2.7 2>&1`
-RS_aromatised=$ffdata
-if [[ $tt =~ which.* ]]; then
-  echo "############### WARNING ############# \n Python 2 can't be found \
-  on your system so ICA_AROMA cannot be used";
-else
-  python2.7 -c 'import numpy';
-  import_error=$?
-  if [[ import_error == 0 ]]
-  then
-    mkdir -p ${featdir}/AROMATISED
-    python2.7 ${ica}/ICA_AROMA.py \
-            -in ${ffdata} \
-            -out ${featdir}/AROMATISED \
-            -mc ${featdir}/mc/prefiltered_func_data_mcf.par \
-            -affmat ${featdir}/reg/example_func2standard.mat \
-            -m ${featdir}/AROMask.nii.gz
 
-    RS_aromatised=`ls ${featdir}/AROMATISED/denoised_*.nii.gz`
-  else
-    echo "############### WARNING ############# \n Python 2 does not contain \
-    the numpy package so ICA_AROMA cannot be used";
-  fi;
-fi;
+RS_aromatised=$ffdata
+
+mkdir -p ${featdir}/AROMATISED
+python2.7 ${ica}/ICA_AROMA.py \
+        -in ${ffdata} \
+        -out ${featdir}/AROMATISED \
+        -mc ${featdir}/mc/prefiltered_func_data_mcf.par \
+        -affmat ${featdir}/reg/example_func2standard.mat \
+        -m ${featdir}/AROMask.nii.gz
+RS_aromatised=`ls ${featdir}/AROMATISED/denoised_*.nii.gz`
 #prendre le denoise de feat si on a pas fait ica_aroma
 
 rsClean=${rsDenoise}/RS_clean.nii.gz

@@ -114,9 +114,9 @@ public class SettingsFrame implements Settings {
 				
 		//betOpt = new JTextField();
 		//betOpt.setPreferredSize(new Dimension(50, 20));
-		synOpt = new JTextField("0.25");
+		synOpt = new JTextField("0.1");
 		synOpt.setPreferredSize(new Dimension(50, 20));
-		synOpt.setToolTipText("<html> The step-size (0.25) impacts accuracy."
+		synOpt.setToolTipText("<html> The step-size (0.1) impacts accuracy."
 				+ "<br /> Smaller is generally more accurate but takes more time"
 				+ "<br /> to compute and may not capture as much deformation if the"
 				+ "<br /> optimization is caught in a local minimum. </html>");
@@ -337,14 +337,14 @@ public class SettingsFrame implements Settings {
 				text = text.trim();
 				//Replace , by .
 				text = text.replace(",", ".");
-				if (!text.equals("0.25")) {
+				if (!text.equals("0.1")) {
 					float opt = 0;
 					try {
 						opt = Float.valueOf(text);
 					} catch (NumberFormatException nbE) {
 						Tools.showErrorMessage(getBCB().getFrame(), 
 								"The step-size impacts accuracy must be a number >= 0");
-						synOpt.setText("0.25");
+						synOpt.setText("0.1");
 						return;
 					}
 					if (!(opt < 0)) {
@@ -352,7 +352,7 @@ public class SettingsFrame implements Settings {
 					} else {
 						Tools.showErrorMessage(getBCB().getFrame(), 
 								"The step-size impacts accuracy must be a number >= 0");
-						synOpt.setText("0.25");
+						synOpt.setText("0.1");
 						return;
 					}
 				} else {

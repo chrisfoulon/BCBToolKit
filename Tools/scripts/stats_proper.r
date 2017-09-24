@@ -54,7 +54,7 @@ create_list <- function(p, s, c) {
     pp = c(read_txt_in_list(file_path(folder, paste(clu, pat_re, sep=''))))
     ss = c(read_txt_in_list(file_path(folder, paste(clu, sco_re, sep=''))))
     cc = c(read_txt_in_list(file_path(folder, paste(clu, co_re, sep=''))))
-    #print(tt)
+
     df[[clu]] <- list("pat"=pp, "sco"=ss, "co"=cc)
   }
   return(df)
@@ -202,7 +202,9 @@ for (clu in names(ll)) {
 
 #### COMPUTATION ####
 # table will contain the final results of the post_hoc stats
+print(paste("The test name is: ", test_name))
 if (test_name == 'kw') {
+  print("We calculate the Kruskal-Wallis tests")
   liste <- kruskal_on_clusters(ll, ctr)
   st <- liste$res
   kw_warn <- liste$warn

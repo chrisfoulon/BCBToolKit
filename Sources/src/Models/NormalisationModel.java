@@ -124,7 +124,7 @@ public class NormalisationModel extends AbstractModel {
 		try {
 			String[] array;
 			
-			String betOptFinal = "0.5";
+			String betOptFinal = "false";
 			if (!betOpt.equals("")) {
 				betOptFinal = betOpt;
 			}

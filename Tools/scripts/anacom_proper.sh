@@ -271,7 +271,7 @@ do
     max=`fslstats $tmp/stdlayer -R | awk '{print $2}'`;
     fslmaths $tmp/stdlayer -thr $max $cluD/cluster${numclu};
     fslmaths $tmp/stdlayer -sub $cluD/cluster${numclu} $tmp/stdlayer;
-    #Here we calculate the number of voxels contained by the cluster
+    #Here we calculate the number of voxels contained in the cluster
     volume=`fslstats $cluD/cluster${numclu} -V | awk '{ print $1 }'`
     #If it is lower than the threshold $9 we remove the cluster and we will
     #create another with that number at the next loop
@@ -349,7 +349,7 @@ then
   declare -a kw_holm
   useless=0
   # Be careful, the first index of values is 1, 0 is the index of the column name
-  while IFS=, read kw_clu[$kw_i] useless kw_pval[$kw_i] kw_holm[$kw_i]
+  while IFS=, read kw_clu[$kw_i] kw_pval[$kw_i] useless kw_holm[$kw_i]
   do
     kw_i=$((kw_i+1))
   done < $kw_csv
@@ -363,10 +363,11 @@ then
     then
       # //\" inside ${} will remove the character " from strings !
       fslmaths $cluD/${kw_clu[$n]//\"} -bin $cluD/${kw_clu[$n]//\"}
-      fslmaths $cluD/${kw_clu[$n]//\"} -mul ${kw_pval[$n]} -add $kw_res $kw_res
+      fslmaths $cluD/${kw_clu[$n]//\"} -mul $((1 - ${kw_pval[$n]})) \
+      -add $kw_res $kw_res
       if [ `awk "BEGIN { print (${kw_holm[$n]} < 0.05)}"` == 1 ];
       then
-        fslmaths $cluD/${kw_clu[$n]//\"} -mul ${kw_holm[$n]} -add \
+        fslmaths $cluD/${kw_clu[$n]//\"} -mul $((1 - ${kw_holm[$n]})) -add \
         $kw_corr $kw_corr
       fi;
     fi;
@@ -399,12 +400,23 @@ then
   declare -a ph_holm
   useless=0
   ph_osef=0
-  # Be careful the first index of values is 1, 0 is the index of the column name
-  while IFS=, read ph_clu[$ph_i] useless ph_kw_pval[$ph_i] ph_kw_holm[$ph_i]\
-   nb_disco[$ph_i] ph_pval[$ph_i] ph_osef ph_holm[$ph_i];
-  do
-    kw_i=$((kw_i+1))
-  done < $ph_csv
+
+  if [[ $6 == '1' ]];
+  then
+    # Be careful the first index of values is 1, 0 is the index of the column name
+    while IFS=, read ph_clu[$ph_i] ph_kw_pval[$ph_i] useless ph_kw_holm[$ph_i]\
+     nb_disco[$ph_i] ph_pval[$ph_i] ph_osef ph_holm[$ph_i];
+    do
+      ph_i=$((ph_i+1))
+    done < $ph_csv
+  else
+    # Be careful the first index of values is 1, 0 is the index of the column name
+    while IFS=, read ph_clu[$ph_i] nb_disco[$ph_i] ph_pval[$ph_i]\
+      ph_osef ph_holm[$ph_i];
+    do
+      ph_i=$((ph_i+1))
+    done < $ph_csv
+  fi;
 
   unset ph_clu[0]
   unset ph_kw_pval[0]
@@ -413,14 +425,18 @@ then
   unset ph_pval[0]
   unset ph_holm[0]
 
+  echo ${ph_clu[@]}
+  echo ${!ph_clu[@]}
+
   for n in ${!ph_clu[@]};
   do
-    if [[ ${kw_clu[$n]//\"} != "" ]];
+    if [[ ${ph_clu[$n]//\"} != "" ]];
     then
-      fslmaths $cluD/${ph_clu[$n]//\"} -mul ${ph_pval[$n]} -add $ph_res $ph_res
+      fslmaths $cluD/${ph_clu[$n]//\"} -mul $((1 - ${ph_pval[$n]})) -add \
+      $ph_res $ph_res
       if [ `awk "BEGIN { print (${ph_holm[$n]} < 0.05)}"` == 1 ];
       then
-        fslmaths $cluD/${ph_clu[$n]//\"}-mul ${ph_holm[$n]} -add \
+        fslmaths $cluD/${ph_clu[$n]//\"} -mul $((1 - ${ph_holm[$n]})) -add \
         $ph_corr $ph_corr
       fi;
     fi;

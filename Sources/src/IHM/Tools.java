@@ -349,7 +349,7 @@ public final class Tools {
 						      	is_num = false;
 						    }
 						}
-						// If not we have a bad input so we go out from the function
+						// If not we have a bad input so we go out of the function
 						if (!is_num) {
 							bool = true;
 							return bool;
@@ -401,6 +401,7 @@ public final class Tools {
 		w.cancel(true);
 		w=null;
 		if (tmpPath != null && !tmpPath.equals("")) {
+			System.err.println(tmpPath);
 			String[] array2 = {"rm", "-rf", tmpPath};
 			try {
 				Runtime.getRuntime().exec(array2);

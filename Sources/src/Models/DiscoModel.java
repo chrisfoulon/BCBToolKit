@@ -16,6 +16,7 @@ import IHM.Tools;
 
 public class DiscoModel extends AbstractModel {
 	public static final String logFile = "logDisconnectome.txt"; 
+	public static final String logDir = "logs"; 
 	private String lesionDir;
 	private String resultDir;
 	private String extraFiles;
@@ -26,7 +27,7 @@ public class DiscoModel extends AbstractModel {
 	
 	public DiscoModel(String path, JFrame f) {
 		super(path, f, BCBEnum.Script.DISCONNECTOME.endPath());
-		this.extraFiles = path + "/Tools/extraFiles/Hypertron";
+		this.extraFiles = path + "/Tools/extraFiles/tracks";
 		
 		// create new filename filter to recognize .nii and .nii.gz files
         this.fileNameFilter = new FilenameFilter() {
@@ -79,25 +80,35 @@ public class DiscoModel extends AbstractModel {
 		}		
 		String erreur = "";
 		
-		try {			
-			String[] array = {script, lesionDir, resultDir, thrOpt};
+		try {
+			
+			String xargs = this.path + "/Tools/scripts" + "/xargs_disco.sh";
+			String disco = this.path + "/Tools/scripts" + "/disco.sh";
+			String[] array = {xargs, disco, lesionDir, resultDir, thrOpt};
 
 			proc = Runtime.getRuntime().exec(array, null, new File(this.path));
 			
 			Scanner out = new Scanner(proc.getInputStream());
 			int progress = 0;
 			int nbTracks = new File(extraFiles).listFiles(trkFilter).length;
-			setNbTicks(new File(lesionDir).listFiles(fileNameFilter).length * nbTracks + 1);
+			int nb_masks = new File(lesionDir).listFiles(fileNameFilter).length;
+			setNbTicks(nb_masks * nbTracks);
 			while (out.hasNextLine()) {
 				String inLoop = out.nextLine();
 				if (inLoop.startsWith("#")) {
 					progress++;
+					System.out.println(progress);
 					loading.setWidth(progress);					
 				}
 			}
 			
 			out.close();
-			erreur = Tools.parseLog(resultDir + "/logDisconnectome.txt");
+			File[] ff = new File(resultDir + "/" + logDir).listFiles();
+			for (File fi : ff) {
+				erreur += Tools.parseLog(fi.getAbsolutePath());
+			}
+			//erreur = Tools.parseLog(resultDir + "/logDisconnectome.txt");
+			loading.setWidth(nb_masks * nbTracks);
 			
         } catch (IOException e) {
 			Writer writer = new StringWriter();
@@ -107,7 +118,7 @@ public class DiscoModel extends AbstractModel {
 			Tools.showErrorMessage(frame, s);
 			return;
 		}
-		if (proc != null) {
+		if (proc != null) {	
 			Tools.classicErrorHandling(frame, erreur, "Data properly written in " + resultDir);
 			return;
 		}

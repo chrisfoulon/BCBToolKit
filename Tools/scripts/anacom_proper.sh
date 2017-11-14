@@ -290,6 +290,35 @@ done;
 echo "#"
 #Here we want to find which patients belong to clusters
 #For that we try to overlap lesions with clusters
+# Attempt to improve the calculation!
+# clu_compare() {
+#   clu_dir=$1
+#   clu_suff=$2
+#   pat_dir=$3
+#   declare -a pat=("${!4}")
+#   tmp_dir=$5
+#   declare -a arr_scores=("${!6}")
+#   index=$7
+#   clu_vol=`fslstats $clu_dir/cluster$clu_suff -V | awk '{ print $1 }'`
+#   for p in ${!pat[@]};
+#   do
+#     fslmaths $clu_dir/cluster$clu_suff -mas $pat_dir/$pat[$p] $tmp_dir/tmpMask
+#     ol=`fslstats $tmp/tmpMask -V | awk '{ print $1 }'`
+#     if [ $ol == 0 ];
+#     then
+#       echo "SPARED Clu : $clu_suff, name : $pat[$p], val : ${co_perf}${arr_scores[$index]},"
+#       co_perf="${co_perf}${arr_scores[$index]},"
+#       imrm $tmp/tmpMask;
+#     elif [ $ol == $clu_vol ];
+#     then
+#       echo "DISCO Clu : $i, name : $p, val : $score${originalSco[$index]},"
+#       patient="$patient$p,"
+#       score="$score${originalSco[$index]},"
+#       imrm $tmp/tmpMask;
+#     else
+#   done;
+# }
+
 for ((i=0; i<$numclu; i++));
 do
   index=0;
@@ -310,6 +339,7 @@ do
       echo "DISCO Clu : $i, name : $p, val : $score${originalSco[$index]},"
       patient="$patient$p,"
       score="$score${originalSco[$index]},"
+      imrm $tmp/tmpMask${i}_${p};
     fi;
     index=$((index + 1));
   done;
@@ -363,11 +393,14 @@ then
     then
       # //\" inside ${} will remove the character " from strings !
       fslmaths $cluD/${kw_clu[$n]//\"} -bin $cluD/${kw_clu[$n]//\"}
-      fslmaths $cluD/${kw_clu[$n]//\"} -mul $((1 - ${kw_pval[$n]})) \
-      -add $kw_res $kw_res
+      fslmaths $cluD/${kw_clu[$n]//\"} -mul \
+      `awk " BEGIN {print 1 - ${kw_pval[$n]}}"` -add $kw_res $kw_res
+      # fslmaths $cluD/${kw_clu[$n]//\"} -mul $((1-${kw_pval[$n]})) \
+      # -add $kw_res $kw_res
       if [ `awk "BEGIN { print (${kw_holm[$n]} < 0.05)}"` == 1 ];
       then
-        fslmaths $cluD/${kw_clu[$n]//\"} -mul $((1 - ${kw_holm[$n]})) -add \
+        fslmaths $cluD/${kw_clu[$n]//\"} -mul \
+        `awk "BEGIN {print 1 - ${kw_holm[$n]}}"` -add \
         $kw_corr $kw_corr
       fi;
     fi;
@@ -432,12 +465,12 @@ then
   do
     if [[ ${ph_clu[$n]//\"} != "" ]];
     then
-      fslmaths $cluD/${ph_clu[$n]//\"} -mul $((1 - ${ph_pval[$n]})) -add \
-      $ph_res $ph_res
+      fslmaths $cluD/${ph_clu[$n]//\"} -mul \
+      `awk "BEGIN {print 1 - ${ph_pval[$n]}}"` -add $ph_res $ph_res
       if [ `awk "BEGIN { print (${ph_holm[$n]} < 0.05)}"` == 1 ];
       then
-        fslmaths $cluD/${ph_clu[$n]//\"} -mul $((1 - ${ph_holm[$n]})) -add \
-        $ph_corr $ph_corr
+        fslmaths $cluD/${ph_clu[$n]//\"} -mul \
+        `awk "BEGIN {print 1 - ${ph_holm[$n]}}"` -add $ph_corr $ph_corr
       fi;
     fi;
   done;

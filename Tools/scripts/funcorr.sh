@@ -43,30 +43,19 @@ rs=$1
 
 path=${PWD}/Tools
 tmp=$path/tmp/tmp_funcon
-if [[ -e $tmp ]];
-then
-  rm -rf $tmp;
-fi;
+
 mkdir -p $tmp
 
-default_gm=$path/extraFiles/Thr100_2mm_avg152T1_gray.nii.gz
+seed_folder=$2
+target=$3
 
-# We will mask the seeds with the gray matter to avoid noise due to voxels
-# in the white matter
-seed_folder=$tmp/masked_seeds
-mkdir -p $seed_folder
-for s in $2/*nii*;
-do
-  seed=`fileName $s`
-  fslmaths $s -mas $default_gm $seed_folder/$seed
-done;
-
-for s in $seed_folder/*nii*;
+for s in $seed_folder/*.nii*;
 do
     seed=`fileName $s`
     res_seed_folder=$4/${seed}
     mkdir -p $res_seed_folder
-
+    # imcp $s $tmp/${subject}_${seed}
+    # s=$tmp/${subject}_${seed}
     bin_seed=${res_seed_folder}/${seed}
     # binarize seed and target, just in case
     fslmaths $s -div $s ${bin_seed}
@@ -81,7 +70,7 @@ do
     # 3D target mask - I will calculate the correlation coefficient and
     # the corresponding Z score, between the mean seed time course and
     # each voxel in this target mask (in this case, the whole gray matter)
-    GM=$3
+    GM=$target
 
     # OUTPUT
     # correlation coefficient

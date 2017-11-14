@@ -5,15 +5,16 @@
   ...'; exit 1; }
 
 # We create the log folder
-if [[ -e $5/logs ]];
+if [[ -e $3/logs ]];
 then
-  rm -rf $5/logs;
+  rm -rf $3/logs;
 fi;
-mkdir -p $5/logs
+mkdir -p $3/logs
 
 path=${PWD}/Tools
 
-tmp=$path/tmp/tmp_funcon
+
+tmp=$path/tmp/tmp_disco
 if [[ -e $tmp ]];
 then
   rm -rf $tmp;
@@ -28,6 +29,12 @@ then
   exit 1;
 fi;
 
+if [[ $2 == $3 ]];
+then
+  echo 'The lesions and results folders are the same ŎםŎ'
+  exit 1;
+fi;
+
 for f in $2/*nii*;
 do
   echo $f >> $tmp/list.txt
@@ -36,6 +43,6 @@ done;
 #we will launch N - 1 process where N is the number of processor cores.
 ncores=`python -c 'import multiprocessing as mp; print(mp.cpu_count())'`
 ncores=$((ncores - 1))
-# cat $tmp/list.txt | xargs -n 1 -P $ncores -t -I {} $1 {} "${@:3}"
+cat $tmp/list.txt | xargs -n 1 -P $ncores -t -I {} $1 {} "${@:3}"
 # Temporary fix, it's slowing down the process but it works.
-cat $tmp/list.txt | xargs -n 1 -P 1 -t -I {} $1 {} "${@:3}"
+# cat $tmp/list.txt | xargs -n 1 -P 1 -t -I {} $1 {} "${@:3}"

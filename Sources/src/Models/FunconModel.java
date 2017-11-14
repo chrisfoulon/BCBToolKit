@@ -199,6 +199,8 @@ public class FunconModel extends AbstractModel {
 				if (inLoop.startsWith("#")) {
 					progress++;
 					loading.setWidth(progress);			
+				} else if (!inLoop.startsWith("+")) {
+					erreur += inLoop + "\n";
 				}
 			}
 			out.close();

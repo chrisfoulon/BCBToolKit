@@ -401,7 +401,6 @@ public final class Tools {
 		w.cancel(true);
 		w=null;
 		if (tmpPath != null && !tmpPath.equals("")) {
-			System.err.println(tmpPath);
 			String[] array2 = {"rm", "-rf", tmpPath};
 			try {
 				Runtime.getRuntime().exec(array2);

@@ -97,7 +97,6 @@ public class DiscoModel extends AbstractModel {
 				String inLoop = out.nextLine();
 				if (inLoop.startsWith("#")) {
 					progress++;
-					System.out.println(progress);
 					loading.setWidth(progress);					
 				}
 			}

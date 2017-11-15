@@ -338,7 +338,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		
 		disclaimer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				File dis = new File(getWD() + "/DISCLAIMER");
+				File dis = new File(getWD() + "/DISCLAIMER.txt");
 				FileInputStream fis = null;
 				try {
 					fis = new FileInputStream(dis);
@@ -365,7 +365,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		
 		ackno.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				File dis = new File(getWD() + "/ACKNOWLEDGEMENT");
+				File dis = new File(getWD() + "/ACKNOWLEDGEMENT.txt");
 				FileInputStream fis = null;
 				try {
 					fis = new FileInputStream(dis);
@@ -392,7 +392,7 @@ public class BCBToolKitIHM  implements BCBToolKit {
 		
 		about.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				File dis = new File(getWD() + "/VERSION");
+				File dis = new File(getWD() + "/VERSION.txt");
 				FileInputStream fis = null;
 				try {
 					fis = new FileInputStream(dis);

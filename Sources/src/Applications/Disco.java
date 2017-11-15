@@ -255,7 +255,7 @@ public class Disco extends AbstractApp {
 	@Override
 	public void cancel() {
 		if (worker != null) {
-			Tools.cancelActions(path + "/Tools/tmp/tmpHyp", worker);
+			Tools.cancelActions(path + "/Tools/tmp/tmp_disco", worker);
 		}
 	}
 	

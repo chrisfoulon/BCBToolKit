@@ -1,12 +1,18 @@
 
 ** Current version **
+v4.1.0 release
+**Major improvement in Disconnectome Maps module**
+**Minor modifications and fixes**
+Improvement of the Normalisation
+Fix in functionnal connectivity module (temprorary deactivation of the multiprocessing to avoid crashes in some cases)
+
+** Previous updates **
 v4.0.0 release
 **Major modifications in AnaCOM2 module**
 We replaced the self-made bash bonferroni-holm correction by the bonferroni_holm correction from R (Results which are significant or not won't change but corrected pvalues might be different).
 We also added the possibility to compare disconnected patients, spared patients and controls using a Kruskal-Wallis test before applying a post-hoc Mann-Whitney test which can now compare 
 diconnected patients with spared patients or controls, or spared patients with controls. 
 
-** Previous updates **
 v3.2.0 beta
 **New method for brain extraction**
 We replaced the bet2 method by the antsBrainExtraction from ants.

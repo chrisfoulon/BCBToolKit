@@ -1,11 +1,12 @@
 #! /bin/bash
 #Normalize Patients - Michel Thiebaut de Schotten & Chris Foulon
 #$1 = T1Folder $2 LesionFolder $3 ResultFolder $4 templateFile $5 skull_strip
-#$6 synValue $7keepTmp $8 lesionMaskingMethod $9 otherFilesFolder
+#$6 synParam $7keepTmp $8 lesionMaskingMethod $9 otherFilesFolder
 #$10 otherResultFolder
 [ $# -lt 8 ] && { echo "Usage : $0 T1Folder LesionFolder ResultFolder \
 templateFile skull_strip synValue keepTmp lesionMaskingMethod \
 [-OPTIONAL otherFilesFolder] [-OPTIONAL otherResultFolder]"; exit 1; }
+
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logNormalisation.txt
@@ -50,7 +51,7 @@ fileName() {
 ##	        - $3 : temporary folder (The result file will be created inside)
 ## 		- $4 : template to align with, the template must contain the
 ## skull
-## @output : the file Enantiomorphic${name} (name is the T1 filename) will be
+## @output : the file Enantiomorphic_${name} (name is the T1 filename) will be
 ## stored in the $3 folder)
 ## $3 will also contain all temporary files created while the function is
 ## running
@@ -97,7 +98,7 @@ enantiomorphic() {
   #THE END (We put the final mask inside the native T1 and we have an
   #healthy T1
   fslmaths $ttmp/T1pitted -add ${ttmp}/mnativeflippedhealthytissue${name} \
-  $ttmp/Enantiomorphic${name}
+  $ttmp/Enantiomorphic_${name}
 
 }
 
@@ -116,24 +117,24 @@ for f in *nii*
 do
     unskulable=$f
     pat=$(basename $f .${f#*.})
-    echo $pat
+    echo ${pat}
     # 1 becomes 0 and 0 becomes 1 !
     lesCommand=""
     if ! [[ $2 == "" ]]
     then
       if [[ $8 == "Classic" ]]
       then
-        fslmaths $2/$pat.nii* -bin -mul -1 -add 1 $tmp/tmp_les$pat.nii.gz
-        lesCommand=" -x $tmp/tmp_les$pat.nii.gz"
+        fslmaths $2/${pat}.nii* -bin -mul -1 -add 1 $tmp/tmp_les${pat}.nii.gz
+        lesCommand=" -x $tmp/tmp_les${pat}.nii.gz"
       elif [[ $8 == "Enantiomorphic" ]]
       then
       	ll=`ls $2/${pat}.nii*`
       	enantiomorphic $f $ll $tmp $templateWSkull
-      	mv $tmp/Enantiomorphic${pat}.nii* $3
+      	mv $tmp/Enantiomorphic_${pat}.nii* $3
 
 
       	#We will now use this image for the skull stripping
-      	unskulable=`ls $3/Enantiomorphic${pat}.nii*`
+      	unskulable=`ls $3/Enantiomorphic_${pat}.nii*`
       else
 	       echo "Lesion masking parameter error" >&2
       fi
@@ -148,59 +149,90 @@ do
       #fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 --nopve -B \
 	    #  -o ${tmp}/${pat} ${unskulable}
 
+#      -m $priors/brainPrior.nii.gz \
+#      -m $priors/brain_stem_cereb_Prior.nii.gz \
       # BET2
       #bet2 ${tmp}/${pat}_restore $tmp/tmp_T1${pat}.nii.gz -m -f $5
       antsBrainExtraction.sh -d 3 \
       -a ${unskulable} \
       -e $priors/brainWithSkullTemplate.nii.gz \
       -m $priors/brainPrior.nii.gz \
-      -o $tmp/tmp_T1$pat
+      -o $tmp/tmp_T1${pat}
 
-      mv $tmp/tmp_T1${pat}BrainExtractionBrain.nii.gz $tmp/tmp_T1$pat.nii.gz
+      mv $tmp/tmp_T1${pat}BrainExtractionBrain.nii.gz $tmp/tmp_T1${pat}.nii.gz
 
-      fslcpgeom ${unskulable} $tmp/tmp_T1$pat.nii.gz
+      fslcpgeom ${unskulable} $tmp/tmp_T1${pat}.nii.gz
     else
-      cp ${unskulable} $tmp/tmp_T1$pat.nii.gz
+      cp ${unskulable} $tmp/tmp_T1${pat}.nii.gz
     fi;
 
-    #ANTMAN will be proud
-    $ants/ANTS 3 -m PR[$tmp/tmp_T1$pat.nii.gz,$4,1,4] \
-      -i 50x90x50 \
-      -o $tmp/tmpwarp${pat}.nii.gz \
-      -t Syn["$6"] \
-      -r Gauss[3,0]$lesCommand
+    fixed_image=$tmp/tmp_T1${pat}.nii.gz;
+    moving_image=$4;
 
-    $ants/WarpImageMultiTransform 3 $f $3/$pat.nii.gz \
-      -R $4 \
-      -i $tmp/tmpwarp${pat}Affine.txt \
-      $tmp/tmpwarp${pat}InverseWarp.nii.gz
+    antsRegistration \
+    --collapse-output-transforms 0 \
+    --dimensionality 3 \
+    --interpolation Linear \
+    --output [$tmp/transform_${pat}_,$tmp/transform_InverseWarped_${pat}.nii.gz,$tmp/transform_Warped_${pat}.nii.gz] \
+    --transform Affine[0.1] \
+    --metric MI[$fixed_image,$moving_image,1,32,Regular,0.25] \
+    --convergence [1000x500x250x100,1e-08,10] \
+    --smoothing-sigmas 3.0x2.0x1.0x0.0 \
+    --shrink-factors 8x4x2x1 \
+    --use-histogram-matching 1 \
+    --transform SyN${6} \
+    --metric CC[$fixed_image,$moving_image,1,4] \
+    --convergence [100x100x70x20,1e-09,15] \
+    --smoothing-sigmas 3.0x2.0x1.0x0.0 \
+    --shrink-factors 6x4x2x1 \
+    --use-histogram-matching 1 \
+    --winsorize-image-intensities [0.01,0.99]${lesCommand}
+
+
+    affine_tr=`ls $tmp/transform_${pat}_*Affine.mat`
+    inverse_syn=`ls $tmp/transform_${pat}_*InverseWarp.nii.gz`
+    antsApplyTransforms -d 3 -n Linear -i $f -o $3/registered_${pat}.nii.gz \
+    -t ["${affine_tr}",1]  \
+    -t ["${inverse_syn}",0] \
+    -r $4 -v
 
     #OPTIONAL apply this deformation also to
     if [ $# -eq 10 ]
     then
         cd $tmp
         #If it is a 4D image, this will split it in vol0000.nii.gz vol0001.nii.gz etc ...
-        fslsplit $9/$pat.nii* ifyouusethisprefixyouarereallyawkward
-        for a in ifyouusethisprefixyouarereallyawkward*
+        fslsplit $9/${pat}.nii* please_do_not_use_this_prefix_in_your_images
+        for a in please_do_not_use_this_prefix_in_your_images*
         do
             #We add OTH prefix to the result in case of the result destination is the same that the previous transformation.
-            $ants/WarpImageMultiTransform 3 $a OTH$a \
-	      -R $4 \
-	      -i $tmp/tmpwarp${pat}Affine.txt \
-	      $tmp/tmpwarp${pat}InverseWarp.nii.gz
+#            affine_tr=`ls $tmp/transform_${pat}_*Affine.mat`
+#            inverse_syn=`ls $tmp/transform_${pat}_*InverseWarp.nii.gz`
+            antsApplyTransforms -d 3 -n Linear -i $a -o OTH$a \
+                -t ["${affine_tr}",1]  \
+                -t ["${inverse_syn}",0] \
+                -r $4 -v
         done
 
         #And you remake the 4D image
-        fslmerge -t ${10}/OTH$pat.nii.gz OTHifyouusethisprefixyouarereallyawkward*gz
-        rm -f $tmp/*ifyouusethisprefixyouarereallyawkward*
+        fslmerge -t ${10}/OTH${pat}.nii.gz OTHplease_do_not_use_this_prefix_in_your_images*gz
+        rm -f $tmp/*please_do_not_use_this_prefix_in_your_images*
         cd $1
     fi
 
     if [[ $7 == "true" ]]
     then
-        cp -vf $tmp/tmpwarp${pat}Affine.txt  $3
-        cp -vf $tmp/tmpwarp${pat}InverseWarp.nii.gz $3
-        cp -vf $tmp/tmpwarp${pat}Warp.nii.gz $3
+        dirname_transfo=$(dirname "${inverse_syn}")
+        basename_syn=$(basename "${inverse_syn}")
+        syn_temp2pat="${dirname_transfo}/${basename_syn/Inverse/}"
+        syn_pat2temp=${inverse_syn}
+        brain_extraction_mask=`ls $tmp/tmp_T1${pat}BrainExtractionMask.nii.gz`
+        cp "${affine_tr}" "$3/$(basename ${affine_tr})"
+        # remove the Inverse so the patient to template transformation is actually the right one
+        cp "${syn_pat2temp}" "$3/${basename_syn/Inverse/}"
+        # the template to patient space transform is actually the inverse transform
+        cp "${syn_temp2pat}" "$3/${basename_syn}"
+        cp "${brain_extraction_mask}" "$3"
+#        cp -vf $tmp/transform_${pat}* $3
     fi
     echo "#"
 done

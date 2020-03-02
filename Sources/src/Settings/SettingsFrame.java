@@ -55,8 +55,12 @@ public class SettingsFrame implements Settings {
 	private JCheckBox saveLoc;
 	//Normalisation
 	//private JTextField betOpt;
-	private JTextField synOpt;
-	private String synVal;
+	private JTextField gradientStepFld;
+	private JTextField updateFieldVarianceInVoxelSpaceFld;
+	private JTextField totalFieldVarianceInVoxelSpaceFld;
+	private String gradientStep;
+	private String updateFieldVarianceInVoxelSpace;
+	private String totalFieldVarianceInVoxelSpace;
 	//Anacom
 	private JTextField nbVox;
 
@@ -75,7 +79,27 @@ public class SettingsFrame implements Settings {
 		this.bcb = bcb;
 		this.conf = c;
 		this.pathsMap = new HashMap<BCBEnum.Param, String>(bcb.getPathsMap());
-		synVal = "0.25";
+		String tmp = c.getVal(BCBEnum.Param.NGRADIENTSTEP);
+		if (tmp.equals("")) {
+			gradientStep = "0.1";
+		} else {
+			gradientStep = tmp;
+		}
+		
+		tmp = c.getVal(BCBEnum.Param.NUPDATEFIELDVARIANCE);
+		if (tmp.equals("")) {
+			updateFieldVarianceInVoxelSpace = "3.0";
+		} else {
+			updateFieldVarianceInVoxelSpace = tmp;
+		}
+		
+		tmp = c.getVal(BCBEnum.Param.NTOTALFIELDVARIANCE);
+		if (tmp.equals("")) {
+			totalFieldVarianceInVoxelSpace = "0.0";
+		} else {
+			totalFieldVarianceInVoxelSpace = tmp;
+		}
+
 		createView();
 		placeComponents();
 		createController();
@@ -114,12 +138,48 @@ public class SettingsFrame implements Settings {
 				
 		//betOpt = new JTextField();
 		//betOpt.setPreferredSize(new Dimension(50, 20));
-		synOpt = new JTextField("0.05");
-		synOpt.setPreferredSize(new Dimension(50, 20));
-		synOpt.setToolTipText("<html> The step-size (0.05) impacts accuracy."
-				+ "<br /> Smaller is generally more accurate but takes more time"
-				+ "<br /> to compute and may not capture as much deformation if the"
-				+ "<br /> optimization is caught in a local minimum. </html>");
+		
+		// AntsReg SyN parameters
+		// GradientStep
+		gradientStepFld = new JTextField(gradientStep);
+		gradientStepFld.setPreferredSize(new Dimension(45, 20));
+		gradientStepFld.setToolTipText("<html> gradientStep - tells the algorithm how much each point can "
+				+ "<br />move after each iteration. The SyN metric computes in which "
+				+ "<br />direction each point needs to move. This movement can be large "
+				+ "<br />(high gradientStep) or small (low gradientStep). Optimal values 0.1-0.25. "
+				+ "<br />Because the shift of each point is computed separately, high values "
+				+ "<br />here may also increase high frequency deformations "
+				+ "<br />(i.e., each point going its own way), but see the other parameters "
+				+ "<br />below that mitigate this problem.</html>");
+		// updateFieldVarianceInVoxelSpace
+		updateFieldVarianceInVoxelSpaceFld = new JTextField(updateFieldVarianceInVoxelSpace);
+		updateFieldVarianceInVoxelSpaceFld.setPreferredSize(new Dimension(45, 20));
+		updateFieldVarianceInVoxelSpaceFld.setToolTipText("<html> After each iteration, a gradient field is computed, "
+				+ "<br />which indicates how each point (or voxel) will shift in space. "
+				+ "<br />This small deformation (or \"updated\" gradient field) is combined"
+				+ "<br /> with previous updates to form a \"total\" gradient deformation. "
+				+ "<br />Because each point can follow its own path, non-realistic deformations"
+				+ "<br /> can occur, which may make images look like teared apart. "
+				+ "<br />To resolve this issue we add a little penalty, such that shifts "
+				+ "<br />are not considered independently at each point.\n" + 
+				"<br />updateFieldVarianceInVoxelSpace - By adding a penalty here, we smooth the "
+				+ "<br />deformation computed on the \"updated\" gradient field, before "
+				+ "<br />this is added to previous deformations to form the \"total\" gradient field. "
+				+ "<br />Thus, for each point the deformation of neighboring points is taken into "
+				+ "<br />account as well, which avoids too much independent moving of points at "
+				+ "<br />each iteration (i.e., a point cannot move 2 voxels away in one direction "
+				+ "<br />if all it's neighbors are moving 0.1 voxels away in the other direction).</html>");
+		// totalFieldVarianceInVoxelSpace
+		totalFieldVarianceInVoxelSpaceFld = new JTextField(totalFieldVarianceInVoxelSpace);
+		totalFieldVarianceInVoxelSpaceFld.setPreferredSize(new Dimension(45, 20));
+		totalFieldVarianceInVoxelSpaceFld.setToolTipText("<html> totalFieldVarianceInVoxelSpace - By adding a penalty "
+				+ "<br />here, we smooth the deformation computed on the \"total\" gradient field. "
+				+ "<br />The smoothing here, therefore, is applied on all the deformations "
+				+ "<br />computed from the beginning (i.e., at this and all previous SyN iterations)." + 
+				"<br />In principle, smoothing of the update field can be viewed as fluid-like "
+				+ "<br />registration whereas smoothing of the total field can be viewed as "
+				+ "<br />elastic registration. </html>");
+		// Anacom
 		String nbvox_str = conf.getVal(Param.AVOXNB);
 		if (nbvox_str.equals("")) {
 			nbVox = new JTextField("512");
@@ -185,7 +245,7 @@ public class SettingsFrame implements Settings {
 			BoxLayout boxLay4 = new BoxLayout(normaTab, BoxLayout.Y_AXIS);
 			normaTab.setLayout(boxLay4);
 			normaTab.add(butMap.get(BCBEnum.Param.NTEMPDIR));
-			normaTab.add(Box.createRigidArea(new Dimension(0, 10)));
+			normaTab.add(Box.createRigidArea(new Dimension(0, 0)));
 			/*JPanel p = new JPanel(new BorderLayout()); {
 				JLabel lab = new JLabel("Brain extraction Threshold (0.0 to 1.0) :");
 				lab.setHorizontalAlignment(SwingConstants.CENTER);
@@ -197,15 +257,35 @@ public class SettingsFrame implements Settings {
 				p.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
 			}*/
 
-			JPanel t = new JPanel(new BorderLayout()); {
-				JLabel lab = new JLabel("Step-size impacts accuracy (SyN) :");
-				lab.setHorizontalAlignment(SwingConstants.CENTER);
-				t.add(lab, BorderLayout.CENTER);
-				JPanel t1 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
-					t1.add(synOpt);
+			JPanel t = new JPanel(new FlowLayout(FlowLayout.LEFT)); {
+				JPanel p1 = new JPanel(new GridLayout(7, 0, 0, -5)); {
+					JLabel lab = new JLabel("Syn parameters:");
+					lab.setHorizontalAlignment(SwingConstants.LEFT);
+					JLabel grad_lab = new JLabel("gradientStep");
+					grad_lab.setHorizontalAlignment(SwingConstants.LEFT);
+					JLabel update_lab = new JLabel("updateFieldVarianceInVoxelSpace");
+					update_lab.setHorizontalAlignment(SwingConstants.LEFT);
+					JLabel total_lab = new JLabel("totalFieldVarianceInVoxelSpace");
+					total_lab.setHorizontalAlignment(SwingConstants.LEFT);
+					p1.add(lab);
+					p1.add(grad_lab);
+					JPanel t1 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+						t1.add(gradientStepFld);
+					}
+					p1.add(t1);
+					p1.add(update_lab);
+					JPanel t2 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+						t2.add(updateFieldVarianceInVoxelSpaceFld);
+					}
+					p1.add(t2);
+					p1.add(total_lab);
+					JPanel t3 = new JPanel(new FlowLayout(FlowLayout.CENTER)); {
+						t3.add(totalFieldVarianceInVoxelSpaceFld);
+					}
+					p1.add(t3);
 				}
-				t.add(t1, BorderLayout.SOUTH);
-				t.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 45));
+				t.add(p1);
+				t.setMaximumSize(new Dimension(BCBToolKit.FRAME_WIDTH - 10, 100));
 			}
 			//normaTab.add(p);
 			normaTab.add(t);
@@ -327,37 +407,48 @@ public class SettingsFrame implements Settings {
 			public void focusGained(FocusEvent e) {
 			}
 		});*/
-
-		synOpt.addFocusListener(new FocusListener() {
+		
+		gradientStepFld.addFocusListener(new FocusListener() {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				String text = synOpt.getText();
-				//Deleting of invisible characters
-				text = text.trim();
-				//Replace , by .
-				text = text.replace(",", ".");
-				if (!text.equals("0.05")) {
-					float opt = 0;
-					try {
-						opt = Float.valueOf(text);
-					} catch (NumberFormatException nbE) {
-						Tools.showErrorMessage(getBCB().getFrame(), 
-								"The step-size impacts accuracy must be a number >= 0");
-						synOpt.setText("0.05");
-						return;
-					}
-					if (!(opt < 0)) {
-						synVal = text;
-					} else {
-						Tools.showErrorMessage(getBCB().getFrame(), 
-								"The step-size impacts accuracy must be a number >= 0");
-						synOpt.setText("0.05");
-						return;
-					}
-				} else {
-					synVal = text;
-				}
+				gradientStep = checkFloatTextField(
+						gradientStepFld.getText(), 
+						"0.1", 
+						"gradientStep takes a number");
+				gradientStepFld.setText(gradientStep);
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+			}
+		});
+		
+		updateFieldVarianceInVoxelSpaceFld.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				updateFieldVarianceInVoxelSpace = checkFloatTextField(
+						updateFieldVarianceInVoxelSpaceFld.getText(), 
+						"3.0", 
+						"updateFieldVarianceInVoxelSpace takes a number");
+				updateFieldVarianceInVoxelSpaceFld.setText(updateFieldVarianceInVoxelSpace);
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+			}
+		});
+		
+		totalFieldVarianceInVoxelSpaceFld.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				totalFieldVarianceInVoxelSpace = checkFloatTextField(
+						totalFieldVarianceInVoxelSpaceFld.getText(), 
+						"0.0", 
+						"totalFieldVarianceInVoxelSpace takes a number");
+				totalFieldVarianceInVoxelSpaceFld.setText(totalFieldVarianceInVoxelSpace);
 			}
 
 			@Override
@@ -410,6 +501,28 @@ public class SettingsFrame implements Settings {
 			but.setAlignmentX(Component.CENTER_ALIGNMENT);
 			but.setMaximumSize(dim);
 			butMap.put(p, but);
+		}
+	}
+	
+	private String checkFloatTextField(String in, String defVal, String errorMsg) {
+		/*
+		 * If the string can be parsed as a float, return it otherwise, 
+		 * return the default value
+		 */
+		//Deleting of invisible characters
+		String text = in.trim();
+		//Replace , by .
+		text = text.replace(",", ".");
+		if (!text.equals(defVal)) {
+			try {
+				Float.parseFloat(text);
+			} catch (NumberFormatException nbE) {
+				Tools.showErrorMessage(getBCB().getFrame(), errorMsg);
+				return defVal;
+			}
+			return text;
+		} else {
+			return defVal;
 		}
 	}
 
@@ -476,8 +589,10 @@ public class SettingsFrame implements Settings {
 		dialog.setVisible(false);
 	}
 
-	public String getNormSynValue() {
-		return synVal;
+	public String getNormSynParam() {
+		String synParam = "[" + gradientStep + "," + updateFieldVarianceInVoxelSpace + "," +
+		totalFieldVarianceInVoxelSpace + "]"; 
+		return synParam;
 	}
 	
 	public String getNbVox() {
@@ -511,6 +626,9 @@ public class SettingsFrame implements Settings {
 	@Override
 	public void applyChanges() {
 		conf.setVal(Param.AVOXNB, nbVox.getText());
+		conf.setVal(BCBEnum.Param.NGRADIENTSTEP, gradientStep);
+		conf.setVal(BCBEnum.Param.NUPDATEFIELDVARIANCE, updateFieldVarianceInVoxelSpace);
+		conf.setVal(BCBEnum.Param.NTOTALFIELDVARIANCE, totalFieldVarianceInVoxelSpace);
 		if (startCheck.isSelected()) {
 			this.startBro.setConf();
 		} else {

@@ -33,7 +33,7 @@ mkdir -p $tmp
 
 subj_name=`fileName $1`
 acc=$tmp/added_maps_$subj_name
-fslmaths $1 -mul 0 $acc
+$bin/fslmaths $1 -mul 0 $acc
 num=0
 for t in $trks/*.trk;
 do

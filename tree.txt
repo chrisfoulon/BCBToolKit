@@ -1,10 +1,492 @@
-BCBToolKit
-├── ACKNOWLEDGEMENT
+BCBToolKit/
+├── ACKNOWLEDGEMENT.txt
 ├── BCBToolKit.sh
 ├── COPYING.txt
-├── DISCLAIMER
+├── DISCLAIMER.txt
+├── JHU
+│   ├── CC_CingG.nii.gz
+│   ├── CC_Cu.nii.gz
+│   ├── CC_LG.nii.gz
+│   ├── CC_MFG.nii.gz
+│   ├── CC_MOG.nii.gz
+│   ├── CC_PoCG.nii.gz
+│   ├── CC_PrCG.nii.gz
+│   ├── CC_PrCu.nii.gz
+│   ├── CC_RG.nii.gz
+│   ├── CC_SFG.nii.gz
+│   ├── CC_SOG.nii.gz
+│   ├── CC_SPG.nii.gz
+│   ├── CGC_L.nii.gz
+│   ├── CGC_R.nii.gz
+│   ├── CGH_L.nii.gz
+│   ├── CGH_R.nii.gz
+│   ├── CST_L.nii.gz
+│   ├── CST_R.nii.gz
+│   ├── IFO_L.nii.gz
+│   ├── IFO_R.nii.gz
+│   ├── ILF_L.nii.gz
+│   ├── ILF_R.nii.gz
+│   ├── SAF_AG_MOG_L.nii.gz
+│   ├── SAF_AG_MOG_R.nii.gz
+│   ├── SAF_AG_SMG_L.nii.gz
+│   ├── SAF_CingG_PrCG_R.nii.gz
+│   ├── SAF_CingG_PrCu_L.nii.gz
+│   ├── SAF_CingG_PrCu_R.nii.gz
+│   ├── SAF_CingG_SFG_L.nii.gz
+│   ├── SAF_CingG_SFG_R.nii.gz
+│   ├── SAF_Cu_LG_L.nii.gz
+│   ├── SAF_Cu_LG_R.nii.gz
+│   ├── SAF_Cu_MOG_L.nii.gz
+│   ├── SAF_Cu_SOG_L.nii.gz
+│   ├── SAF_Cu_SOG_R.nii.gz
+│   ├── SAF_Fu_IOG_L.nii.gz
+│   ├── SAF_Fu_MOG_L.nii.gz
+│   ├── SAF_IFG_PrCG_L.nii.gz
+│   ├── SAF_IFG_PrCG_R.nii.gz
+│   ├── SAF_IOG_MOG_L.nii.gz
+│   ├── SAF_IOG_MOG_R.nii.gz
+│   ├── SAF_ITG_MTG_L.nii.gz
+│   ├── SAF_ITG_MTG_R.nii.gz
+│   ├── SAF_LFOG_MFOG_L.nii.gz
+│   ├── SAF_MFG_IFG_L.nii.gz
+│   ├── SAF_MFG_PrCG_L.nii.gz
+│   ├── SAF_MFG_PrCG_R.nii.gz
+│   ├── SAF_PoCG_SMG_L.nii.gz
+│   ├── SAF_PoCG_SMG_R.nii.gz
+│   ├── SAF_PrCG_PoCG_L.nii.gz
+│   ├── SAF_PrCG_PoCG_R.nii.gz
+│   ├── SAF_SFG_IFG_L.nii.gz
+│   ├── SAF_SFG_MFG_L.nii.gz
+│   ├── SAF_SFG_MFG_R.nii.gz
+│   ├── SAF_SFG_PrCG_L.nii.gz
+│   ├── SAF_SFG_PrCG_R.nii.gz
+│   ├── SAF_SFG_RG_R.nii.gz
+│   ├── SAF_SOG_MOG_L.nii.gz
+│   ├── SAF_SOG_MOG_R.nii.gz
+│   ├── SAF_SPG_AG_L.nii.gz
+│   ├── SAF_SPG_AG_R.nii.gz
+│   ├── SAF_SPG_MOG_L.nii.gz
+│   ├── SAF_SPG_PoCG_L.nii.gz
+│   ├── SAF_SPG_PoCG_R.nii.gz
+│   ├── SAF_SPG_PrCu_L.nii.gz
+│   ├── SAF_SPG_PrCu_R.nii.gz
+│   ├── SAF_SPG_SMG_L.nii.gz
+│   ├── SAF_SPG_SMG_R.nii.gz
+│   ├── SAF_SPG_SOG_L.nii.gz
+│   ├── SAF_STG_MTG_L.nii.gz
+│   ├── SAF_STG_MTG_R.nii.gz
+│   ├── SAF_STG_SMG_L.nii.gz
+│   ├── SAF_STG_SMG_R.nii.gz
+│   ├── SLF_FP_L.nii.gz
+│   ├── SLF_FP_R.nii.gz
+│   ├── SLF_FT_L.nii.gz
+│   ├── SLF_FT_R.nii.gz
+│   ├── SLF_PT_L.nii.gz
+│   ├── SLF_PT_R.nii.gz
+│   ├── TH_MFG_L.nii.gz
+│   ├── TH_MFG_R.nii.gz
+│   ├── TH_MOG_L.nii.gz
+│   ├── TH_MOG_R.nii.gz
+│   ├── TH_PoCG_L.nii.gz
+│   ├── TH_PoCG_R.nii.gz
+│   ├── TH_PrCG_L.nii.gz
+│   ├── TH_PrCG_R.nii.gz
+│   ├── TH_PrCu_L.nii.gz
+│   ├── TH_PrCu_R.nii.gz
+│   ├── TH_SFG_L.nii.gz
+│   ├── TH_SFG_R.nii.gz
+│   ├── TH_SOG_L.nii.gz
+│   ├── TH_SOG_R.nii.gz
+│   ├── TH_SPG_L.nii.gz
+│   ├── TH_SPG_R.nii.gz
+│   ├── UNC_L.nii.gz
+│   └── UNC_R.nii.gz
+├── jre
+│   ├── bin
+│   │   ├── ControlPanel -> jcontrol
+│   │   ├── java
+│   │   ├── javaws
+│   │   ├── jcontrol
+│   │   ├── jjs
+│   │   ├── keytool
+│   │   ├── orbd
+│   │   ├── pack200
+│   │   ├── policytool
+│   │   ├── rmid
+│   │   ├── rmiregistry
+│   │   ├── servertool
+│   │   ├── tnameserv
+│   │   └── unpack200
+│   ├── COPYRIGHT
+│   ├── lib
+│   │   ├── amd64
+│   │   │   ├── jli
+│   │   │   │   └── libjli.so
+│   │   │   ├── jvm.cfg
+│   │   │   ├── libavplugin-53.so
+│   │   │   ├── libavplugin-54.so
+│   │   │   ├── libavplugin-55.so
+│   │   │   ├── libavplugin-56.so
+│   │   │   ├── libavplugin-ffmpeg-56.so
+│   │   │   ├── libawt_headless.so
+│   │   │   ├── libawt.so
+│   │   │   ├── libawt_xawt.so
+│   │   │   ├── libbci.so
+│   │   │   ├── libdcpr.so
+│   │   │   ├── libdecora_sse.so
+│   │   │   ├── libdeploy.so
+│   │   │   ├── libdt_socket.so
+│   │   │   ├── libfontmanager.so
+│   │   │   ├── libfxplugins.so
+│   │   │   ├── libglass.so
+│   │   │   ├── libgstreamer-lite.so
+│   │   │   ├── libhprof.so
+│   │   │   ├── libinstrument.so
+│   │   │   ├── libj2gss.so
+│   │   │   ├── libj2pcsc.so
+│   │   │   ├── libj2pkcs11.so
+│   │   │   ├── libjaas_unix.so
+│   │   │   ├── libjava_crw_demo.so
+│   │   │   ├── libjavafx_font_freetype.so
+│   │   │   ├── libjavafx_font_pango.so
+│   │   │   ├── libjavafx_font.so
+│   │   │   ├── libjavafx_font_t2k.so
+│   │   │   ├── libjavafx_iio.so
+│   │   │   ├── libjava.so
+│   │   │   ├── libjawt.so
+│   │   │   ├── libjdwp.so
+│   │   │   ├── libjfr.so
+│   │   │   ├── libjfxmedia.so
+│   │   │   ├── libjfxwebkit.so
+│   │   │   ├── libjpeg.so
+│   │   │   ├── libjsdt.so
+│   │   │   ├── libjsig.so
+│   │   │   ├── libjsoundalsa.so
+│   │   │   ├── libjsound.so
+│   │   │   ├── libkcms.so
+│   │   │   ├── liblcms.so
+│   │   │   ├── libmanagement.so
+│   │   │   ├── libmlib_image.so
+│   │   │   ├── libnet.so
+│   │   │   ├── libnio.so
+│   │   │   ├── libnpjp2.so
+│   │   │   ├── libnpt.so
+│   │   │   ├── libprism_common.so
+│   │   │   ├── libprism_es2.so
+│   │   │   ├── libprism_sw.so
+│   │   │   ├── libresource.so
+│   │   │   ├── libsctp.so
+│   │   │   ├── libsplashscreen.so
+│   │   │   ├── libsunec.so
+│   │   │   ├── libt2k.so
+│   │   │   ├── libunpack.so
+│   │   │   ├── libverify.so
+│   │   │   ├── libzip.so
+│   │   │   └── server
+│   │   │       ├── libjsig.so -> ../libjsig.so
+│   │   │       ├── libjvm.so
+│   │   │       └── Xusage.txt
+│   │   ├── applet
+│   │   ├── calendars.properties
+│   │   ├── charsets.jar
+│   │   ├── classlist
+│   │   ├── cmm
+│   │   │   ├── CIEXYZ.pf
+│   │   │   ├── GRAY.pf
+│   │   │   ├── LINEAR_RGB.pf
+│   │   │   ├── PYCC.pf
+│   │   │   └── sRGB.pf
+│   │   ├── content-types.properties
+│   │   ├── currency.data
+│   │   ├── deploy
+│   │   │   ├── cautionshield.icns
+│   │   │   ├── ffjcext.zip
+│   │   │   ├── java-icon.ico
+│   │   │   ├── messages_de.properties
+│   │   │   ├── messages_es.properties
+│   │   │   ├── messages_fr.properties
+│   │   │   ├── messages_it.properties
+│   │   │   ├── messages_ja.properties
+│   │   │   ├── messages_ko.properties
+│   │   │   ├── messages.properties
+│   │   │   ├── messages_pt_BR.properties
+│   │   │   ├── messages_sv.properties
+│   │   │   ├── messages_zh_CN.properties
+│   │   │   ├── messages_zh_HK.properties
+│   │   │   ├── messages_zh_TW.properties
+│   │   │   ├── mixcode_s.png
+│   │   │   ├── MixedCodeMainDialogJs.ui
+│   │   │   ├── MixedCodeMainDialog.ui
+│   │   │   ├── splash_11@2x-lic.gif
+│   │   │   ├── splash_11-lic.gif
+│   │   │   ├── splash@2x.gif
+│   │   │   └── splash.gif
+│   │   ├── deploy.jar
+│   │   ├── desktop
+│   │   │   ├── applications
+│   │   │   │   ├── sun_java.desktop
+│   │   │   │   ├── sun-java.desktop
+│   │   │   │   └── sun-javaws.desktop
+│   │   │   ├── icons
+│   │   │   │   ├── hicolor
+│   │   │   │   │   ├── 16x16
+│   │   │   │   │   │   ├── apps
+│   │   │   │   │   │   │   ├── sun-java.png
+│   │   │   │   │   │   │   ├── sun-javaws.png
+│   │   │   │   │   │   │   └── sun-jcontrol.png
+│   │   │   │   │   │   └── mimetypes
+│   │   │   │   │   │       ├── gnome-mime-application-x-java-archive.png
+│   │   │   │   │   │       ├── gnome-mime-application-x-java-jnlp-file.png
+│   │   │   │   │   │       └── gnome-mime-text-x-java.png
+│   │   │   │   │   └── 48x48
+│   │   │   │   │       ├── apps
+│   │   │   │   │       │   ├── sun-java.png
+│   │   │   │   │       │   ├── sun-javaws.png
+│   │   │   │   │       │   └── sun-jcontrol.png
+│   │   │   │   │       └── mimetypes
+│   │   │   │   │           ├── gnome-mime-application-x-java-archive.png
+│   │   │   │   │           ├── gnome-mime-application-x-java-jnlp-file.png
+│   │   │   │   │           └── gnome-mime-text-x-java.png
+│   │   │   │   ├── HighContrast
+│   │   │   │   │   ├── 16x16
+│   │   │   │   │   │   ├── apps
+│   │   │   │   │   │   │   ├── sun-java.png
+│   │   │   │   │   │   │   ├── sun-javaws.png
+│   │   │   │   │   │   │   └── sun-jcontrol.png
+│   │   │   │   │   │   └── mimetypes
+│   │   │   │   │   │       ├── gnome-mime-application-x-java-archive.png
+│   │   │   │   │   │       ├── gnome-mime-application-x-java-jnlp-file.png
+│   │   │   │   │   │       └── gnome-mime-text-x-java.png
+│   │   │   │   │   └── 48x48
+│   │   │   │   │       ├── apps
+│   │   │   │   │       │   ├── sun-java.png
+│   │   │   │   │       │   ├── sun-javaws.png
+│   │   │   │   │       │   └── sun-jcontrol.png
+│   │   │   │   │       └── mimetypes
+│   │   │   │   │           ├── gnome-mime-application-x-java-archive.png
+│   │   │   │   │           ├── gnome-mime-application-x-java-jnlp-file.png
+│   │   │   │   │           └── gnome-mime-text-x-java.png
+│   │   │   │   ├── HighContrastInverse
+│   │   │   │   │   ├── 16x16
+│   │   │   │   │   │   ├── apps
+│   │   │   │   │   │   │   ├── sun-java.png
+│   │   │   │   │   │   │   ├── sun-javaws.png
+│   │   │   │   │   │   │   └── sun-jcontrol.png
+│   │   │   │   │   │   └── mimetypes
+│   │   │   │   │   │       ├── gnome-mime-application-x-java-archive.png
+│   │   │   │   │   │       ├── gnome-mime-application-x-java-jnlp-file.png
+│   │   │   │   │   │       └── gnome-mime-text-x-java.png
+│   │   │   │   │   └── 48x48
+│   │   │   │   │       ├── apps
+│   │   │   │   │       │   ├── sun-java.png
+│   │   │   │   │       │   ├── sun-javaws.png
+│   │   │   │   │       │   └── sun-jcontrol.png
+│   │   │   │   │       └── mimetypes
+│   │   │   │   │           ├── gnome-mime-application-x-java-archive.png
+│   │   │   │   │           ├── gnome-mime-application-x-java-jnlp-file.png
+│   │   │   │   │           └── gnome-mime-text-x-java.png
+│   │   │   │   └── LowContrast
+│   │   │   │       ├── 16x16
+│   │   │   │       │   ├── apps
+│   │   │   │       │   │   ├── sun-java.png
+│   │   │   │       │   │   ├── sun-javaws.png
+│   │   │   │       │   │   └── sun-jcontrol.png
+│   │   │   │       │   └── mimetypes
+│   │   │   │       │       ├── gnome-mime-application-x-java-archive.png
+│   │   │   │       │       ├── gnome-mime-application-x-java-jnlp-file.png
+│   │   │   │       │       └── gnome-mime-text-x-java.png
+│   │   │   │       └── 48x48
+│   │   │   │           ├── apps
+│   │   │   │           │   ├── sun-java.png
+│   │   │   │           │   ├── sun-javaws.png
+│   │   │   │           │   └── sun-jcontrol.png
+│   │   │   │           └── mimetypes
+│   │   │   │               ├── gnome-mime-application-x-java-archive.png
+│   │   │   │               ├── gnome-mime-application-x-java-jnlp-file.png
+│   │   │   │               └── gnome-mime-text-x-java.png
+│   │   │   └── mime
+│   │   │       └── packages
+│   │   │           ├── x-java-archive.xml
+│   │   │           └── x-java-jnlp-file.xml
+│   │   ├── ext
+│   │   │   ├── cldrdata.jar
+│   │   │   ├── dnsns.jar
+│   │   │   ├── jaccess.jar
+│   │   │   ├── jfxrt.jar
+│   │   │   ├── localedata.jar
+│   │   │   ├── meta-index
+│   │   │   ├── nashorn.jar
+│   │   │   ├── sunec.jar
+│   │   │   ├── sunjce_provider.jar
+│   │   │   ├── sunpkcs11.jar
+│   │   │   └── zipfs.jar
+│   │   ├── flavormap.properties
+│   │   ├── fontconfig.bfc
+│   │   ├── fontconfig.properties.src
+│   │   ├── fontconfig.RedHat.5.bfc
+│   │   ├── fontconfig.RedHat.5.properties.src
+│   │   ├── fontconfig.RedHat.6.bfc
+│   │   ├── fontconfig.RedHat.6.properties.src
+│   │   ├── fontconfig.SuSE.10.bfc
+│   │   ├── fontconfig.SuSE.10.properties.src
+│   │   ├── fontconfig.SuSE.11.bfc
+│   │   ├── fontconfig.SuSE.11.properties.src
+│   │   ├── fontconfig.Turbo.bfc
+│   │   ├── fontconfig.Turbo.properties.src
+│   │   ├── fonts
+│   │   │   ├── fonts.dir
+│   │   │   ├── LucidaBrightDemiBold.ttf
+│   │   │   ├── LucidaBrightDemiItalic.ttf
+│   │   │   ├── LucidaBrightItalic.ttf
+│   │   │   ├── LucidaBrightRegular.ttf
+│   │   │   ├── LucidaSansDemiBold.ttf
+│   │   │   ├── LucidaSansRegular.ttf
+│   │   │   ├── LucidaTypewriterBold.ttf
+│   │   │   └── LucidaTypewriterRegular.ttf
+│   │   ├── hijrah-config-umalqura.properties
+│   │   ├── images
+│   │   │   ├── cursors
+│   │   │   │   ├── cursors.properties
+│   │   │   │   ├── invalid32x32.gif
+│   │   │   │   ├── motif_CopyDrop32x32.gif
+│   │   │   │   ├── motif_CopyNoDrop32x32.gif
+│   │   │   │   ├── motif_LinkDrop32x32.gif
+│   │   │   │   ├── motif_LinkNoDrop32x32.gif
+│   │   │   │   ├── motif_MoveDrop32x32.gif
+│   │   │   │   └── motif_MoveNoDrop32x32.gif
+│   │   │   └── icons
+│   │   │       ├── sun-java_HighContrastInverse.png
+│   │   │       ├── sun-java_HighContrast.png
+│   │   │       ├── sun-java_LowContrast.png
+│   │   │       └── sun-java.png
+│   │   ├── javafx.properties
+│   │   ├── javaws.jar
+│   │   ├── jce.jar
+│   │   ├── jexec
+│   │   ├── jfr
+│   │   │   ├── default.jfc
+│   │   │   └── profile.jfc
+│   │   ├── jfr.jar
+│   │   ├── jfxswt.jar
+│   │   ├── jsse.jar
+│   │   ├── jvm.hprof.txt
+│   │   ├── locale
+│   │   │   ├── de
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── es
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── fr
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── it
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── ja
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── ko
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── ko.UTF-8
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── pt_BR
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── sv
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── zh
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── zh.GBK
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── zh_HK.BIG5HK
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   ├── zh_TW
+│   │   │   │   └── LC_MESSAGES
+│   │   │   │       └── sunw_java_plugin.mo
+│   │   │   └── zh_TW.BIG5
+│   │   │       └── LC_MESSAGES
+│   │   │           └── sunw_java_plugin.mo
+│   │   ├── logging.properties
+│   │   ├── management
+│   │   │   ├── jmxremote.access
+│   │   │   ├── jmxremote.password.template
+│   │   │   ├── management.properties
+│   │   │   └── snmp.acl.template
+│   │   ├── management-agent.jar
+│   │   ├── meta-index
+│   │   ├── net.properties
+│   │   ├── oblique-fonts
+│   │   │   ├── fonts.dir
+│   │   │   ├── LucidaSansDemiOblique.ttf
+│   │   │   ├── LucidaSansOblique.ttf
+│   │   │   ├── LucidaTypewriterBoldOblique.ttf
+│   │   │   └── LucidaTypewriterOblique.ttf
+│   │   ├── plugin.jar
+│   │   ├── psfontj2d.properties
+│   │   ├── psfont.properties.ja
+│   │   ├── resources.jar
+│   │   ├── rt.jar
+│   │   ├── security
+│   │   │   ├── blacklist
+│   │   │   ├── blacklisted.certs
+│   │   │   ├── cacerts
+│   │   │   ├── java.policy
+│   │   │   ├── java.security
+│   │   │   ├── javaws.policy
+│   │   │   ├── local_policy.jar
+│   │   │   ├── trusted.libraries
+│   │   │   └── US_export_policy.jar
+│   │   ├── sound.properties
+│   │   └── tzdb.dat
+│   ├── LICENSE
+│   ├── man
+│   │   ├── ja -> ja_JP.UTF-8
+│   │   ├── ja_JP.UTF-8
+│   │   │   └── man1
+│   │   │       ├── java.1
+│   │   │       ├── javaws.1
+│   │   │       ├── jjs.1
+│   │   │       ├── keytool.1
+│   │   │       ├── orbd.1
+│   │   │       ├── pack200.1
+│   │   │       ├── policytool.1
+│   │   │       ├── rmid.1
+│   │   │       ├── rmiregistry.1
+│   │   │       ├── servertool.1
+│   │   │       ├── tnameserv.1
+│   │   │       └── unpack200.1
+│   │   └── man1
+│   │       ├── java.1
+│   │       ├── javaws.1
+│   │       ├── jjs.1
+│   │       ├── keytool.1
+│   │       ├── orbd.1
+│   │       ├── pack200.1
+│   │       ├── policytool.1
+│   │       ├── rmid.1
+│   │       ├── rmiregistry.1
+│   │       ├── servertool.1
+│   │       ├── tnameserv.1
+│   │       └── unpack200.1
+│   ├── plugin
+│   │   └── desktop
+│   │       ├── sun_java.desktop
+│   │       └── sun_java.png
+│   ├── README
+│   ├── release
+│   ├── THIRDPARTYLICENSEREADME-JAVAFX.txt
+│   ├── THIRDPARTYLICENSEREADME.txt
+│   └── Welcome.html
 ├── Lesions
 │   └── lesionpatient1.nii.gz
+├── LICENSE.txt
 ├── README.txt
 ├── relatedPapers
 │   ├── A novel approach to clinical–radiological correlations (AnaCOM).pdf
@@ -14,6 +496,134 @@ BCBToolKit
 │   ├── REF_Monkey to human comparative anatomy of the frontal lobe association tracts Cortex.pdf
 │   └── REF_Short frontal lobe connections of the human brain.pdf
 ├── Sources
+│   ├── BCBtoolkit.jardesc
+│   ├── bin
+│   │   ├── anacom.jpg
+│   │   ├── anacom.png
+│   │   ├── anacomtxt.png
+│   │   ├── Applications
+│   │   │   ├── AbstractApp.class
+│   │   │   ├── Anacom$1.class
+│   │   │   ├── Anacom$2$1.class
+│   │   │   ├── Anacom$2.class
+│   │   │   ├── Anacom$3.class
+│   │   │   ├── Anacom$4.class
+│   │   │   ├── Anacom$5.class
+│   │   │   ├── Anacom$6.class
+│   │   │   ├── Anacom$7.class
+│   │   │   ├── Anacom$8.class
+│   │   │   ├── Anacom.class
+│   │   │   ├── Cortical$1.class
+│   │   │   ├── Cortical$2.class
+│   │   │   ├── Cortical$3$1.class
+│   │   │   ├── Cortical$3.class
+│   │   │   ├── Cortical$4.class
+│   │   │   ├── Cortical.class
+│   │   │   ├── Disco$1.class
+│   │   │   ├── Disco$2.class
+│   │   │   ├── Disco$3$1.class
+│   │   │   ├── Disco$3.class
+│   │   │   ├── Disco.class
+│   │   │   ├── Funcon$1.class
+│   │   │   ├── Funcon$2.class
+│   │   │   ├── Funcon$3$1.class
+│   │   │   ├── Funcon$3.class
+│   │   │   ├── Funcon$4.class
+│   │   │   ├── Funcon.class
+│   │   │   ├── Normalisation$1.class
+│   │   │   ├── Normalisation$2.class
+│   │   │   ├── Normalisation$3$1.class
+│   │   │   ├── Normalisation$3.class
+│   │   │   ├── Normalisation$4.class
+│   │   │   ├── Normalisation$5.class
+│   │   │   ├── Normalisation$6.class
+│   │   │   ├── Normalisation.class
+│   │   │   ├── Statistical$1.class
+│   │   │   ├── Statistical$2.class
+│   │   │   ├── Statistical$3$1.class
+│   │   │   ├── Statistical$3.class
+│   │   │   ├── Statistical.class
+│   │   │   ├── Tractotron$1.class
+│   │   │   ├── Tractotron$2$1.class
+│   │   │   ├── Tractotron$2.class
+│   │   │   ├── Tractotron$3.class
+│   │   │   └── Tractotron.class
+│   │   ├── BCBLogo.png
+│   │   ├── BCBLogoR.png
+│   │   ├── Brain.jpg
+│   │   ├── Config
+│   │   │   ├── BCBEnum.class
+│   │   │   ├── BCBEnum$fType.class
+│   │   │   ├── BCBEnum$Index.class
+│   │   │   ├── BCBEnum$Param.class
+│   │   │   ├── BCBEnum$Script.class
+│   │   │   └── Config.class
+│   │   ├── corti.png
+│   │   ├── disco.png
+│   │   ├── funcon.png
+│   │   ├── HLogo.png
+│   │   ├── icon.png
+│   │   ├── iconT.png
+│   │   ├── IHM
+│   │   │   ├── BCBToolKit.class
+│   │   │   ├── BCBToolKitIHM$10.class
+│   │   │   ├── BCBToolKitIHM$11.class
+│   │   │   ├── BCBToolKitIHM$12.class
+│   │   │   ├── BCBToolKitIHM$13.class
+│   │   │   ├── BCBToolKitIHM$1.class
+│   │   │   ├── BCBToolKitIHM$2.class
+│   │   │   ├── BCBToolKitIHM$3.class
+│   │   │   ├── BCBToolKitIHM$4.class
+│   │   │   ├── BCBToolKitIHM$5.class
+│   │   │   ├── BCBToolKitIHM$6.class
+│   │   │   ├── BCBToolKitIHM$7.class
+│   │   │   ├── BCBToolKitIHM$8.class
+│   │   │   ├── BCBToolKitIHM$9.class
+│   │   │   ├── BCBToolKitIHM.class
+│   │   │   ├── Browser$1.class
+│   │   │   ├── Browser$2.class
+│   │   │   ├── Browser.class
+│   │   │   ├── ImagePanel.class
+│   │   │   ├── LoadingBar.class
+│   │   │   ├── Renamer$1.class
+│   │   │   ├── Renamer$2.class
+│   │   │   ├── Renamer.class
+│   │   │   ├── Tools$1.class
+│   │   │   └── Tools.class
+│   │   ├── Logo.png
+│   │   ├── LogoT.png
+│   │   ├── Models
+│   │   │   ├── AbstractModel.class
+│   │   │   ├── AnacomModel.class
+│   │   │   ├── CorticalModel$1.class
+│   │   │   ├── CorticalModel.class
+│   │   │   ├── DiscoModel$1.class
+│   │   │   ├── DiscoModel$2.class
+│   │   │   ├── DiscoModel.class
+│   │   │   ├── FunconModel$1.class
+│   │   │   ├── FunconModel.class
+│   │   │   ├── NormalisationModel$1.class
+│   │   │   ├── NormalisationModel.class
+│   │   │   ├── StatisticalModel$1.class
+│   │   │   ├── StatisticalModel.class
+│   │   │   ├── TractoModel$1.class
+│   │   │   └── TractoModel.class
+│   │   ├── norma.png
+│   │   ├── Settings
+│   │   │   ├── Settings.class
+│   │   │   ├── SettingsFrame$1.class
+│   │   │   ├── SettingsFrame$2.class
+│   │   │   ├── SettingsFrame$3.class
+│   │   │   ├── SettingsFrame$4.class
+│   │   │   ├── SettingsFrame$5.class
+│   │   │   ├── SettingsFrame$6.class
+│   │   │   ├── SettingsFrame$7.class
+│   │   │   ├── SettingsFrame$8.class
+│   │   │   ├── SettingsFrame$9.class
+│   │   │   └── SettingsFrame.class
+│   │   ├── settings.png
+│   │   ├── tracto.png
+│   │   └── undercons.png
 │   ├── images
 │   │   ├── anacom.jpg
 │   │   ├── anacom.png
@@ -33,6 +643,7 @@ BCBToolKit
 │   │   ├── settings.png
 │   │   ├── tracto.png
 │   │   └── undercons.png
+│   ├── MANIFEST.MF
 │   └── src
 │       ├── Applications
 │       │   ├── AbstractApp.java
@@ -302,70 +913,6 @@ BCBToolKit
 │   ├── extraFiles
 │   │   ├── avg152T1_gray.nii.gz
 │   │   ├── BCBToolKit.conf
-│   │   ├── Hypertron
-│   │   │   ├── 000Hypertron_linear.mat
-│   │   │   ├── 000Hypertron_nonlinear.nii.gz
-│   │   │   ├── 000Hypotron_linear.mat
-│   │   │   ├── 000Hypotron_nonlinear.nii.gz
-│   │   │   ├── 000.trk
-│   │   │   ├── 001Hypertron_linear.mat
-│   │   │   ├── 001Hypertron_nonlinear.nii.gz
-│   │   │   ├── 001Hypotron_linear.mat
-│   │   │   ├── 001Hypotron_nonlinear.nii.gz
-│   │   │   ├── 001.trk
-│   │   │   ├── 002Hypertron_linear.mat
-│   │   │   ├── 002Hypertron_nonlinear.nii.gz
-│   │   │   ├── 002Hypotron_linear.mat
-│   │   │   ├── 002Hypotron_nonlinear.nii.gz
-│   │   │   ├── 002.trk
-│   │   │   ├── 003Hypertron_linear.mat
-│   │   │   ├── 003Hypertron_nonlinear.nii.gz
-│   │   │   ├── 003Hypotron_linear.mat
-│   │   │   ├── 003Hypotron_nonlinear.nii.gz
-│   │   │   ├── 003.trk
-│   │   │   ├── 004Hypertron_linear.mat
-│   │   │   ├── 004Hypertron_nonlinear.nii.gz
-│   │   │   ├── 004Hypotron_linear.mat
-│   │   │   ├── 004Hypotron_nonlinear.nii.gz
-│   │   │   ├── 004.trk
-│   │   │   ├── 005Hypertron_linear.mat
-│   │   │   ├── 005Hypertron_nonlinear.nii.gz
-│   │   │   ├── 005Hypotron_linear.mat
-│   │   │   ├── 005Hypotron_nonlinear.nii.gz
-│   │   │   ├── 005.trk
-│   │   │   ├── 006Hypertron_linear.mat
-│   │   │   ├── 006Hypertron_nonlinear.nii.gz
-│   │   │   ├── 006Hypotron_linear.mat
-│   │   │   ├── 006Hypotron_nonlinear.nii.gz
-│   │   │   ├── 006.trk
-│   │   │   ├── 007Hypertron_linear.mat
-│   │   │   ├── 007Hypertron_nonlinear.nii.gz
-│   │   │   ├── 007Hypotron_linear.mat
-│   │   │   ├── 007Hypotron_nonlinear.nii.gz
-│   │   │   ├── 007.trk
-│   │   │   ├── 008Hypertron_linear.mat
-│   │   │   ├── 008Hypertron_nonlinear.nii.gz
-│   │   │   ├── 008Hypotron_linear.mat
-│   │   │   ├── 008Hypotron_nonlinear.nii.gz
-│   │   │   ├── 008.trk
-│   │   │   ├── 009Hypertron_linear.mat
-│   │   │   ├── 009Hypertron_nonlinear.nii.gz
-│   │   │   ├── 009Hypotron_linear.mat
-│   │   │   ├── 009Hypotron_nonlinear.nii.gz
-│   │   │   ├── 009.trk
-│   │   │   ├── l000.nii.gz
-│   │   │   ├── l001.nii.gz
-│   │   │   ├── l002.nii.gz
-│   │   │   ├── l003.nii.gz
-│   │   │   ├── l004.nii.gz
-│   │   │   ├── l005.nii.gz
-│   │   │   ├── l006.nii.gz
-│   │   │   ├── l007.nii.gz
-│   │   │   ├── l008.nii.gz
-│   │   │   ├── l009.nii.gz
-│   │   │   ├── mask.nii.gz
-│   │   │   ├── MNI152.nii.gz
-│   │   │   └── track_vis.log
 │   │   ├── MNI152_for_antsBrainExtractionBrain.nii.gz
 │   │   ├── MNI152_for_antsBrainExtractionMask.nii.gz
 │   │   ├── MNI152_for_antsBrainExtractionPrior0GenericAffine.mat
@@ -373,6 +920,7 @@ BCBToolKit
 │   │   ├── MNI152_wskull.nii.gz
 │   │   ├── Priors
 │   │   │   ├── brainPrior.nii.gz
+│   │   │   ├── brain_stem_cereb_Prior.nii.gz
 │   │   │   ├── brainWithSkullTemplate.nii.gz
 │   │   │   ├── priors1.nii.gz
 │   │   │   ├── priors2.nii.gz
@@ -384,7 +932,18 @@ BCBToolKit
 │   │   │   ├── design_preproc_TEMPLATE.fsf
 │   │   │   ├── f1_kernel.nii.gz
 │   │   │   └── MNI152_T1_2mm_brain.nii.gz
-│   │   └── Thr100_2mm_avg152T1_gray.nii.gz
+│   │   ├── Thr100_2mm_avg152T1_gray.nii.gz
+│   │   └── tracks
+│   │       ├── P02_1mm.trk
+│   │       ├── S10_1mm.trk
+│   │       ├── S12_1mm.trk
+│   │       ├── S13_1mm.trk
+│   │       ├── S16_1mm.trk
+│   │       ├── S24_1mm.trk
+│   │       ├── S26_1mm.trk
+│   │       ├── S27_1mm.trk
+│   │       ├── S32_1mm.trk
+│   │       └── S35_1mm.trk
 │   ├── libraries
 │   │   └── lib
 │   │       ├── libfslio.so
@@ -397,13 +956,16 @@ BCBToolKit
 │   │       └── libznz.so.2
 │   ├── scripts
 │   │   ├── anacom_proper.sh
+│   │   ├── disco.sh
 │   │   ├── funcorr.sh
 │   │   ├── HypertronModified.sh
+│   │   ├── _normalize_old_backup.sh
 │   │   ├── normalize.sh
 │   │   ├── resting.sh
 │   │   ├── stats_proper.r
 │   │   ├── thickLoop.sh
 │   │   ├── TractotronParam.sh
+│   │   ├── xargs_disco.sh
 │   │   └── xargs_launch.sh
 │   └── tmp
 ├── Tracts
@@ -476,6 +1038,6 @@ BCBToolKit
 │   ├── Uncinate_Left.nii.gz
 │   └── Uncinate_Right.nii.gz
 ├── tree.txt
-└── VERSION
+└── VERSION.txt
 
-27 directories, 451 files
+121 directories, 919 files

@@ -1,4 +1,4 @@
-We sincerely thank We sincerely thank Emmanuelle Volle, Marika Urbanski, Stefanie Forkel and Marine Lunven who tested the beta versions and helped with the revision of the software. MRI Data used in the tractotron were acquired thanks to the funding CAFORPFC, No. ANR-09-RPDOC-004-01 attributed to Emmanuelle Volle. Additional funding came from project PHENOTYPES, No. ANR-13-JSV4-0001-01.
+We sincerely thank We sincerely thank Emmanuelle Volle, Marika Urbanski, Stephanie Forkel and Marine Lunven who tested the beta versions and helped with the revision of the software. MRI Data used in the tractotron were acquired thanks to the funding CAFORPFC, No. ANR-09-RPDOC-004-01 attributed to Emmanuelle Volle. Additional funding came from project PHENOTYPES, No. ANR-13-JSV4-0001-01.
 
 Many thanks to Emmanuelle Volle and Serge Kinkingnéhun for helping us to understand, adapt and add anaCOM to the BCBToolKit.
 

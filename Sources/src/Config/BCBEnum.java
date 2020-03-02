@@ -56,7 +56,7 @@ public final class BCBEnum {
 		 * WARNING : all string starting by "default" is use in 
 		 * BCBToolBoxIHM to determine which file have to be saved in 
 		 * the toolBox. 
-		 * WARNING2 : Those String are parse to use the last part 
+		 * WARNING2 : Those String are parsed to use the last part 
 		 * as button name in the settingsFrame. (Each part is separated by 
 		 * a space)
 		 * WARNING3(The revenge) : The SECOND part of the String is used to 
@@ -84,6 +84,10 @@ public final class BCBEnum {
 		NOTHRESDIR("default NORMALISATION otherResult"),
 		NBRAINEXT("save NORMALISATION brain_extration"),
 		NSAVETMP("save NORMALISATION tmpFiles"),
+		// GradientStep
+		NGRADIENTSTEP("save NORMALISATION gradientStep"),
+		NUPDATEFIELDVARIANCE("save NORMALISATION updateFieldVarianceInVoxelSpace"),
+		NTOTALFIELDVARIANCE("save NORMALISATION totalFieldVarianceInVoxelSpace"),
 		//ANACOM
 		ALESDIR("default ANACOM lesions"),
 		ARESDIR("default ANACOM result"),

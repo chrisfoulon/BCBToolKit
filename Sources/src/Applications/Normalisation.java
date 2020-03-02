@@ -285,7 +285,7 @@ public class Normalisation extends AbstractApp {
 						// Setting the brain extraction threshold
 						model.setBrainExt(conf.getVal(BCBEnum.Param.NBRAINEXT));
 						
-						model.setSynOpt(getBCB().getSettings().getNormSynValue());
+						model.setSynOpt(getBCB().getSettings().getNormSynParam());
 						// Should we save temporary files
 						if (saveTmp.isSelected()) {
 							model.setSaveTmp("true");

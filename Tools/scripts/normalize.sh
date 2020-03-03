@@ -115,7 +115,7 @@ priors=$path/extraFiles/Priors
 cd $1
 for f in *nii*
 do
-    unskulable=$f
+    unskullable=$f
     pat=$(basename $f .${f#*.})
     echo ${pat}
     # 1 becomes 0 and 0 becomes 1 !
@@ -134,7 +134,7 @@ do
 
 
       	#We will now use this image for the skull stripping
-      	unskulable=`ls $3/Enantiomorphic_${pat}.nii*`
+      	unskullable=`ls $3/Enantiomorphic_${pat}.nii*`
       else
 	       echo "Lesion masking parameter error" >&2
       fi
@@ -147,28 +147,29 @@ do
 
       #Brain extraction Threshold (Leo preproc before the bet)
       #fast -t 1 -n 3 -H 0.1 -I 4 -l 20.0 --nopve -B \
-	    #  -o ${tmp}/${pat} ${unskulable}
+	    #  -o ${tmp}/${pat} ${unskullable}
 
 #      -m $priors/brainPrior.nii.gz \
 #      -m $priors/brain_stem_cereb_Prior.nii.gz \
       # BET2
       #bet2 ${tmp}/${pat}_restore $tmp/tmp_T1${pat}.nii.gz -m -f $5
       antsBrainExtraction.sh -d 3 \
-      -a ${unskulable} \
+      -a ${unskullable} \
       -e $priors/brainWithSkullTemplate.nii.gz \
       -m $priors/brainPrior.nii.gz \
       -o $tmp/tmp_T1${pat}
 
       mv $tmp/tmp_T1${pat}BrainExtractionBrain.nii.gz $tmp/tmp_T1${pat}.nii.gz
 
-      fslcpgeom ${unskulable} $tmp/tmp_T1${pat}.nii.gz
+      fslcpgeom ${unskullable} $tmp/tmp_T1${pat}.nii.gz
     else
-      cp ${unskulable} $tmp/tmp_T1${pat}.nii.gz
+      cp ${unskullable} $tmp/tmp_T1${pat}.nii.gz
     fi;
 
     fixed_image=$tmp/tmp_T1${pat}.nii.gz;
     moving_image=$4;
-
+    # Because we calculate the transformation template to subject, we inversed the name of the Warped outputs
+    # so it correspond to what we what, i.e. Warped is the subject to template transform
     antsRegistration \
     --collapse-output-transforms 0 \
     --dimensionality 3 \
@@ -232,6 +233,7 @@ do
         # the template to patient space transform is actually the inverse transform
         cp "${syn_temp2pat}" "$3/${basename_syn}"
         cp "${brain_extraction_mask}" "$3"
+        cp "${tmp}"/*Warped* "$3"
 #        cp -vf $tmp/transform_${pat}* $3
     fi
     echo "#"

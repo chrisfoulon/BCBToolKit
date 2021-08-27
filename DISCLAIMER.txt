@@ -1,0 +1,3 @@
+BCBToolKit is not approved for clinical use.
+BCBToolKit is the property of Chris Foulon and Michel Thiebaut de Schotten.
+Contact: hd.chrisfoulon@gmail.com or michel.thiebaut@gmail.com 

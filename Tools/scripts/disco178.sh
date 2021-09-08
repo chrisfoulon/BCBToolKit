@@ -17,7 +17,8 @@ exec 2>> $2/logs/${subject}.txt
 set -x
 
 path=/data/nimlab/toolkits/BCBToolKit/Tools
-tmp=$path/tmp/tmp_disco
+# tmp=$path/tmp/tmp_disco ~Commented out by WD on Aug 30, 2021
+tmp=$2/tmp_disco
 lib=$path/libraries/lib
 bin=$path/binaries/bin
 export PATH=$PATH:$path/binaries/bin

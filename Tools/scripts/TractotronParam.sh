@@ -10,7 +10,7 @@ exec 2>> $3/logTractotron.txt
 set -x
 
 
-path=${PWD}/Tools
+path=/data/nimlab/toolkits/BCBToolKit/Tools
 lib=$path/libraries/lib
 bin=$path/binaries/bin
 
@@ -21,8 +21,8 @@ export FSLMULTIFILEQUIT="TRUE"
 export FSLOUTPUTTYPE="NIFTI_GZ"
 export FSLREMOTECALL=""
 
-mkdir -p $path/tmp/multresh
-tmpMult=$path/tmp/multresh
+mkdir -p $1/tmp/multresh
+tmpMult=$1/tmp/multresh
 
 fileName() {
   name=$(basename $1)

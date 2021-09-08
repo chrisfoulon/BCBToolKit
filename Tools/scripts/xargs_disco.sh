@@ -11,9 +11,11 @@ then
 fi;
 mkdir -p $3/logs
 
-path=${PWD}/Tools
+# Edits from WD Aug30,2021, commented out two lines below, added 'tmp=$3/tmp_disco'
+# path=${PWD}/Tools
+# tmp=$path/tmp/tmp_disco
+tmp=$3/tmp_disco
 
-tmp=$path/tmp/tmp_disco
 if [[ -e $tmp ]];
 then
   rm -rf $tmp;

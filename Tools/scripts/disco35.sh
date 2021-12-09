@@ -1,6 +1,6 @@
 #! /bin/bash
 #hypertron v1.0 - Michel Thiebaut de Schotten & Chris Foulon
-[ $# -lt 3 ] && { echo "Usage : $0 LesionFile ResultDir Threshold"; exit 1; }
+[ $# -lt 3 ] && { echo "Usage : $0 LesionFile ConnectomeDir ResultDir Threshold"; exit 1; }
 
 fileName() {
   name=$(basename $1)
@@ -10,10 +10,10 @@ fileName() {
 
 subject=`fileName $1`
 #Those lines are the handling of the script's trace and errors
-#Traces and errors will be stored in $3/logAnacom.txt
+#Traces and errors will be stored in $4/logAnacom.txt
 export PS4='+(${LINENO})'
-echo -n "" > $2/logs/${subject}.txt
-exec 2>> $2/logs/${subject}.txt
+echo -n "" > $3/logs/${subject}.txt
+exec 2>> $3/logs/${subject}.txt
 set -x
 
 path=/data/nimlab/toolkits/BCBToolKit/Tools
@@ -31,7 +31,7 @@ export FSLREMOTECALL=""
 trks=/data/nimlab/connectomes/tracts/Base35
 mkdir -p $tmp
 
-subj_name=`fileName $1`
+subj_name="`fileName $1`_bcb_disco"
 acc=$tmp/added_maps_$subj_name
 fslmaths $1 -mul 0 $acc
 num=0
@@ -47,11 +47,11 @@ do
 done;
 # We divide the result image by the number of tractographies to obtain a
 # probabilistic map of the disconnections
-fslmaths $acc -div $num $2/$subj_name
+fslmaths $acc -div $num $3/$subj_name
 
 # We threshold the result as asked with the last parameter
-fslmaths $2/$subj_name -thr $3 $2/$subj_name
+fslmaths $3/$subj_name -thr $4 $3/$subj_name
 
-fslcpgeom $1 $2/$subj_name
+fslcpgeom $1 $3/$subj_name
 
 echo "#"

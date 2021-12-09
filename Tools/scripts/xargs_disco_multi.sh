@@ -11,7 +11,7 @@ then
 fi;
 mkdir -p $3/logs
 
-# Edits from WD Aug30,2021: commented out two lines below, added 'tmp=$3/tmp_disco'
+# Edits from WD Aug30,2021, commented out two lines below, added 'tmp=$3/tmp_disco'
 # path=${PWD}/Tools
 # tmp=$path/tmp/tmp_disco
 tmp=$3/tmp_disco
@@ -20,8 +20,8 @@ if [[ -e $tmp ]];
 then
   rm -rf $tmp;
 fi;
-mkdir -p $tmp
 
+mkdir -p $tmp
 # We will create a list with the paths of all files inside the $2 folder.
 echo -n "" > $tmp/list.txt
 if [[ `ls -l $2 | wc -l` -lt 2 ]];
@@ -45,6 +45,5 @@ done;
 #ncores=`python -c 'import multiprocessing as mp; print(mp.cpu_count())'`
 #ncores=$((ncores - 1))
 #cat $tmp/list.txt | xargs -n 1 -P $ncores -t -I {} $1 {} "${@:3}"
-
 # Temporary fix, it's slowing down the process but it works.
-cat $tmp/list.txt | xargs -n 1 -P 6 -t -I {} $1 {} "${@:3}"
+cat $tmp/list.txt | xargs -n 1 -P 12 -t -I {} $1 {} "${@:3}"

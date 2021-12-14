@@ -1,6 +1,6 @@
 #! /bin/bash
 #hypertron v1.0 - Michel Thiebaut de Schotten & Chris Foulon
-[ $# -lt 3 ] && { echo "Usage : $0 LesionFile ConnectomeDir ResultDir Threshold"; exit 1; }
+[ $# -lt 4 ] && { echo "Usage : $0 LesionFile ConnectomeDir ResultDir Threshold"; exit 1; }
 
 fileName() {
   name=$(basename $1)

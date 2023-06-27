@@ -268,7 +268,7 @@ do
   # our clusters
   while [ `fslstats $tmp/stdlayer -V | awk '{ print $1 }'` != 0 ];
   do
-    max=`fslstats $tmp/stdlayer -R | awk '{print $2}'`;
+    max=`fslstats $tmp/stdlayer -R | awk '{print int($2)}'`;
     fslmaths $tmp/stdlayer -thr $max $cluD/cluster${numclu};
     fslmaths $tmp/stdlayer -sub $cluD/cluster${numclu} $tmp/stdlayer;
     #Here we calculate the number of voxels contained in the cluster

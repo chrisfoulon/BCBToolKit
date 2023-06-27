@@ -29,7 +29,7 @@ then
   exit 1;
 fi;
 
-if [[ $2 == $3 ]];
+if [[ "$2" == "$3" ]];
 then
   echo 'The lesions and results folders are the same ŎםŎ'
   exit 1;

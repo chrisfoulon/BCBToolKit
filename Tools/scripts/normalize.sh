@@ -7,6 +7,21 @@
 templateFile skull_strip synValue keepTmp lesionMaskingMethod \
 [-OPTIONAL otherFilesFolder] [-OPTIONAL otherResultFolder]"; exit 1; }
 
+# print the parameters given to the script by the user
+echo "T1Folder: $1"
+echo "LesionFolder: $2"
+echo "ResultFolder: $3"
+echo "templateFile: $4"
+echo "skull_strip: $5"
+echo "synValue: $6"
+echo "keepTmp: $7"
+echo "lesionMaskingMethod: $8"
+echo "otherFilesFolder: $9"
+echo "otherResultFolder: ${10}"
+
+# print the whole command line
+echo "Command: $0 $@"
+
 
 #Those lines are the handling of the script's trace and errors
 #Traces and errors will be stored in $3/logNormalisation.txt
@@ -226,13 +241,13 @@ do
         basename_syn=$(basename "${inverse_syn}")
         syn_temp2pat="${dirname_transfo}/${basename_syn/Inverse/}"
         syn_pat2temp=${inverse_syn}
-        brain_extraction_mask=`ls $tmp/tmp_T1${pat}BrainExtractionMask.nii.gz`
+#        brain_extraction_mask=`ls $tmp/tmp_T1${pat}BrainExtractionMask.nii.gz`
         cp "${affine_tr}" "$3/$(basename ${affine_tr})"
         # remove the Inverse so the patient to template transformation is actually the right one
         cp "${syn_pat2temp}" "$3/${basename_syn/Inverse/}"
         # the template to patient space transform is actually the inverse transform
         cp "${syn_temp2pat}" "$3/${basename_syn}"
-        cp "${brain_extraction_mask}" "$3"
+#        cp "${brain_extraction_mask}" "$3"
         cp "${tmp}"/*Warped* "$3"
 #        cp -vf $tmp/transform_${pat}* $3
     fi

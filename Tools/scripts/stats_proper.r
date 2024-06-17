@@ -20,7 +20,7 @@ file_path <- function(dir, filename) {
 
 # read a csv file in a list
 read_txt_in_list <- function(path) {
-  return(read.csv(file=path, header=FALSE, sep=","))
+  return(read.csv(file=path, header=FALSE, sep=",", na.strings = "NaN"))
 }
 
 # We want to know if the second arg is a path or a mean
@@ -82,7 +82,8 @@ kruskal_on_clusters <- function(list, ctr) {
 # Add a column to df with the holm correction of pvalues. The order of df is
 # modified
 mult_comp_corr <- function(st, col, meth="holm", col_name="holm") {
-  st <- st[order(st[col]),]
+  st <- st[order(st$col),]
+  #st <- st[order(st[col]),]
   tmp <- p.adjust(unlist(st[col]), method=meth)
   st[col_name] <- p.adjust(unlist(st[col]), method=meth)
   return(st)
@@ -180,9 +181,11 @@ if (!use_mu) {
 
 # We store the lists of the different text files
 pat <- list.files(path = folder, pattern = pat_re)
+print(pat)
 sco <- list.files(path = folder, pattern = sco_re)
+print(sco)
 co <- list.files(path = folder, pattern = co_re)
-
+print(co)
 ll <- create_list(pat, sco, co)
 
 out_info <- file_path(res_folder, "patients_info.csv")

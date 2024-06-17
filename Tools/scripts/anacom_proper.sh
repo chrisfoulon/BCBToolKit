@@ -7,11 +7,14 @@
    $3:    ResultFolder
    $4:    threshold
    $5:    controlScores
-   $6:    test (Mann-Whitney, t-test, Kolmogorov-Smirnov, Kruskal-Wallis)
+   $6:    test (Kruskal-Wallis, Mann-Whitney, t-test, Kolmogorov-Smirnov)
    $7:    keepTmp
    $8:    detZero
    $9:    nbvox
    ${10}: ph_mode (no post-hoc, co_deco, deco_ctr, co_ctr)'; exit 1; }
+
+# print the command line
+echo "Command line : $0 $*"
 
 # Those lines are the handling of the script's trace and errors
 # Traces and errors will be stored in $3/logAnacom.txt
@@ -19,6 +22,9 @@ export PS4='+(${LINENO})'
 echo -n "" > $3/logAnacom.txt
 exec 2>> $3/logAnacom.txt
 set -x
+
+# echo the command line in the log file
+echo "Command line : $0 $*" >> $3/logAnacom.txt
 
 PATH=$( echo $PATH | tr ":" "\n" | grep  -v "fsl" | tr -s "\n" ":" | sed 's/:$//')
 LD_LIBRARY_PATH=$( echo $LD_LIBRARY_PATH | tr ":" "\n" | grep  -v "fsl" | tr -s "\n" ":" | sed 's/:$//')
@@ -203,6 +209,7 @@ then
 else
   nblayer=$((nblayer + 1))
 fi;
+rounding_step=0.000001
 while [ `fslstats $tmp/eroded -V | awk '{ print $1 }'` != 0 ];
 do
   max=`fslstats $tmp/eroded -R | awk '{print $2}'`;
@@ -212,6 +219,15 @@ do
   fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
 
   volume=`fslstats $tmp/layer${nblayer} -V | awk '{ print $1 }'`
+
+  if [[ $volume -eq 0 ]];
+  then
+    # try again after subtracting the rounding_step to $max
+    max=`echo "$max - $rounding_step" | bc`
+    fslmaths $tmp/eroded -thr $max $tmp/layer${nblayer}
+    fslmaths $tmp/eroded -sub $tmp/layer${nblayer} $tmp/eroded
+    volume=`fslstats $tmp/layer${nblayer} -V | awk '{ print $1 }'`
+  fi;
 
   #If it is lower than the threshold $9 we remove the cluster and we will
   #create another with that number at the next loop
@@ -344,9 +360,28 @@ do
     index=$((index + 1));
   done;
   #We remove the last comma of strings and we store values in files
-  echo -n "${patient:0:${#patient}-1}" >> $tmp/cluster${i}pat.txt
-  echo -n "${score:0:${#score}-1}" >> $tmp/cluster${i}sco.txt
-  echo -n "${co_perf:0:${#co_perf}-1}" >> $tmp/cluster${i}co_perf.txt
+  # test whether each list is empty before removing the last comma
+  if [[ ${#patient} != 0 ]];
+  then
+    echo -n "${patient:0:${#patient}-1}" >> $tmp/cluster${i}pat.txt
+  else
+    echo -n "NaN" >> $tmp/cluster${i}pat.txt
+  fi;
+  if [[ ${#score} != 0 ]];
+  then
+    echo -n "${score:0:${#score}-1}" >> $tmp/cluster${i}sco.txt
+  else
+    echo -n "NaN" >> $tmp/cluster${i}sco.txt
+  fi;
+  if [[ ${#co_perf} != 0 ]];
+  then
+    echo -n "${co_perf:0:${#co_perf}-1}" >> $tmp/cluster${i}co_perf.txt
+  else
+    echo -n "NaN" >> $tmp/cluster${i}co_perf.txt
+  fi;
+#  echo -n "${patient:0:${#patient}-1}" >> $tmp/cluster${i}pat.txt
+#  echo -n "${score:0:${#score}-1}" >> $tmp/cluster${i}sco.txt
+#  echo -n "${co_perf:0:${#co_perf}-1}" >> $tmp/cluster${i}co_perf.txt
 done;
 echo "#"
 
@@ -394,13 +429,15 @@ then
       # //\" inside ${} will remove the character " from strings !
       fslmaths $cluD/${kw_clu[$n]//\"} -bin $cluD/${kw_clu[$n]//\"}
       fslmaths $cluD/${kw_clu[$n]//\"} -mul \
-      `awk " BEGIN {print 1 - ${kw_pval[$n]}}"` -add $kw_res $kw_res
+#      `awk " BEGIN {print 1 - ${kw_pval[$n]}}"` -add $kw_res $kw_res
+      ${kw_pval[$n]} -add $kw_res $kw_res
       # fslmaths $cluD/${kw_clu[$n]//\"} -mul $((1-${kw_pval[$n]})) \
       # -add $kw_res $kw_res
       if [ `awk "BEGIN { print (${kw_holm[$n]} < 0.05)}"` == 1 ];
       then
-        fslmaths $cluD/${kw_clu[$n]//\"} -mul \
-        `awk "BEGIN {print 1 - ${kw_holm[$n]}}"` -add \
+        fslmaths $cluD/${kw_clu[$n]//\"} -bin -mul \
+#        `awk "BEGIN {print 1 - ${kw_holm[$n]}}"` -add \
+        ${kw_holm[$n]} -add \
         $kw_corr $kw_corr
       fi;
     fi;
@@ -466,11 +503,13 @@ then
     if [[ ${ph_clu[$n]//\"} != "" ]];
     then
       fslmaths $cluD/${ph_clu[$n]//\"} -mul \
-      `awk "BEGIN {print 1 - ${ph_pval[$n]}}"` -add $ph_res $ph_res
+      ${ph_pval[$n]} -add $ph_res $ph_res
+#      `awk "BEGIN {print 1 - ${ph_pval[$n]}}"` -add $ph_res $ph_res
+#      if [ `awk "BEGIN { print (${ph_holm[$n]} < 0.05)}"` == 1 ];
       if [ `awk "BEGIN { print (${ph_holm[$n]} < 0.05)}"` == 1 ];
       then
-        fslmaths $cluD/${ph_clu[$n]//\"} -mul \
-        `awk "BEGIN {print 1 - ${ph_holm[$n]}}"` -add $ph_corr $ph_corr
+        fslmaths $cluD/${ph_clu[$n]//\"} -bin -mul \
+        ${ph_holm[$n]} -add $ph_corr $ph_corr
       fi;
     fi;
   done;

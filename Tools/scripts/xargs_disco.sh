@@ -41,8 +41,19 @@ do
 done;
 
 #we will launch N - 1 process where N is the number of processor cores.
-ncores=`python -c 'import multiprocessing as mp; print(mp.cpu_count())'`
+ncores=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
+
+if [ -z "$ncores" ]; then
+    ncores=$(sysctl -n hw.ncpu 2>/dev/null)
+fi
+
+if [ -z "$ncores" ]; then
+    ncores=1
+fi
+
 ncores=$((ncores - 1))
+[ "$ncores" -lt 1 ] && ncores=1
+echo $ncores
 cat "$tmp"/list.txt | xargs -P "$ncores" -t -I {} "$1" {} "${@:3}"
 # xargs: warning: options --max-args and --replace/-I/-i are mutually exclusive, ignoring previous --max-args value
 #cat "$tmp"/list.txt | xargs -n 1 -P "$ncores" -t -I {} "$1" {} "${@:3}"

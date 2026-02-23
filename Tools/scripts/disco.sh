@@ -28,7 +28,8 @@ export FSLMULTIFILEQUIT="TRUE"
 export FSLOUTPUTTYPE="NIFTI_GZ"
 export FSLREMOTECALL=""
 
-trks="$path"/extraFiles/tracks
+#trks="$path"/extraFiles/tracks
+trks="$path"/extraFiles/tracks_1mm
 mkdir -p "$tmp"
 
 subj_name=$(fileName "$1")

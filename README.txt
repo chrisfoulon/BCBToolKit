@@ -42,3 +42,70 @@ To launch the BCBtoolkit, double-click on the script : BCBToolKit.sh (Or launch 
 --------- IMPORTANT ---------
 Be careful with file extension, this application recognises only nifti (i.e.: .nii) and compressed nifti (i.e.: .nii.gz) extensions.
 Do not use files or directories containing space, tabulation or parenthesis.
+
+
+#### Disconnectome Maps — command-line runner (run_disco.sh) ####
+
+run_disco.sh is a standalone script for running structural disconnectome maps
+in batch from the command line, without the GUI. It can be called from any
+working directory.
+
+--- Requirements ---
+
+  System packages (Linux):
+    sudo apt install libxt6 libglu1-mesa libgl1-mesa-glx
+
+  All other dependencies (FSL subset, track_vis, bundled libraries) are
+  included in the BCBToolKit distribution.
+
+--- Tractography atlas ---
+
+  A default tract atlas (178 subjects, 2 mm isotropic MNI space) is bundled
+  in Tools/extraFiles/tracks/.
+
+  Larger atlases are available for download:
+
+    2 mm isotropic, 180 subjects:
+      https://www.dropbox.com/sh/efm3yns3tixsqih/AACmfQv3CVLN2wfbB_cF92uDa?dl=0
+
+    1 mm isotropic, 180 subjects (recommended when lesions are at 1 mm):
+      https://www.dropbox.com/sh/2hnwip97bbuen5a/AAB3M7QCTmWTW9KD6iJteCmga?dl=0
+
+  To use a custom atlas, either:
+    (a) replace the contents of Tools/extraFiles/tracks/ with the new .trk files, or
+    (b) pass the -T flag: run_disco.sh ... -T /path/to/your/tracks/
+
+--- Lesion mask resolution ---
+
+  Lesion masks must be registered to MNI space and at the SAME resolution as
+  the tract atlas. The bundled and 2 mm Dropbox atlases require 2 mm lesions;
+  the 1 mm Dropbox atlas requires 1 mm lesions.
+
+  To resample a 1 mm lesion mask to 2 mm:
+    flirt -in lesion_1mm.nii.gz \
+          -ref BCBToolKit/Tools/extraFiles/MNI152.nii.gz \
+          -out lesion_2mm.nii.gz \
+          -applyisoxfm 2 -interp nearestneighbour
+
+--- Usage ---
+
+  Folder mode  (all *.nii / *.nii.gz in a directory):
+    run_disco.sh -l LESIONS_DIR -o OUTPUT_DIR [-t THRESHOLD] [-n NCORES] [-T TRACKS_DIR]
+
+  CSV/TSV mode  (explicit list of paths, one per line; optional participant_id column):
+    run_disco.sh -l subjects.tsv  -o OUTPUT_DIR [-t THRESHOLD] [-n NCORES] [-T TRACKS_DIR]
+
+  BIDS mode  (auto-discovers *_lesion.nii.gz, writes *_les_SDC.nii.gz in-place):
+    run_disco.sh -B BIDS_ROOT               [-t THRESHOLD] [-n NCORES] [-T TRACKS_DIR]
+
+  Options:
+    -t  Proportional threshold in [0,1]  (default: 0, no thresholding)
+    -n  Number of parallel jobs          (default: nCPUs - 1)
+    -T  Custom tractography atlas folder
+    -d  Dry run: print the execution plan without running anything
+
+  Examples:
+    ./run_disco.sh -l Lesions/ -o /tmp/results
+    ./run_disco.sh -l Lesions/ -o /tmp/results -T /data/HCP_tracks_1mm -t 0.05
+    ./run_disco.sh -l subjects.tsv -o /tmp/results -d
+    ./run_disco.sh -B /data/Clinical_connectome -T /data/HCP_tracks_1mm

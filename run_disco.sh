@@ -61,12 +61,14 @@
 # REQUIREMENTS
 #   • bash ≥ 4.3  (for mapfile / process substitution)
 #   • Lesion masks must be registered to MNI space and at the same resolution
-#     as the tractography atlas. The bundled atlas and the HCP 178-subject
-#     atlas are both at 2 mm isotropic MNI space. Submitting 1 mm masks will
-#     cause track_vis to silently fail for every subject; use FSL flirt to
-#     downsample first:
-#       flirt -in lesion_1mm.nii.gz -ref <BCBToolKit>/Tools/extraFiles/MNI152.nii.gz \
-#             -out lesion_2mm.nii.gz -applyisoxfm 2 -interp nearestneighbour
+#     as the tractography atlas. The bundled 1 mm atlas uses the FSL MNI152
+#     template (182×218×182 voxels). Masks produced by SPM-based pipelines are
+#     commonly in the ICBM MNI152 template (181×217×181 voxels). This
+#     one-voxel difference is detected automatically: the mask is resliced to
+#     FSL space before processing and the disconnectome is resliced back
+#     afterwards, so no manual intervention is required for this case.
+#     Other resolution mismatches (e.g. 2 mm masks with a 1 mm atlas) are not
+#     handled automatically and will cause track_vis to fail.
 #
 # EXAMPLES
 #   ./run_disco.sh -l Lesions/ -o /tmp/results
@@ -188,7 +190,8 @@ TMP="$SCRIPT_DIR/Tools/tmp/tmp_disco"
 export PATH="$BIN:$PATH"
 export LD_LIBRARY_PATH="$LIB${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
-# FSL environment (required by fslmaths / fslcpgeom)
+# FSL environment (required by fslmaths / fslcpgeom / fslhd and wrappers)
+export FSLDIR="$BIN/.."   # fslinfo/fslhd wrappers call ${FSLDIR}/bin/fslhd
 export FSLOUTPUTTYPE="NIFTI_GZ"
 export FSLLOCKDIR="" FSLMACHINELIST="" FSLMULTIFILEQUIT="TRUE" FSLREMOTECALL=""
 
@@ -411,12 +414,39 @@ run_one() {
     # acc: accumulates the sum of binary tract masks across all tracts
     local acc="$subj_tmp/acc"
 
-    # Initialise the accumulator to an all-zero image matching the lesion
-    # (captures geometry / voxel dimensions of the input)
+    # Detect the SPM/FSL 1-voxel MNI template mismatch (181×217×181 vs
+    # 182×218×182). Read dims from the NIfTI header via the bundled fslhd.
+    local les_d1 les_d2 les_d3
+    read les_d1 les_d2 les_d3 <<< \
+        "$("$BIN/fslhd" "$lesion" | awk '/^dim[123]/{print $2}' | tr '\n' ' ')"
+    local needs_reslice=false
+    if [[ "$les_d1" == "181" && "$les_d2" == "217" && "$les_d3" == "181" ]]; then
+        needs_reslice=true
+    fi
+
     (
         set -x
 
-        "$BIN/fslmaths" "$lesion" -mul 0 "$acc"
+        # ------------------------------------------------------------------
+        # If the lesion is in SPM MNI space (181×217×181), reslice it to
+        # FSL MNI space (182×218×182) so track_vis can read it as an ROI.
+        # nulldeform.mat is the identity matrix — no transformation is
+        # applied, only the voxel grid is resampled to match MNI152.nii.gz.
+        # ------------------------------------------------------------------
+        local lesion_for_disco="$lesion"
+        if [[ $needs_reslice == true ]]; then
+            local resliced_lesion="$subj_tmp/lesion_resliced.nii.gz"
+            echo "Note: lesion is 181x217x181 (SPM MNI); reslicing to 182x218x182 (FSL MNI) for track_vis."
+            "$BIN/flirt" \
+                -in      "$lesion" \
+                -ref     "$SCRIPT_DIR/Tools/extraFiles/MNI152.nii.gz" \
+                -out     "$resliced_lesion" \
+                -applyxfm -init "$SCRIPT_DIR/Tools/extraFiles/nulldeform.mat" \
+                -interp  nearestneighbour
+            lesion_for_disco="$resliced_lesion"
+        fi
+
+        "$BIN/fslmaths" "$lesion_for_disco" -mul 0 "$acc"
 
         local num=0
         local tmp_mask="$subj_tmp/tmp_tracto"
@@ -426,7 +456,7 @@ run_one() {
             # -l 25 250 : keep only streamlines between 25 and 250 mm long
             # -nr       : do not render (headless, no display required)
             # -disable_log : suppress track_vis's own verbose log
-            "$BIN/track_vis" "$t" -l 25 250 -roi "$lesion" -ov "$tmp_mask" \
+            "$BIN/track_vis" "$t" -l 25 250 -roi "$lesion_for_disco" -ov "$tmp_mask" \
                 -nr -disable_log
 
             # Binarise the tract mask and add to accumulator
@@ -439,6 +469,20 @@ run_one() {
 
         # Apply threshold (0 = keep all voxels with any disconnection signal)
         "$BIN/fslmaths" "$out_stem" -thr "$THRESHOLD" "$out_stem"
+
+        # If the lesion was resliced, bring the disconnectome back to the
+        # original SPM MNI space (181×217×181) using the original lesion as
+        # the reference grid. Trilinear interpolation preserves the continuous
+        # values of the probabilistic map.
+        if [[ $needs_reslice == true ]]; then
+            echo "Note: reslicing disconnectome back to original lesion space (181x217x181)."
+            "$BIN/flirt" \
+                -in      "$out_stem" \
+                -ref     "$lesion" \
+                -out     "$out_stem" \
+                -applyxfm -init "$SCRIPT_DIR/Tools/extraFiles/nulldeform.mat" \
+                -interp  trilinear
+        fi
 
         # Copy spatial metadata (qform/sform) from the source lesion
         "$BIN/fslcpgeom" "$lesion" "$out_stem"

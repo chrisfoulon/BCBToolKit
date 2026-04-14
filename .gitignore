@@ -1,4 +1,5 @@
 Tools/extraFiles/**
+!Tools/extraFiles/nulldeform.mat
 jre/**
 Lesions/**
 Tracts/**

@@ -11,11 +11,11 @@
 #   TRACTS_DIR, computes two measures of lesion–tract overlap and writes them
 #   as TSV matrices to OUTPUT_DIR:
 #
-#     probability.tsv  — peak value of (tract_probability × lesion) per cell.
+#     probability.csv  — peak value of (tract_probability × lesion) per cell.
 #                        Reflects the highest tract probability at the lesion
 #                        site. Values are in [0, 1].
 #
-#     proportion.tsv   — fraction of the binarised tract volume occupied by the
+#     proportion.csv   — fraction of the binarised tract volume occupied by the
 #                        lesion: lesion_voxels_within_tract / tract_voxels.
 #                        Values are in [0, 1].
 #
@@ -228,18 +228,18 @@ echo "Done."
 echo ""
 
 # ---------------------------------------------------------------------------
-# 9. Write TSV headers (tract names as column headers)
+# 9. Write CSV headers (tract names as column headers)
 # ---------------------------------------------------------------------------
-PROBA_OUT="$OUTPUT_DIR/probability.tsv"
-PROP_OUT="$OUTPUT_DIR/proportion.tsv"
+PROBA_OUT="$OUTPUT_DIR/probability.csv"
+PROP_OUT="$OUTPUT_DIR/proportion.csv"
 
-header=$'\t'
+header=','
 for tract in "${TRACTS[@]}"; do
     t_name=$(basename "$tract")
     t_name="${t_name%.nii.gz}"; t_name="${t_name%.nii}"
-    header+="${t_name}"$'\t'
+    header+="${t_name},"
 done
-header="${header%$'\t'}"   # strip trailing tab for clean TSV
+header="${header%,}"   # strip trailing comma
 printf '%s\n' "$header" | tee "$PROBA_OUT" > "$PROP_OUT"
 
 # ---------------------------------------------------------------------------
@@ -273,7 +273,7 @@ for lesion in "${LESIONS[@]}"; do
         fi
 
         max=$("$FSLSTATS" "$OVERLAP" -R 2>> "$LOG" | awk '{print $2}')
-        proba_row+=$'\t'"$max"
+        proba_row+=","$max
 
         # ---- Proportion: lesion voxels inside tract / total tract voxels ----
         tract_vol=$("$FSLSTATS" "$tract_bin" -V 2>> "$LOG" | awk '{print $1}')
@@ -281,10 +281,10 @@ for lesion in "${LESIONS[@]}"; do
                        | awk '{print $1}')
 
         if [[ -z "$tract_vol" || "$tract_vol" =~ ^0(\.0*)?$ ]]; then
-            prop_row+=$'\t'0.000000
+            prop_row+=",0.000000"
         else
             prop=$(LC_ALL=C awk "BEGIN {printf \"%.6f\", $les_trac_vol / $tract_vol}")
-            prop_row+=$'\t'"$prop"
+            prop_row+=","$prop
         fi
 
         if [[ "$GUI_PROGRESS" == true ]]; then echo "#"; fi

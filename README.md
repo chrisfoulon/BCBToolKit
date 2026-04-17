@@ -126,6 +126,7 @@ BIDS mode     (auto-discovers lesion masks under anat/, writes *_les_SDC.nii.gz 
 # Folder mode
 ./run_disco.sh -l Lesions/ -o /tmp/results
 
+
 # Folder mode with custom atlas and threshold
 ./run_disco.sh -l Lesions/ -o /tmp/results -T /data/HCP_tracks_1mm -t 0.05
 
@@ -144,4 +145,78 @@ BIDS mode     (auto-discovers lesion masks under anat/, writes *_les_SDC.nii.gz 
 
 # Cluster usage: write temp files to a writable scratch partition
 ./run_disco.sh -B /data/derivatives -w /scratch/myuser
+```
+
+---
+
+## Tractotron — command-line runner (`tractotron_cli.sh`)
+
+`tractotron_cli.sh` computes lesion–tract overlap for a set of lesion masks
+against a folder of tract atlas NIfTIs. For each lesion × tract pair it
+produces two values:
+
+- **probability** — peak value of `tract_probability × lesion` at the lesion
+  site (0–1). Reflects how densely connected the lesion location is within
+  that tract.
+- **proportion** — fraction of the binarised tract volume covered by the
+  lesion: `lesion_voxels_within_tract / tract_voxels` (0–1). A value of 0.05
+  means the lesion covers 5% of that tract.
+
+Results are written as two CSV matrices (rows = lesions, columns = tracts):
+`probability.csv` and `proportion.csv`.
+
+### Inputs
+
+**Lesion masks** must be binary NIfTIs registered to MNI space at the same
+resolution as the tract atlas. The bundled atlas in `Tracts/` is 1 mm
+isotropic FSL MNI (182×218×182). To resample a lesion to match:
+
+```bash
+flirt -in lesion.nii.gz \
+      -ref BCBToolKit/Tools/extraFiles/MNI152.nii.gz \
+      -out lesion_1mm.nii.gz \
+      -applyisoxfm 1 -interp nearestneighbour
+```
+
+**Tract atlas** — a directory of probability NIfTIs, one per tract (values
+0–1). The bundled 68-tract atlas is in `Tracts/`. Any compatible atlas in the
+same MNI space works; the JHU atlas is a common alternative.
+
+### FSL detection
+
+System FSL is used automatically when `$FSLDIR` is set. Falls back to the FSL
+subset bundled in BCBToolKit. Use `-F` to force the bundled version.
+
+### Usage
+
+```bash
+tractotron_cli.sh -l LESIONS_DIR -t TRACTS_DIR -o OUTPUT_DIR [options]
+```
+
+| Flag | Description |
+|------|-------------|
+| `-l LESIONS_DIR` | Directory of binary lesion masks |
+| `-t TRACTS_DIR` | Directory of tract atlas NIfTIs (default atlas: `Tracts/`) |
+| `-o OUTPUT_DIR` | Where to write `probability.csv` and `proportion.csv` |
+| `-T THR` | Threshold for binarising tract maps (default: 0.5) |
+| `-w TMPDIR` | Writable scratch space (default: `$TMPDIR`, falls back to `/tmp`) |
+| `-F` | Force bundled FSL |
+| `-g` | Emit GUI progress signals (for BCBToolKit GUI use) |
+| `-d` | Dry run: print plan without processing |
+
+### Examples
+
+```bash
+# Basic run with bundled tract atlas
+./tractotron_cli.sh -l Lesions/ -t Tracts/ -o results/
+
+# Custom tract atlas, lower threshold
+./tractotron_cli.sh -l Lesions/ -t /data/JHU_tracts/ -o results/ -T 0.25
+
+# Dry run first, then execute
+./tractotron_cli.sh -l Lesions/ -t Tracts/ -o results/ -d
+./tractotron_cli.sh -l Lesions/ -t Tracts/ -o results/
+
+# On a server with read-only BCBToolKit install
+./tractotron_cli.sh -l Lesions/ -t Tracts/ -o results/ -w /scratch/myuser
 ```

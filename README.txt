@@ -95,13 +95,20 @@ working directory.
   CSV/TSV mode  (explicit list of paths, one per line; optional participant_id column):
     run_disco.sh -l subjects.tsv  -o OUTPUT_DIR [-t THRESHOLD] [-n NCORES] [-T TRACKS_DIR]
 
-  BIDS mode  (auto-discovers *_lesion.nii.gz, writes *_les_SDC.nii.gz in-place):
-    run_disco.sh -B BIDS_ROOT               [-t THRESHOLD] [-n NCORES] [-T TRACKS_DIR]
+  BIDS mode  (auto-discovers lesion masks under anat/, writes *_les_SDC.nii.gz in-place):
+    run_disco.sh -B BIDS_ROOT               [-t THRESHOLD] [-n NCORES] [-T TRACKS_DIR] [-p PATTERN]
 
   Options:
     -t  Proportional threshold in [0,1]  (default: 0, no thresholding)
     -n  Number of parallel jobs          (default: nCPUs - 1)
     -T  Custom tractography atlas folder
+    -p  Filename glob for BIDS lesion discovery (default: *lesion*.nii.gz and *lesion*.nii).
+        May be repeated for OR logic, e.g. -p "*_lesion.nii.gz" -p "*_label-lesion_mask.nii.gz"
+        participant_id is taken from the subject directory name, not the filename,
+        so extra BIDS entities (e.g. _space-MNI152NLin2009cAsym) are handled automatically.
+    -w  Temporary working directory for intermediate files.
+        Default: $TMPDIR/bcb_disco_<PID> (falls back to /tmp). Use this on servers
+        where the BCBToolKit installation directory is read-only.
     -d  Dry run: print the execution plan without running anything
 
   Examples:
@@ -109,3 +116,5 @@ working directory.
     ./run_disco.sh -l Lesions/ -o /tmp/results -T /data/HCP_tracks_1mm -t 0.05
     ./run_disco.sh -l subjects.tsv -o /tmp/results -d
     ./run_disco.sh -B /data/Clinical_connectome -T /data/HCP_tracks_1mm
+    ./run_disco.sh -B /data/derivatives -p "*space-MNI152NLin2009cAsym*lesion*mask.nii.gz"
+    ./run_disco.sh -B /data/derivatives -w /scratch/myuser

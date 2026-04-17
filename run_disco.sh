@@ -38,10 +38,13 @@
 #             Output stem = participant_id (if given) or input filename stem.
 #
 #   -B ROOT   BIDS mode.
-#             Recursively discovers all files matching
-#               ROOT/…/<participant_id>/anat/<participant_id>_lesion.nii.gz
-#             and routes each output in-place:
+#             Recursively discovers NIfTI files inside any anat/ sub-directory
+#             of ROOT whose basename matches the pattern(s) given with -p.
+#             Default pattern: *lesion*.nii.gz and *lesion*.nii
+#             Outputs are routed in-place:
 #               ROOT/…/<participant_id>/features/lesion/<participant_id>_les_SDC.nii.gz
+#             participant_id is taken from the subject directory name (BIDS
+#             standard), so extra BIDS entities in the filename are ignored.
 #             The -o flag is ignored in this mode. Compatible with the EBRAINS
 #             WP2 BIDS-like structure (nested center_id/dataset/participant_id)
 #             as well as flat BIDS (participant_id directly under root).
@@ -54,6 +57,18 @@
 #               Default: nCPUs − 1, minimum 1
 #   -T TRKDIR   Path to a directory of *.trk tractography atlas files
 #               Default: <BCBToolKit_root>/Tools/extraFiles/tracks
+#   -p PATTERN  Filename glob matched against files inside anat/ directories
+#               in BIDS mode. May be repeated; files matching ANY pattern are
+#               included (OR logic). Applies only with -B.
+#               Default: "*lesion*.nii.gz"  "*lesion*.nii"
+#               Example: -p "*space-MNI152NLin2009cAsym*lesion*mask.nii.gz"
+#               Example: -p "*_lesion.nii.gz" -p "*_label-lesion_mask.nii.gz"
+#   -w TMPDIR   Directory used for intermediate per-subject working files.
+#               Default: $TMPDIR/bcb_disco_<PID>  (falls back to /tmp if
+#               $TMPDIR is unset). Set this if the default location is on a
+#               filesystem you cannot write to, or to control where scratch
+#               data lands (e.g. a fast local scratch partition on a cluster).
+#               The directory is created automatically and deleted on exit.
 #   -d          Dry-run. Discover all inputs, print the execution plan, and
 #               exit without running anything. Use this to verify path mappings
 #               before a long batch job.
@@ -117,9 +132,11 @@ OUTPUT_DIR=""   # value of -o
 THRESHOLD=0
 NCORES=""
 TRACKS_DIR="$SCRIPT_DIR/Tools/extraFiles/tracks"
+BIDS_PATTERNS=()  # value(s) of -p; empty = use built-in defaults
+WORK_DIR_ARG=""   # value of -w; empty = use default
 DRY_RUN=false
 
-while getopts ":l:B:o:t:n:T:dh" opt; do
+while getopts ":l:B:o:t:n:T:p:w:dh" opt; do
     case "$opt" in
         l) INPUT_ARG="$OPTARG" ;;
         B) BIDS_ROOT="$OPTARG" ;;
@@ -127,6 +144,8 @@ while getopts ":l:B:o:t:n:T:dh" opt; do
         t) THRESHOLD="$OPTARG" ;;
         n) NCORES="$OPTARG" ;;
         T) TRACKS_DIR="$OPTARG" ;;
+        p) BIDS_PATTERNS+=("$OPTARG") ;;
+        w) WORK_DIR_ARG="$OPTARG" ;;
         d) DRY_RUN=true ;;
         h) usage ;;
         :) echo "Error: -$OPTARG requires an argument." >&2; usage ;;
@@ -182,7 +201,15 @@ n_tracks=$(find "$TRACKS_DIR" -maxdepth 1 -name "*.trk" | wc -l)
 # Bundled tool paths (FSL subset + track_vis, all inside BCBToolKit)
 BIN="$SCRIPT_DIR/Tools/binaries/bin"
 LIB="$SCRIPT_DIR/Tools/libraries/lib"
-TMP="$SCRIPT_DIR/Tools/tmp/tmp_disco"
+
+# Temporary working directory for intermediate per-subject files.
+# Prefer the caller-supplied -w path; otherwise use $TMPDIR (set by most
+# cluster schedulers to a per-job scratch area) or fall back to /tmp.
+if [[ -n "$WORK_DIR_ARG" ]]; then
+    TMP="$WORK_DIR_ARG/bcb_disco_$$"
+else
+    TMP="${TMPDIR:-/tmp}/bcb_disco_$$"
+fi
 
 [[ -d "$BIN" ]] || { echo "Error: binaries not found at $BIN" >&2; exit 1; }
 
@@ -289,26 +316,50 @@ discover_csv() {
 }
 
 # -- 5c. BIDS mode -----------------------------------------------------------
-# Discovers:  ROOT/…/<participant_id>/anat/<participant_id>_lesion.nii.gz
+# Discovers NIfTI files under anat/ directories whose basenames match one or
+# more glob patterns.  Patterns come from the global BIDS_PATTERNS array
+# (populated by -p flags).  When the array is empty the built-in defaults are
+# used:  "*lesion*.nii.gz"  and  "*lesion*.nii"
+# These cover both the minimal BIDS convention:
+#   <participant_id>_lesion.nii.gz
+# and derivative pipelines that add BIDS entities, e.g.:
+#   <participant_id>_space-MNI152NLin2009cAsym_label-lesion_mask.nii.gz
+#
+# participant_id is taken from the subject directory name (BIDS standard),
+# not from the filename, so extra BIDS entities in the stem do not matter.
 # Outputs to: ROOT/…/<participant_id>/features/lesion/<participant_id>_les_SDC
 discover_bids() {
     local root="$1"
     local lesion anat_dir participant_dir participant_id out_stem
 
+    # Build find -name conditions: one per pattern, joined with -o.
+    # We must wrap the whole group in \( … \) so -type f applies to all.
+    local -a name_conds=()
+    if [[ ${#BIDS_PATTERNS[@]} -eq 0 ]]; then
+        # Built-in defaults: any NIfTI whose name contains "lesion"
+        name_conds=( -name "*lesion*.nii.gz" -o -name "*lesion*.nii" )
+    else
+        local first=true
+        for pat in "${BIDS_PATTERNS[@]}"; do
+            $first || name_conds+=( -o )
+            name_conds+=( -name "$pat" )
+            first=false
+        done
+    fi
+
     while IFS= read -r lesion; do
         anat_dir="$(dirname "$lesion")"
         participant_dir="$(dirname "$anat_dir")"
 
-        # Derive participant_id from the filename (_lesion.nii.gz suffix)
-        local fname
-        fname="$(basename "$lesion")"
-        participant_id="${fname%_lesion.nii.gz}"
-        participant_id="${participant_id%_lesion.nii}"   # handle uncompressed
+        # Derive participant_id from the subject directory name (BIDS standard).
+        # This is robust to any extra BIDS entities in the filename.
+        participant_id="$(basename "$participant_dir")"
 
         out_stem="$participant_dir/features/lesion/${participant_id}_les_SDC"
 
         echo "$lesion|$out_stem"
-    done < <(find "$root" -path "*/anat/*_lesion.nii.gz" -type f 2>/dev/null | sort)
+    done < <(find "$root" -path "*/anat/*" \( "${name_conds[@]}" \) \
+                  -type f 2>/dev/null | sort)
 }
 
 # ---------------------------------------------------------------------------
@@ -368,6 +419,14 @@ echo "  Tracks   : $n_tracks *.trk files"
 echo "  Atlas    : $TRACKS_DIR"
 echo "  Threshold: $THRESHOLD"
 echo "  Jobs     : $NCORES parallel"
+echo "  Temp dir : $TMP"
+if [[ -n "$BIDS_ROOT" ]]; then
+    if [[ ${#BIDS_PATTERNS[@]} -eq 0 ]]; then
+        echo "  Patterns : *lesion*.nii.gz  *lesion*.nii  (defaults)"
+    else
+        echo "  Patterns : ${BIDS_PATTERNS[*]}"
+    fi
+fi
 [[ $DRY_RUN == true ]] && echo "  Mode     : DRY RUN — nothing will be executed"
 echo "────────────────────────────────────────────────────────"
 printf "  %-50s  %s\n" "INPUT" "OUTPUT STEM"
@@ -507,7 +566,9 @@ run_one() {
 # Launches up to NCORES background jobs. When the pool is full we wait for the
 # oldest job to finish before launching the next one (FIFO order). This avoids
 # the early-termination race condition in "xargs -I{} -P N".
-rm -rf "$TMP" && mkdir -p "$TMP"
+mkdir -p "$TMP" || { echo "Error: cannot create temp directory: $TMP" >&2; exit 1; }
+# Ensure the temp tree is removed on exit (normal, error, or Ctrl-C).
+trap 'rm -rf "$TMP"' EXIT
 
 declare -a PIDS=()
 declare -i FAIL_COUNT=0

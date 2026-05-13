@@ -450,8 +450,20 @@ if [[ $DRY_RUN == true ]]; then
     exit 0
 fi
 
+WALL_START=$(date +%s)
+
 # ---------------------------------------------------------------------------
-# 8. Per-lesion worker
+# 8. Helpers
+# ---------------------------------------------------------------------------
+fmt_elapsed() {
+    local s=$1
+    if (( s < 60 )); then printf '%ds' "$s"
+    else printf '%dm%02ds' $(( s / 60 )) $(( s % 60 ))
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# 9. Per-lesion worker
 # ---------------------------------------------------------------------------
 # Called as a background subshell: run_one <lesion> <out_stem>
 # All output goes to a log file next to the output.
@@ -459,6 +471,7 @@ run_one() {
     local lesion="$1"
     local out_stem="$2"
     local out_dir name log_dir log
+    local t0; t0=$(date +%s)
 
     out_dir="$(dirname "$out_stem")"
     name="$(basename "$out_stem")"
@@ -575,16 +588,17 @@ run_one() {
     ) >> "$log" 2>&1
 
     local rc=$?
+    local _etime; _etime=$(fmt_elapsed $(( $(date +%s) - t0 )))
     if [[ $rc -eq 0 ]]; then
-        echo "  [done]  $name"
+        echo "  [done]  $name  ($_etime)"
     else
-        echo "  [FAIL]  $name  (see $log)"
+        echo "  [FAIL]  $name  ($_etime)  (see $log)"
     fi
     return $rc
 }
 
 # ---------------------------------------------------------------------------
-# 9. Parallel FIFO job pool
+# 10. Parallel FIFO job pool
 # ---------------------------------------------------------------------------
 # Launches up to NCORES background jobs. When the pool is full we wait for the
 # oldest job to finish before launching the next one (FIFO order). This avoids
@@ -613,8 +627,9 @@ for pid in "${PIDS[@]}"; do
 done
 
 # ---------------------------------------------------------------------------
-# 10. Summary
+# 11. Summary
 # ---------------------------------------------------------------------------
+_wall_elapsed=$(fmt_elapsed $(( $(date +%s) - WALL_START )))
 echo ""
 echo "════════════════════════════════════════════════════════"
 if (( FAIL_COUNT == 0 )); then
@@ -624,6 +639,7 @@ else
     echo "  Completed: $_ok / ${#INPUT_LESIONS[@]} subjects"
     echo "  Failed   : $FAIL_COUNT subject(s) — check log files for details."
 fi
+echo "  Total time: $_wall_elapsed"
 echo "════════════════════════════════════════════════════════"
 echo ""
 

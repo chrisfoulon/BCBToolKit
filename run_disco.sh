@@ -473,11 +473,16 @@ run_one() {
     # acc: accumulates the sum of binary tract masks across all tracts
     local acc="$subj_tmp/acc"
 
+    # Read dims and voxel size from the NIfTI header via the bundled fslhd.
+    # les_px is used in error messages when track_vis reports a space mismatch.
+    local les_d1 les_d2 les_d3 les_px
+    read les_d1 les_d2 les_d3 les_px <<< \
+        "$("$BIN/fslhd" "$lesion" \
+           | awk '/^dim[123]/{print $2} /^pixdim1/{print $2}' \
+           | tr '\n' ' ')"
+
     # Detect the SPM/FSL 1-voxel MNI template mismatch (181×217×181 vs
-    # 182×218×182). Read dims from the NIfTI header via the bundled fslhd.
-    local les_d1 les_d2 les_d3
-    read les_d1 les_d2 les_d3 <<< \
-        "$("$BIN/fslhd" "$lesion" | awk '/^dim[123]/{print $2}' | tr '\n' ' ')"
+    # 182×218×182).
     local needs_reslice=false
     if [[ "$les_d1" == "181" && "$les_d2" == "217" && "$les_d3" == "181" ]]; then
         needs_reslice=true
@@ -517,9 +522,27 @@ run_one() {
             # -disable_log : suppress track_vis's own verbose log
             "$BIN/track_vis" "$t" -l 25 250 -roi "$lesion_for_disco" -ov "$tmp_mask" \
                 -nr -disable_log
+            tv_rc=$?
 
-            # Binarise the tract mask and add to accumulator
-            "$BIN/fslmaths" "$tmp_mask" -bin -add "$acc" "$acc"
+            if [[ $tv_rc -ne 0 ]]; then
+                echo ""
+                echo "Error: track_vis failed (exit $tv_rc) on $(basename "$t")"
+                echo "  Lesion      : $lesion_for_disco"
+                echo "  Voxel size  : ${les_px} mm"
+                echo "  This usually means the lesion resolution does not match the"
+                echo "  atlas. Check that your lesions are in the same space as the"
+                echo "  tracks in $TRACKS_DIR"
+                echo "  Use -T to point to the correct atlas (e.g. tracks_1mm/)."
+                exit "$tv_rc"
+            fi
+
+            # track_vis exits 0 but writes no output when no streamlines pass
+            # through the lesion — a valid result. Skip fslmaths in that case
+            # so the accumulator stays unchanged. num still increments: the
+            # denominator must remain the total number of tractographies.
+            if [[ -f "${tmp_mask}.nii.gz" || -f "${tmp_mask}.nii" ]]; then
+                "$BIN/fslmaths" "$tmp_mask" -bin -add "$acc" "$acc"
+            fi
             num=$(( num + 1 ))
         done
 

@@ -4,8 +4,8 @@
 # =============================================================================
 #
 # SYNOPSIS
-#   Folder mode : run_disco.sh -l DIR   -o OUTDIR [options]
-#   CSV mode    : run_disco.sh -l FILE  -o OUTDIR [options]
+#   Folder mode : run_disco.sh -l DIR   -o OUTDIR [-r FROM:TO] [options]
+#   CSV mode    : run_disco.sh -l FILE  -o OUTDIR [-r FROM:TO] [options]
 #   BIDS mode   : run_disco.sh -B ROOT            [options]
 #
 # DESCRIPTION
@@ -42,7 +42,7 @@
 #             of ROOT whose basename matches the pattern(s) given with -p.
 #             Default pattern: *lesion*.nii.gz and *lesion*.nii
 #             Outputs are routed in-place:
-#               ROOT/…/<participant_id>/features/lesion/<participant_id>_les_SDC.nii.gz
+#               ROOT/…/<participant_id>/features/lesion/<participant_id>_desc-disconnectome.nii.gz
 #             participant_id is taken from the subject directory name (BIDS
 #             standard), so extra BIDS entities in the filename are ignored.
 #             The -o flag is ignored in this mode. Compatible with the EBRAINS
@@ -63,6 +63,10 @@
 #               Default: "*lesion*.nii.gz"  "*lesion*.nii"
 #               Example: -p "*space-MNI152NLin2009cAsym*lesion*mask.nii.gz"
 #               Example: -p "*_lesion.nii.gz" -p "*_label-lesion_mask.nii.gz"
+#   -r FROM:TO  Rename: replace the first occurrence of FROM with TO in every
+#               output filename stem. Applies only in folder and CSV mode.
+#               Colon-separated. Example:
+#                 -r "_label-lesion_mask:_desc-disconnectome"
 #   -w TMPDIR   Directory used for intermediate per-subject working files.
 #               Default: $TMPDIR/bcb_disco_<PID>  (falls back to /tmp if
 #               $TMPDIR is unset). Set this if the default location is on a
@@ -96,7 +100,7 @@
 # PARALLELISM
 #   Subjects are parallelised with a FIFO bash job pool (no xargs). Each
 #   subject's stdout/stderr is captured in OUTDIR/logs/<stem>.txt (folder/CSV
-#   mode) or <participant_dir>/features/lesion/logs/<id>_les_SDC.txt (BIDS).
+#   mode) or <participant_dir>/features/lesion/logs/<id>_desc-disconnectome.txt (BIDS).
 #   The script exits with code 1 if any subject failed.
 # =============================================================================
 
@@ -134,9 +138,11 @@ NCORES=""
 TRACKS_DIR="$SCRIPT_DIR/Tools/extraFiles/tracks"
 BIDS_PATTERNS=()  # value(s) of -p; empty = use built-in defaults
 WORK_DIR_ARG=""   # value of -w; empty = use default
+RENAME_FROM=""    # value of -r (before colon)
+RENAME_TO=""      # value of -r (after colon)
 DRY_RUN=false
 
-while getopts ":l:B:o:t:n:T:p:w:dh" opt; do
+while getopts ":l:B:o:t:n:T:p:r:w:dh" opt; do
     case "$opt" in
         l) INPUT_ARG="$OPTARG" ;;
         B) BIDS_ROOT="$OPTARG" ;;
@@ -145,6 +151,7 @@ while getopts ":l:B:o:t:n:T:p:w:dh" opt; do
         n) NCORES="$OPTARG" ;;
         T) TRACKS_DIR="$OPTARG" ;;
         p) BIDS_PATTERNS+=("$OPTARG") ;;
+        r) RENAME_FROM="${OPTARG%%:*}"; RENAME_TO="${OPTARG##*:}" ;;
         w) WORK_DIR_ARG="$OPTARG" ;;
         d) DRY_RUN=true ;;
         h) usage ;;
@@ -246,6 +253,7 @@ discover_folder() {
     while IFS= read -r lesion; do
         name="$(basename "$lesion")"
         stem="${name%.nii.gz}"; stem="${stem%.nii}"
+        [[ -n "$RENAME_FROM" ]] && stem="${stem/$RENAME_FROM/$RENAME_TO}"
         echo "$lesion|$outdir/$stem"
     done < <(find "$dir" -maxdepth 1 \( -name "*.nii" -o -name "*.nii.gz" \) \
              -type f | sort)
@@ -310,6 +318,7 @@ discover_csv() {
             stem="$(basename "$abs_lesion")"
             stem="${stem%.nii.gz}"; stem="${stem%.nii}"
         fi
+        [[ -n "$RENAME_FROM" ]] && stem="${stem/$RENAME_FROM/$RENAME_TO}"
 
         echo "$abs_lesion|$outdir/$stem"
     done < "$csv_file"
@@ -355,7 +364,7 @@ discover_bids() {
         # This is robust to any extra BIDS entities in the filename.
         participant_id="$(basename "$participant_dir")"
 
-        out_stem="$participant_dir/features/lesion/${participant_id}_les_SDC"
+        out_stem="$participant_dir/features/lesion/${participant_id}_desc-disconnectome"
 
         echo "$lesion|$out_stem"
     done < <(find "$root" -path "*/anat/*" \( "${name_conds[@]}" \) \

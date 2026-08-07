@@ -263,11 +263,25 @@ for lesion in "${LESIONS[@]}"; do
     prop_row="$les_name"
     failed=false
 
+    # Binarize the lesion once per lesion (reused across all tracts below).
+    # A non-binary/graded lesion mask (e.g. values on a 0-255 scale instead
+    # of 0/1) would otherwise inflate the probability column past its
+    # expected [0, 1] range.
+    lesion_bin="$TMP/lesion_bin"
+    if ! "$FSLMATHS" "$lesion" -bin "$lesion_bin" >> "$LOG" 2>&1; then
+        echo "  [FAIL] fslmaths -bin on $les_name — see $LOG" >&2
+        n_failed=$(( n_failed + 1 ))
+        continue
+    fi
+
     for tract in "${TRACTS[@]}"; do
         tract_bin="$TMP/tracts/$(basename "$tract")"
 
         # ---- Probability: max value of (tract_probability × lesion) ----
-        if ! "$FSLMATHS" "$tract_bin" -mul "$lesion" "$OVERLAP" >> "$LOG" 2>&1; then
+        # Uses the raw (non-binarized) tract map — tract_bin is only for the
+        # proportion/volume calc below. Multiplying by tract_bin here would
+        # collapse the probability column to {0,1} for a binary lesion.
+        if ! "$FSLMATHS" "$tract" -mul "$lesion_bin" "$OVERLAP" >> "$LOG" 2>&1; then
             echo "  [FAIL] fslmaths on $les_name × $(basename "$tract") — see $LOG" >&2
             failed=true; break
         fi
@@ -277,7 +291,7 @@ for lesion in "${LESIONS[@]}"; do
 
         # ---- Proportion: lesion voxels inside tract / total tract voxels ----
         tract_vol=$("$FSLSTATS" "$tract_bin" -V 2>> "$LOG" | awk '{print $1}')
-        les_trac_vol=$("$FSLSTATS" "$lesion" -k "$tract_bin" -V 2>> "$LOG" \
+        les_trac_vol=$("$FSLSTATS" "$lesion_bin" -k "$tract_bin" -V 2>> "$LOG" \
                        | awk '{print $1}')
 
         if [[ -z "$tract_vol" || "$tract_vol" =~ ^0(\.0*)?$ ]]; then

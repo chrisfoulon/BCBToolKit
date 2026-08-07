@@ -61,10 +61,14 @@ for a in *.nii*
 do
   printf  "%s\t" `fileName $a`>>$proba
   printf  "%s\t" `fileName $a` >> $prop
+  #We have to binarise the lesion too, otherwise a non-binary/graded lesion
+  #mask (e.g. values on a 0-255 scale instead of 0/1) inflates the
+  #probability column past its expected 0-1 range.
+  $bin/fslmaths $1/$a -bin $tmpMult/lesbin_$a
   cd $2
   for b in *.nii*
   do
-    $bin/fslmaths $2/$b -mul $1/$a $tmpMult/multresh_$b || (rm -rf $tmpMult; exit 1)
+    $bin/fslmaths $2/$b -mul $tmpMult/lesbin_$a $tmpMult/multresh_$b || (rm -rf $tmpMult; exit 1)
 
     echo "#"
     max=`$bin/fslstats $tmpMult/multresh_$b -R` || (rm -rf $tmpMult; exit 1)
@@ -74,7 +78,7 @@ do
     tractVol=`$bin/fslstats $tmpMult/tmp$b -V | awk '{print $1}'`;
     echo "#"
     #Then the volume of the lesion masked with the 50% thresholded tract
-    lesTracVol=`$bin/fslstats $1/$a -k $tmpMult/tmp$b -V | awk '{print $1}'`;
+    lesTracVol=`$bin/fslstats $tmpMult/lesbin_$a -k $tmpMult/tmp$b -V | awk '{print $1}'`;
     #And we compute the volume ratio between the lesion and the tract
     if [[ $tractVol == "" || $tractVol =~ ^0\.0+$|^0$ ]];
     then
